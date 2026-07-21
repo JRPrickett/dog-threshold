@@ -44,6 +44,21 @@ Edit `index.html`, then **bump the `CACHE` version in `sw.js`** (for example
 `threshold-v1` to `threshold-v2`) and upload both. Without that bump, people who
 already installed it may keep seeing the old version from their cache.
 
+## While you're in another app
+
+You'll usually be watching the dog on a camera app, not this. Live Activities
+and Picture-in-Picture aren't available to web apps on iOS, so instead:
+
+- A silent audio loop starts when you begin a step, which keeps the timer
+  running while the app is in the background.
+- A chime sounds when the absence is up.
+- The current step appears on your lock screen and in Control Centre via the
+  Media Session API — the same place music track names show.
+- The screen is kept awake while a session is running.
+
+Turn it off in Settings under *Sound while you're away*. Note that muting also
+gives up the background timer, since the silent loop is what keeps it alive.
+
 ## Data
 
 Stored under the key `threshold.v2` in the browser's localStorage, roughly 2KB.

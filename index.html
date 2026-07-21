@@ -11,8 +11,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Threshold">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="apple-touch-icon" href="./icon-512.png">
-<link rel="icon" href="./icon-512.png" sizes="32x32">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./favicon-32.png" sizes="32x32">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -271,7 +271,7 @@
 <div class="installbar" id="installBar" hidden></div>
 
 <header>
-  <div class="mark"><img src="./icon-512.png" alt="">Threshold<em>separation anxiety log</em></div>
+  <div class="mark"><img src="./icon-192.png" alt="">Threshold<em>separation anxiety log</em></div>
   <div class="eyebrow" id="counter"></div>
 </header>
 
@@ -340,6 +340,13 @@
     <button class="btn ghost" id="modeToggle"></button>
     <p class="small">Door is a Bore works on door cues instead of duration, for dogs who panic before
       you've even left. Switching keeps this scenario's history.</p>
+  </div>
+  <div class="field">
+    <label>Sound while you're away</label>
+    <button class="btn ghost" id="soundToggle"></button>
+    <p class="small">Chimes when the absence is up, so you can watch the camera instead of the clock.
+      It also keeps the timer running while the app is in the background, and shows the current step
+      on your lock screen.</p>
   </div>
   <div class="field">
     <label for="dailyCap">Most sessions per day, across all scenarios</label>
@@ -715,6 +722,7 @@ function render(){
   el("startDur").value=s.start;
   el("warmups").value=nWarm(s);
   el("dailyCap").value=dailyCap();
+  el("soundToggle").textContent = soundOn() ? "Sound on — tap to mute" : "Muted — tap to turn sound on";
   el("modeToggle").textContent = mode(s)==="door"
     ? "Switch to timed absences" : "Start with Door is a Bore instead";
   el("restLen").value=restLen(s);
@@ -861,6 +869,7 @@ function cueVerdict(v){
 function endDoorEarly(){ recordDoor(true); }
 
 function recordDoor(stopped){
+  audioStop();
   var s=scen(), done=repLog.filter(Boolean);
   var wobbles=done.filter(function(x){ return !x.ok; }).length;
   var outcome = stopped ? "bad" : wobbles===0 ? "success" : wobbles===1 ? "ok" : "bad";
@@ -1003,17 +1012,23 @@ function ask(parent,question,opts,fn){
 }
 
 function startRep(){
-  phase="running"; startedAt=Date.now();
+  phase="running"; startedAt=Date.now(); chimed=false;
+  audioStart();
+  var label = current().kind==="main" ? "Main absence" : "Warm-up "+(repIdx+1)+" of "+(reps.length-1);
+  nowPlaying(label+" · "+fmt(current().target), dogName()+" · "+scen().label);
   clearInterval(tick);
   drawActions(); drawTabs(); drawHeadline(); drawReps();
   el("coach").hidden=true;
   var c=el("clock"), target=current().target;
+  var label = current().kind==="main" ? "Main absence" : "Warm-up "+(repIdx+1)+" of "+(reps.length-1);
   tick=setInterval(function(){
     var e=Math.round((Date.now()-startedAt)/1000), left=target-e;
     if(left>=0){ c.className="clock live"; c.textContent=fmt(left); }
     else { c.className="clock over"; c.textContent="+"+fmt(-left); }
     el("delta").textContent = left>=0 ? "Time out of the room."
       : "Target reached — come back whenever you like.";
+    if(left<=0&&!chimed){ chimed=true; playChime(); nowPlaying("Time to head back", dogName()+" · "+scen().label); }
+    else if(left>0&&e%5===0) nowPlaying(label+" · "+fmt(left)+" left", dogName()+" · "+scen().label);
   },250);
 }
 
@@ -1048,6 +1063,7 @@ function stopRep(){
 
 function toRest(){
   var s=scen(), wait=Math.min(restLen(s), mode(s)==="door"?30:restLen(s));
+  nowPlaying("Settle break · next "+fmt(current().target), dogName()+" · "+s.label);
   phase="rest"; restEnds=Date.now()+wait*1000;
   drawActions(); drawHeadline(); drawReps();
   el("coach").hidden=true;
@@ -1091,6 +1107,7 @@ function record(outcome){
   var floor=Math.max(1,Math.round(pending.base*0.5));
   if(pending.actual<pending.target*0.75) pending.base=Math.max(floor,pending.actual);
   if(outcome==="bad"&&pending.actual<pending.base) pending.base=Math.max(floor,pending.actual);
+  audioStop();
   s.sessions.push(pending);
   var after=badges();
   justEarned=MILESTONES.filter(function(m){ return after[m.s]&&!before[m.s]; });
@@ -1404,6 +1421,11 @@ el("modeToggle").onclick=function(){
   else { s.mode="door"; if(s.doorLevel==null) s.doorLevel=0; }
   graduated=false; save(); render();
 };
+el("soundToggle").onclick=function(){
+  state.soundOff=!state.soundOff;
+  if(state.soundOff) audioStop(); 
+  save(); render();
+};
 el("dailyCap").oninput=function(){
   var v=parseInt(this.value,10);
   if(v>=1&&v<=3){ state.dailyCap=v; save(); render(); }
@@ -1452,6 +1474,86 @@ function backupWhen(){
   var days=Math.floor((Date.now()-state.lastBackup)/86400000);
   p.textContent="Last backup "+(days===0?"today":days===1?"yesterday":days+" days ago")+".";
 }
+/* ================= running in the background =================
+   You'll be watching the camera, not this. Live Activities and Picture-in-
+   Picture aren't available to web apps, so instead: a silent loop keeps the
+   page alive once you've backgrounded it, a chime tells you the absence is up,
+   and Media Session puts the current step on your lock screen. */
+var keeper=null, chime=null, wakeLock=null, chimed=false;
+
+function makeWav(fill, secs, rate){
+  rate=rate||8000;
+  var n=Math.floor(secs*rate), buf=new ArrayBuffer(44+n*2), v=new DataView(buf), i;
+  function str(o,t){ for(var j=0;j<t.length;j++) v.setUint8(o+j,t.charCodeAt(j)); }
+  str(0,"RIFF"); v.setUint32(4,36+n*2,true); str(8,"WAVEfmt ");
+  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,rate,true); v.setUint32(28,rate*2,true); v.setUint16(32,2,true);
+  v.setUint16(34,16,true); str(36,"data"); v.setUint32(40,n*2,true);
+  for(i=0;i<n;i++) v.setInt16(44+i*2, Math.max(-1,Math.min(1,fill(i/rate)))*32767, true);
+  var b=new Uint8Array(buf), s="";
+  for(i=0;i<b.length;i++) s+=String.fromCharCode(b[i]);
+  return "data:audio/wav;base64,"+btoa(s);
+}
+
+function initAudio(){
+  if(keeper||typeof Audio==="undefined") return;
+  try{
+    keeper=new Audio(makeWav(function(){ return 0; },2,8000));
+    keeper.loop=true; keeper.volume=0.02;
+    keeper.setAttribute("playsinline","");
+    // two soft notes, well short of an alarm
+    chime=new Audio(makeWav(function(t){
+      var a=Math.sin(2*Math.PI*660*t)*Math.exp(-6*t);
+      var b=t>0.22 ? Math.sin(2*Math.PI*990*(t-0.22))*Math.exp(-5*(t-0.22)) : 0;
+      return 0.35*(a+b);
+    },0.9,22050));
+    chime.volume=0.9;
+  }catch(e){ keeper=null; }
+}
+
+function soundOn(){ return !state.soundOff; }
+
+function audioStart(){
+  if(!soundOn()) return;
+  initAudio();
+  if(keeper){ keeper.currentTime=0; var p=keeper.play(); if(p&&p.catch) p.catch(function(){}); }
+  if(navigator.mediaSession){
+    try{
+      navigator.mediaSession.playbackState="playing";
+      // keep the page audible if the OS tries to pause us
+      navigator.mediaSession.setActionHandler("pause",function(){ if(keeper) keeper.play().catch(function(){}); });
+      navigator.mediaSession.setActionHandler("play",function(){ if(keeper) keeper.play().catch(function(){}); });
+    }catch(e){}
+  }
+  if(navigator.wakeLock&&navigator.wakeLock.request&&!wakeLock){
+    navigator.wakeLock.request("screen").then(function(l){
+      wakeLock=l; l.addEventListener("release",function(){ wakeLock=null; });
+    }).catch(function(){});
+  }
+}
+
+function audioStop(){
+  if(keeper){ try{ keeper.pause(); }catch(e){} }
+  if(navigator.mediaSession){ try{ navigator.mediaSession.playbackState="none"; }catch(e){} }
+  if(wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock=null; }
+}
+
+function playChime(){
+  if(!soundOn()||!chime) return;
+  try{ chime.currentTime=0; var p=chime.play(); if(p&&p.catch) p.catch(function(){}); }catch(e){}
+}
+
+function nowPlaying(line,sub){
+  if(!navigator.mediaSession||typeof MediaMetadata==="undefined") return;
+  try{
+    navigator.mediaSession.metadata=new MediaMetadata({
+      title:line, artist:sub, album:"Threshold",
+      artwork:[{src:"./icon-192.png",sizes:"192x192",type:"image/png"},
+               {src:"./icon-512.png",sizes:"512x512",type:"image/png"}]
+    });
+  }catch(e){}
+}
+
 /* ================= install and durability =================
    Home-screen installs are the single biggest protection against losing a log:
    iOS exempts them from its seven-day eviction of site data, and Chrome treats
