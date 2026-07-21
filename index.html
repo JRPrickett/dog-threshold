@@ -121,9 +121,7 @@
     color:var(--muted);white-space:nowrap}
   .pip.main{background:var(--ink);color:#fff}
   .pip.now{background:var(--amber);color:#fff}
-  .pip.done{background:var(--green-bg);color:var(--green)}
-  .pip.okay{background:var(--ochre-bg);color:var(--ochre)}
-  .pip.wobble{background:var(--red-bg);color:var(--red)}
+  .pip.done{background:var(--line);color:var(--muted)}
   .reps .arrow{color:var(--faint);font-size:11px}
   .repsNote{font-size:12.5px;color:var(--muted);margin:10px 0 0;line-height:1.5}
   .repsNote b{color:var(--ink);font-family:"DM Mono",monospace;font-weight:500}
@@ -244,9 +242,7 @@
     background:var(--night-line);text-indent:-9999px;overflow:hidden;display:block}
   body.is-live .pip.main{background:var(--night-line)}
   body.is-live .pip.now{background:var(--paper)}
-  body.is-live .pip.done{background:var(--mint)}
-  body.is-live .pip.okay{background:var(--sun)}
-  body.is-live .pip.wobble{background:var(--red)}
+  body.is-live .pip.done{background:var(--muted)}
   body.is-live .actions{margin-top:18px;gap:9px}
   body.is-live .btn{background:var(--mint);color:#14261D;padding:20px;font-size:17px;border-radius:14px}
   body.is-live .btn:hover{background:#96DEB1}
@@ -666,11 +662,13 @@ var LINES=["#4F7A6B","#4A6B84","#B58135","#7B6480","#96574B","#3F6B63"];
 function esc(t){ return String(t).replace(/[<>&]/g,function(c){return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c];}); }
 
 /* ================= state of play ================= */
-/* phase: idle | running | rest | verdictWarm | wobble | verdictMain */
+/* phase: idle | running | rest | cue | verdictMain
+   Warm-ups aren't graded — you just do them. The one judgement call comes
+   after the main absence, about the session as a whole. */
 var phase="idle", startedAt=0, tick=null, restEnds=0;
 var plan=null, pending=null, chartMode="one";
 var reps=[], repIdx=0, repLog=[], retries=0, shuffle=0, justEarned=[];
-var tags=[], note="", graduated=false, warmBad=0, trimmed=false;
+var tags=[], note="", graduated=false;
 
 function render(){
   var s=scen();
@@ -679,7 +677,7 @@ function render(){
     reps = mode(s)==="door"
       ? buildCues(s,hash(s.id)+s.sessions.length*997+shuffle*31)
       : buildReps(plan.target,nWarm(s),hash(s.id)+absOf(s).length*997+shuffle*31);
-    repIdx=0; repLog=[]; retries=0; tags=[]; note=""; warmBad=0; trimmed=false;
+    repIdx=0; repLog=[]; retries=0; tags=[]; note="";
   }
   el("counter").textContent=s.label+" · session "+(s.sessions.length+1);
   drawClock(); drawHeadline(); drawDelta(); drawReps();
@@ -793,8 +791,7 @@ function drawReps(){
       else if(i===repIdx&&phase!=="idle") c2+=" now";
       return (i?'<span class="arrow">·</span>':'')+'<span class="'+c2+'">'+(rep.cue+1)+'</span>';
     }
-    var done=repLog[i];
-    if(done) cls+= done.grade==="bad" ? " wobble" : done.grade==="ok" ? " okay" : " done";
+    if(repLog[i]) cls+=" done";
     else if(i===repIdx && phase!=="idle") cls+=" now";
     var sep = i ? '<span class="arrow">→</span>' : '';
     return sep+'<span class="'+cls+'">'+fmt(rep.target)+'</span>';
@@ -810,8 +807,8 @@ function drawReps(){
   }
   if(phase==="idle"&&reps.length>1){
     cap.hidden=false;
-    cap.innerHTML="Time alone is the main absence only — <b>"+fmt(reps[reps.length-1].target)+
-      "</b>. Warm-ups don't add to it. About "+fmt(routineLength(reps,restLen(scen())))+
+    cap.innerHTML="Warm-ups first, then the one that counts — <b>"+fmt(reps[reps.length-1].target)+
+      "</b> alone. You rate the session at the end. About "+fmt(routineLength(reps,restLen(scen())))+
       " start to finish, breaks included.";
   } else if(phase==="idle"){
     cap.hidden=false;
@@ -962,15 +959,6 @@ function drawActions(){
     return;
   }
 
-  if(phase==="verdictWarm"){
-    ask(a,"How was that warm-up?",[
-      ["good","Good","Relaxed, barely noticed you'd gone."],
-      ["ok","Okay","A bit alert, but settled again by himself."],
-      ["bad","Bad","Worried, restless, fixed on the door."]
-    ],warmVerdict);
-    return;
-  }
-
   if(phase==="rest"){
     var next=reps[repIdx];
     btn(a,(next.kind==="main"?"Start the main absence":"Start warm-up "+(repIdx+1)),startRep);
@@ -1043,44 +1031,20 @@ function stopRep(){
   }
   el("clock").className="clock"; el("clock").textContent=fmt(actual);
   if(rep.kind==="warm"){
-    repLog[repIdx]={ target:rep.target, actual:actual };
-    phase="verdictWarm";
-    el("delta").textContent="You were gone "+fmt(actual)+".";
-    if(trimmed) el("delta").textContent+=" Session trimmed after a hard warm-up.";
+    repLog[repIdx]={ target:rep.target, actual:actual, done:true };
+    repIdx++;
+    toRest();
+    return;
   } else {
-    pending={ base:trimmed?Math.max(1,rep.target):plan.base, target:rep.target, actual:actual,
-              easy:!!plan.easy, warmups:reps.length-1, warmDone:reps.length-1, trimmed:trimmed,
-              warmBad:warmBad, warmTimes:repLog.map(function(x){ return x?x.actual:0; }) };
+    pending={ base:plan.base, target:rep.target, actual:actual, easy:!!plan.easy,
+              warmups:reps.length-1, warmDone:reps.length-1,
+              warmTimes:repLog.map(function(x){ return x?x.actual:0; }) };
     phase="verdictMain";
     el("delta").textContent="You were gone "+fmt(actual)+" of a "+fmt(rep.target)+" target.";
   }
   drawActions(); drawTabs(); drawHeadline(); drawReps();
 }
 
-function warmVerdict(v){
-  repLog[repIdx]={ target:reps[repIdx].target, actual:repLog[repIdx].actual, ok:v!=="bad", grade:v };
-  if(v==="bad"){
-    warmBad++;
-    if(warmBad>=3){ endEarly(); return; }   // three hard warm-ups: the main absence isn't today's job
-    trimSession();
-  }
-  repIdx++; retries=0;
-  toRest();
-}
-
-/* A hard warm-up shortens the session rather than ending it: half the remaining
-   warm-ups come off, and the main absence loses 10% — floored so it can't
-   collapse. You still finish on a real absence, just a smaller one. */
-function trimSession(){
-  var mainRep=reps[reps.length-1];
-  var remaining=0, i;
-  for(i=repIdx+1;i<reps.length-1;i++) remaining++;
-  var drop=Math.ceil(remaining/2);
-  if(drop>0) reps.splice(reps.length-1-drop, drop);
-  var floorT=Math.max(2,Math.round(plan.target*0.5));
-  mainRep.target=Math.max(floorT,Math.round(mainRep.target*0.9));
-  trimmed=true;
-}
 
 function toRest(){
   var s=scen(), wait=Math.min(restLen(s), mode(s)==="door"?30:restLen(s));
@@ -1112,7 +1076,7 @@ function endEarly(){
   clearInterval(tick);
   var reached=repLog[repIdx]?repLog[repIdx].actual:(repLog[repIdx-1]?repLog[repIdx-1].actual:1);
   pending={ base:plan.base, target:reps[reps.length-1].target, actual:reached, easy:!!plan.easy,
-            warmups:reps.length-1, warmDone:repIdx, stopped:true, warmBad:warmBad,
+            warmups:reps.length-1, warmDone:repIdx, stopped:true,
             warmTimes:repLog.map(function(x){ return x?x.actual:0; }) };
   record("bad");
 }
