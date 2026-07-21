@@ -11,8 +11,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Threshold">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<link rel="icon" href="./favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="./icon-512.png">
+<link rel="icon" href="./icon-512.png" sizes="32x32">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -271,7 +271,7 @@
 <div class="installbar" id="installBar" hidden></div>
 
 <header>
-  <div class="mark"><img src="./icon-192.png" alt="">Threshold<em>separation anxiety log</em></div>
+  <div class="mark"><img src="./icon-512.png" alt="">Threshold<em>separation anxiety log</em></div>
   <div class="eyebrow" id="counter"></div>
 </header>
 
@@ -961,7 +961,7 @@ function drawActions(){
     tagPanel(a);
     ask(a,"How was "+dogName()+"?",[
       ["success","Success","Settled quickly and stayed relaxed the whole time."],
-      ["ok","OK","Held it together, but you saw unease — pacing, watching the door, a whine."],
+      ["ok","OK","Held it together, but you saw unease — pacing, panting, a whine."],
       ["bad","Not good","Vocalising, panic, couldn't settle. You came back to a worried dog."]
     ],record);
     return;
