@@ -500,8 +500,8 @@ function nextBase(sessions,start){
     return { base:base, reason:"Borderline last time. Repeating the same duration until it's easy." };
   }
   var bad=trailing(sessions,"bad");
-  if(bad>=3) return { base:Math.max(1,Math.round(base*0.6)), reset:true,
-    reason:"Three difficult sessions. Down to 60% — and something other than duration is probably driving this." };
+  if(bad>=3) return { base:Math.max(1,Math.round(base*0.7)), reset:true,
+    reason:"Three difficult sessions. Down to 70% — and something other than duration is probably driving this." };
   if(bad===2) return { base:Math.max(1,Math.round(base*0.8)),
     reason:"Two difficult sessions in a row. Down 20% to rebuild confidence." };
   return { base:base, reason:"Last session was hard. No increase — repeat it." };
@@ -570,8 +570,7 @@ function routineLength(reps,rest){
 }
 
 /* ================= context tags ================= */
-var TAGS=["Pre-walk","After a walk","Pre-meal","After a meal","Had a chew","Visitors about",
-          "Bad night's sleep","Off colour","Radio on","New place"];
+var TAGS=["Pre-walk","After a walk","Pre-meal","After a meal", "Radio on","New place"];
 
 /* ================= door is a bore =================
    For dogs who aren't ready for any absence at all. The door itself has become
