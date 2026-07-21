@@ -148,6 +148,22 @@
   .note{font-size:13.5px;color:var(--muted);background:var(--page);border-radius:var(--r-ctl);
     padding:12px 14px;margin:16px 0 0;line-height:1.5}
   .note.warn{background:var(--red-bg);color:#8C3A2A}
+  .targetReason{margin:14px 0 0;padding:13px 14px;background:var(--page);border:1px solid var(--line);
+    border-left:4px solid var(--amber);border-radius:var(--r-ctl);text-align:left;line-height:1.45}
+  .targetReason.warn{background:var(--red-bg);border-left-color:var(--red)}
+  .targetReason .why{display:block;font-size:12px;font-weight:700;letter-spacing:.03em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+  .targetReason .rule{display:block;font-size:13.5px;color:var(--ink)}
+  .targetReason .previous{display:block;font-size:12.5px;color:var(--muted);margin-top:7px}
+  .reviewGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+  .reviewItem{background:var(--page);border:1px solid var(--line);border-radius:var(--r-ctl);padding:12px}
+  .reviewItem .l{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px}
+  .reviewItem .v{display:block;font-size:17px;font-weight:600;color:var(--ink)}
+  .reviewNext{background:var(--green-bg);border-radius:var(--r-ctl);padding:15px;margin-top:12px}
+  .reviewNext .l{display:block;font-size:12px;color:#47705F;margin-bottom:3px}
+  .reviewNext .v{display:block;font-size:28px;font-weight:500;color:#2F6B4E;
+    font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+  .reviewNext p{font-size:13px;color:#47705F;line-height:1.45;margin:7px 0 0}
   .cheer{margin-top:16px;padding:14px 16px;border-radius:var(--r-ctl);font-size:14px;
     background:var(--green-bg);color:#2F6B4E}
   .cheer b{font-weight:600}
@@ -251,7 +267,7 @@
     padding:7px 11px;border-radius:var(--r-pill);flex-shrink:0}
 
   @media(max-width:520px){
-    .modalGrid{grid-template-columns:1fr}
+    .modalGrid,.reviewGrid{grid-template-columns:1fr}
     .modalCard{padding:20px}
     .row.stackSmall{flex-direction:column}
   }
@@ -279,7 +295,7 @@
 
   body.is-live{background:var(--night)}
   body.is-live .tabs,body.is-live section,body.is-live details,body.is-live footer,
-  body.is-live .installbar,body.is-live .warnbar,body.is-live .adjust{display:none}
+  body.is-live .installbar,body.is-live .warnbar,body.is-live .adjust,body.is-live .targetReason{display:none}
   body.is-live header{padding:22px 0 0}
   body.is-live .mark,body.is-live .eyebrow{color:var(--paper)}
   body.is-live .mark em{color:var(--faint)}
@@ -381,6 +397,28 @@
   </div>
 </div>
 
+<div class="modal" id="sessionReviewModal" role="dialog" aria-modal="true" aria-labelledby="sessionReviewTitle" hidden>
+  <div class="modalCard">
+    <h2 id="sessionReviewTitle">Review session</h2>
+    <p class="sub">Nothing has been saved yet. Check the details and the next target before continuing.</p>
+    <div class="reviewGrid">
+      <div class="reviewItem"><span class="l">Planned target</span><span class="v" id="reviewTarget"></span></div>
+      <div class="reviewItem"><span class="l">Actual absence</span><span class="v" id="reviewActual"></span></div>
+      <div class="reviewItem"><span class="l">Session status</span><span class="v" id="reviewStatus"></span></div>
+      <div class="reviewItem"><span class="l">Rating</span><span class="v" id="reviewOutcome"></span></div>
+    </div>
+    <div class="reviewNext">
+      <span class="l">Next planned target</span>
+      <span class="v" id="reviewNextTarget"></span>
+      <p id="reviewNextReason"></p>
+    </div>
+    <div class="modalActions">
+      <button class="btn" type="button" id="reviewSave">Save session</button>
+      <button class="btn ghost" type="button" id="reviewBack">Change rating or details</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="sessionModal" role="dialog" aria-modal="true" aria-labelledby="sessionTitle" hidden>
   <div class="modalCard">
     <h2 id="sessionTitle">Edit session</h2>
@@ -478,6 +516,7 @@
     <p class="adjNote" id="adjNote" hidden></p>
   </div>
   <p class="delta" id="delta"></p>
+  <div class="targetReason" id="targetReason" hidden></div>
   <div class="reps" id="reps"></div>
   <p class="repsNote" id="repsNote" hidden></p>
   <div class="actions" id="actions"></div>
@@ -800,14 +839,20 @@ function nextBase(sessions,start){
 
 function planFor(s){
   var abs=absOf(s), plan=nextBase(abs,s.start), n=abs.length;
+  var progressionReason=plan.reason;
   plan.easy=false;
   if(plan.holdExact){
     plan.target=plan.base;
   } else if(trailing(s.sessions,"success")>=3 && n%4===0){
     plan.target=Math.max(1,Math.round(plan.base*0.6)); plan.easy=true;
+    plan.reason="A deliberately shorter session after several completed Success ratings. The working baseline remains "+fmt(plan.base)+".";
   } else if(n>0){
     var seed=((n*9301+49297)%233280)/233280;
     plan.target=Math.max(1,Math.round(plan.base*(1-seed*0.08)));
+    if(plan.target!==plan.base){
+      plan.reason=progressionReason+" The working baseline is "+fmt(plan.base)+
+        "; today's planned absence is varied to "+fmt(plan.target)+" so duration is less predictable.";
+    }
   } else {
     plan.target=plan.base;
   }
@@ -986,6 +1031,7 @@ var phase="idle", startedAt=0, tick=null, restEnds=0;
 var plan=null, pending=null, chartMode="one";
 var reps=[], repIdx=0, repLog=[], retries=0, shuffle=0, justEarned=[];
 var tags=[], note="", graduated=false, editingIndex=null;
+var reviewCandidate=null, reviewPlan=null, milestoneTimer=null;
 
 function persistActiveRun(){
   if(phase==="idle"){ state.activeRun=null; save(); return; }
@@ -1016,7 +1062,7 @@ function render(){
     repIdx=0; repLog=[]; retries=0; tags=[]; note="";
   }
   el("counter").textContent=s.label+" · session "+(s.sessions.length+1);
-  drawClock(); drawHeadline(); drawDelta(); drawReps();
+  drawClock(); drawHeadline(); drawDelta(); drawTargetReason(); drawReps();
 
   var coach=el("coach");
   if(mode(s)==="door"&&phase==="idle"&&graduated){
@@ -1035,11 +1081,7 @@ function render(){
         "between sessions rather than during them, and stacking more on tends to undo progress.";
     coach.className="note"; coach.hidden=false;
   } else if(phase==="idle"){
-    coach.textContent=plan.easy
-      ? "A short rep on purpose. Varying the length stops "+dogName()+" learning to predict how long you'll be gone."
-      : plan.reason;
-    coach.className=plan.reset?"note warn":"note";
-    coach.hidden=false;
+    coach.hidden=true;
   } else if(phase==="wobble"){
     coach.textContent="Warm-ups are the tell. If the small ones are hard, the main absence won't go better.";
     coach.className="note warn"; coach.hidden=false;
@@ -1121,6 +1163,24 @@ function drawDelta(){
     lead="<b>Where this scenario starts.</b>";
   }
   d.innerHTML=lead;
+}
+
+function drawTargetReason(){
+  var box=el("targetReason"), s=scen();
+  if(mode(s)!=="absence"||phase!=="idle"||capped()){
+    box.hidden=true; box.innerHTML=""; return;
+  }
+  var abs=absOf(s), previous="No previous timed session in this scenario.";
+  if(abs.length){
+    var last=abs[abs.length-1];
+    previous="Previous: "+fmt(last.target)+" planned · "+fmt(last.actual)+" actual · "+
+      (last.stopped?"ended early":"completed")+" · "+LABEL[last.outcome]+".";
+  }
+  box.className="targetReason"+(plan.reset?" warn":"");
+  box.innerHTML='<span class="why">Why '+esc(fmt(plan.target))+'?</span>'+
+    '<span class="rule">'+esc(plan.reason)+'</span>'+
+    '<span class="previous">'+esc(previous)+'</span>';
+  box.hidden=false;
 }
 
 function drawReps(){
@@ -1345,7 +1405,7 @@ function drawActions(){
       ["success","Success","Settled quickly and stayed relaxed the whole time."],
       ["ok","OK","Held it together, but you saw unease — pacing, panting, a whine."],
       ["bad","Not good","Vocalising, panic, couldn't settle. You came back to a worried dog."]
-    ],record);
+    ],reviewSession);
     return;
   }
 
@@ -1486,27 +1546,84 @@ function endEarly(){
   phase="verdictMain"; persistActiveRun(); render();
 }
 
-function record(outcome){
-  var s=scen(), before=badges();
-  pending.id=makeId("p"); pending.outcome=outcome; pending.at=Date.now(); pending.kind="absence";
-  pending.tags=tags.slice(); pending.note=note.trim(); pending.stopReason=pending.stopped?textIn(pending.stopReason,80).trim():"";
-  if(pending.easy&&outcome==="success") pending.base=plan.base;
-  var floor=Math.max(1,Math.round(pending.base*0.5));
-  if(!pending.stopped){
-    if(pending.actual<pending.target*0.75) pending.base=Math.max(floor,pending.actual);
-    if(outcome==="bad"&&pending.actual<pending.base) pending.base=Math.max(floor,pending.actual);
+function candidateFor(outcome){
+  var candidate={
+    base:pending.base,target:pending.target,actual:pending.actual,easy:!!pending.easy,
+    stopped:!!pending.stopped,stopReason:pending.stopped?textIn(pending.stopReason,80).trim():"",
+    warmups:pending.warmups,warmDone:pending.warmDone,
+    warmTimes:Array.isArray(pending.warmTimes)?pending.warmTimes.slice():[],
+    outcome:outcome,at:Date.now(),kind:"absence",tags:tags.slice(),note:note.trim()
+  };
+  if(candidate.easy&&outcome==="success") candidate.base=plan.base;
+  var floor=Math.max(1,Math.round(candidate.base*0.5));
+  if(!candidate.stopped){
+    if(candidate.actual<candidate.target*0.75) candidate.base=Math.max(floor,candidate.actual);
+    if(outcome==="bad"&&candidate.actual<candidate.base) candidate.base=Math.max(floor,candidate.actual);
   } else {
-    // A stopped session never changes its baseline immediately. The next-plan
-    // rules decide whether to hold or reduce after repeated stopped outcomes.
-    pending.base=plan.base;
+    candidate.base=plan.base;
   }
-  audioStop(); s.sessions.push(pending); var saved=pending;
-  var after=badges(); justEarned=MILESTONES.filter(function(m){return after[m.s]&&!before[m.s];});
-  s.override=null; pending=null; phase="idle"; repLog=[]; repIdx=0; retries=0; shuffle=0; tags=[]; note="";
-  clearActiveRun(); clearInterval(tick); save(); render();
-  if(justEarned.length){ var earned=justEarned[justEarned.length-1]; setTimeout(function(){openMilestone(earned.s,true);},0); }
-  showToast("Session saved.","Undo",function(){ removeSessionById(s.id,saved.id); });
+  return candidate;
 }
+
+function nextPlanWith(candidate){
+  var s=scen(), preview={};
+  Object.keys(s).forEach(function(k){ preview[k]=s[k]; });
+  preview.sessions=s.sessions.concat([candidate]);
+  preview.override=null;
+  return planFor(preview);
+}
+
+function reviewSession(outcome){
+  reviewCandidate=candidateFor(outcome);
+  reviewPlan=nextPlanWith(reviewCandidate);
+  el("reviewTarget").textContent=fmt(reviewCandidate.target);
+  el("reviewActual").textContent=fmt(reviewCandidate.actual);
+  el("reviewStatus").textContent=reviewCandidate.stopped?"Ended early":"Completed";
+  el("reviewOutcome").textContent=LABEL[reviewCandidate.outcome];
+  el("reviewNextTarget").textContent=fmt(reviewPlan.target);
+  el("reviewNextReason").textContent=reviewPlan.reason;
+  openModal("sessionReviewModal");
+  el("reviewSave").focus();
+}
+
+function commitReviewedSession(){
+  if(!reviewCandidate) return;
+  var s=scen(), before=badges(), saved=reviewCandidate;
+  saved.id=makeId("p");
+  saved.at=Date.now();
+  audioStop();
+  s.sessions.push(saved);
+  var after=badges();
+  justEarned=MILESTONES.filter(function(m){return after[m.s]&&!before[m.s];});
+  s.override=null;
+  reviewCandidate=null; reviewPlan=null;
+  closeModal("sessionReviewModal");
+  pending=null; phase="idle"; repLog=[]; repIdx=0; retries=0; shuffle=0; tags=[]; note="";
+  clearActiveRun(); clearInterval(tick); save(); render();
+
+  clearTimeout(milestoneTimer);
+  var earned=justEarned.length?justEarned[justEarned.length-1]:null;
+  if(earned){
+    milestoneTimer=setTimeout(function(){
+      milestoneTimer=null;
+      if(state.scenarios.some(function(x){return x.id===s.id&&x.sessions.some(function(p){return p.id===saved.id;});})){
+        openMilestone(earned.s,true);
+      }
+    },12500);
+  }
+
+  var next=planFor(s);
+  showToast("Session saved · next target "+fmt(next.target)+".","Undo",function(){
+    clearTimeout(milestoneTimer); milestoneTimer=null;
+    removeSessionById(s.id,saved.id);
+  },12000);
+}
+
+el("reviewSave").onclick=commitReviewedSession;
+el("reviewBack").onclick=function(){
+  reviewCandidate=null; reviewPlan=null;
+  closeModal("sessionReviewModal");
+};
 
 /* ================= milestone board ================= */
 function drawBadges(){
@@ -1767,10 +1884,10 @@ function drawLog(){
 
 /* ================= editing, export and notices ================= */
 var toastTimer=null, toastUndo=null;
-function showToast(message,action,fn){
+function showToast(message,action,fn,duration){
   clearTimeout(toastTimer); var t=el("toast"); el("toastText").textContent=message; toastUndo=fn||null;
   var b=el("toastAction"); b.hidden=!action; b.textContent=action||""; t.hidden=false;
-  toastTimer=setTimeout(function(){t.hidden=true;toastUndo=null;},6000);
+  toastTimer=setTimeout(function(){t.hidden=true;toastUndo=null;},duration||6000);
 }
 el("toastAction").onclick=function(){var fn=toastUndo;el("toast").hidden=true;toastUndo=null;if(fn)fn();};
 function removeSessionById(scenarioId,id){

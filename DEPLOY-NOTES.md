@@ -1,23 +1,35 @@
-# Threshold v20 deployment
+# Threshold v21 deployment
 
 Replace `index.html` and `sw.js` together.
 
-## Early-return progression fix
+## 1. Next-target explanation
 
-Pressing **I'm back** before the main-absence target is reached now automatically
-marks the session as stopped early.
+The home screen now shows a dedicated explanation directly beneath the target:
 
-This means:
+- Why that target was selected
+- The previous planned and actual duration
+- Whether the previous session was completed or ended early
+- The previous rating
 
-- Returned before target + Success: repeat the exact planned target
-- Returned before target + OK: follow the stopped-OK hold/reduction rules
-- Returned before target + Not good: follow the stopped-not-good hold/reduction rules
-- Reaching or exceeding the target continues to count as a completed session
+When the app deliberately varies a target, it now distinguishes the displayed
+session target from the underlying working baseline.
 
-Older affected records are repaired when the app loads: any absence whose actual time
-is shorter than its target is treated as stopped early. This should correct the
-currently displayed next target without requiring the session to be deleted.
+## 2. Review before saving
 
-The session editor now follows the same rule.
+Selecting Success, OK or Not good no longer saves immediately. A review screen shows:
 
-The service-worker cache is `threshold-v20`.
+- Planned target
+- Actual absence
+- Completed or ended early
+- Selected rating
+- Exact next target
+- The rule used to calculate it
+
+The user can save or return to change the rating, context tags or notes.
+
+## 3. Longer undo window
+
+After saving, the confirmation includes the next target and offers Undo for 12 seconds.
+Milestone pop-ups are delayed until the undo window has passed so they do not obscure it.
+
+The service-worker cache is `threshold-v21`.
