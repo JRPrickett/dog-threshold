@@ -14,6 +14,14 @@ Use a camera during every timed session. Return before concern develops into dis
 
 Morning, Daytime and Evening progress separately because a dog may cope differently at different times or with different departure routines. Rename them or add scenarios such as School run, Bins or Night.
 
+## Door is a Bore
+
+Door is a Bore uses untimed leaving cues rather than measuring an absence. Complete each displayed cue, tap **Step done**, allow the settle break, and continue.
+
+You do not rate every individual cue. At the end, rate the session overall and add any useful context or note.
+
+Following you, watching from the door or gate, or choosing to lie nearby is not automatically a sign of stress. Choose **Relaxed** when your dog remained calm overall and could settle, even if they followed. Use **Some unease** for persistent alertness or slower settling, and **Not settled** for clear inability to relax, escalating vocalising, pacing, panting or distress.
+
 ## Running a session
 
 1. Check today's target and reduce it when your dog has had an unsettled day.

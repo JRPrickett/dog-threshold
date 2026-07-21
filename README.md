@@ -28,7 +28,7 @@ Keep your existing icon files in the repository: `icon-192.png`, `icon-512.png`,
 
 ## Deploying the update
 
-Replace `index.html`, `sw.js` and `manifest.webmanifest` in the repository root. Commit and push them to the branch used by GitHub Pages. The service worker is already bumped to `threshold-v8`.
+Replace `index.html`, `sw.js` and `manifest.webmanifest` in the repository root. Commit and push them to the branch used by GitHub Pages. The service worker is already bumped to `threshold-v9`.
 
 Existing data stored under `threshold.v2` is normalised in place and receives stable session IDs. A backup before deployment is still sensible.
 
