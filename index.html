@@ -1266,20 +1266,32 @@ function startRep(){
 
 function runTicker(){
   clearInterval(tick);
-  var c=el("clock"), target=current().target;
+  var c=el("clock"), target=current().target, lastMediaLeft=null;
   var label=current().kind==="main"?"Main absence":"Warm-up "+(repIdx+1)+" of "+(reps.length-1);
   nowPlaying(label+" · "+fmt(target),dogName()+" · "+scen().label);
+  setMediaCountdown(target,Math.max(0,(Date.now()-startedAt)/1000));
   function paint(){
-    var e=Math.max(0,Math.round((Date.now()-startedAt)/1000)), left=target-e;
+    var elapsed=Math.max(0,(Date.now()-startedAt)/1000);
+    var e=Math.round(elapsed), left=target-e;
+    var mediaLeft=Math.max(0,Math.ceil(target-elapsed));
     if(left>=0){ c.className="clock live"; c.textContent=fmt(left); }
     else { c.className="clock over"; c.textContent="+"+fmt(-left); }
     el("delta").textContent=left>=0?"Time out of the room.":"Target reached — come back whenever you like.";
     var early=target>=15?5:target>=8?3:0;
-    if(early&&left<=early&&left>0&&!preChimed){
-      preChimed=true; playPreChime(); nowPlaying("Head back soon · "+fmt(left)+" left",dogName()+" · "+scen().label);
+    if(early&&mediaLeft<=early&&mediaLeft>0&&!preChimed){
+      preChimed=true; playPreChime();
     }
-    if(left<=0&&!chimed){ chimed=true; playChime(); nowPlaying("Time to head back",dogName()+" · "+scen().label); }
-    else if(left>0&&e%5===0&&!preChimed) nowPlaying(label+" · "+fmt(left)+" left",dogName()+" · "+scen().label);
+    if(mediaLeft!==lastMediaLeft){
+      lastMediaLeft=mediaLeft;
+      setMediaCountdown(target,Math.min(target,elapsed));
+      if(mediaLeft>0){
+        nowPlaying((preChimed?"Head back soon":label)+" · "+fmt(mediaLeft)+" left",dogName()+" · "+scen().label);
+      }
+    }
+    if(left<=0&&!chimed){
+      chimed=true; setMediaCountdown(target,target); playChime();
+      nowPlaying("Time to head back",dogName()+" · "+scen().label);
+    }
   }
   paint(); tick=setInterval(paint,250);
 }
@@ -1819,6 +1831,7 @@ function audioStart(){
 
 function audioStop(){
   if(keeper){ try{ keeper.pause(); }catch(e){} }
+  clearMediaCountdown();
   if(navigator.mediaSession){ try{ navigator.mediaSession.playbackState="none"; }catch(e){} }
   if(wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock=null; }
 }
@@ -1841,6 +1854,22 @@ function nowPlaying(line,sub){
                {src:"./icon-512.png",sizes:"512x512",type:"image/png"}]
     });
   }catch(e){}
+}
+
+/* Ask the operating system to render its own moving progress bar/countdown.
+   The one-second metadata refresh in runTicker remains as a fallback for
+   lock screens that ignore position state or redraw it inconsistently. */
+function setMediaCountdown(duration,position){
+  if(!navigator.mediaSession||typeof navigator.mediaSession.setPositionState!=="function") return;
+  var d=Math.max(1,Number(duration)||1);
+  var p=Math.max(0,Math.min(d,Number(position)||0));
+  try{
+    navigator.mediaSession.setPositionState({duration:d,playbackRate:1,position:p});
+  }catch(e){}
+}
+function clearMediaCountdown(){
+  if(!navigator.mediaSession||typeof navigator.mediaSession.setPositionState!=="function") return;
+  try{ navigator.mediaSession.setPositionState(); }catch(e){}
 }
 
 /* ================= install and durability =================

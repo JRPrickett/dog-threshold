@@ -15,6 +15,13 @@ A privacy-first separation anxiety training log. It suggests a conservative abse
 - Mobile session-table scrolling and improved keyboard focus
 - Service-worker cache cleanup is limited to Threshold caches
 
+
+## What changed in v10
+
+- Timed absences publish Media Session position state for a system-managed Lock Screen or Control Centre progress display where supported.
+- Notification metadata refreshes once per second as a fallback instead of every five seconds.
+- The progress state is cleared after each rep so it does not remain attached to settle breaks or completed sessions.
+
 ## Files
 
 | File | What it is |
@@ -28,7 +35,7 @@ Keep your existing icon files in the repository: `icon-192.png`, `icon-512.png`,
 
 ## Deploying the update
 
-Replace `index.html`, `sw.js` and `manifest.webmanifest` in the repository root. Commit and push them to the branch used by GitHub Pages. The service worker is already bumped to `threshold-v9`.
+Replace `index.html`, `sw.js` and `manifest.webmanifest` in the repository root. Commit and push them to the branch used by GitHub Pages. The service worker is already bumped to `threshold-v10`.
 
 Existing data stored under `threshold.v2` is normalised in place and receives stable session IDs. A backup before deployment is still sensible.
 

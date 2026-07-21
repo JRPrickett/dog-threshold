@@ -30,7 +30,7 @@ Following you, watching from the door or gate, or choosing to lie nearby is not 
 4. Complete the main absence only when the warm-ups were comfortable.
 5. Return early whenever needed; do not stay out merely to complete the clock.
 
-Keep **Sound while you're away** switched on for the target chime and background-timer features.
+Keep **Sound while you're away** switched on for the target chime and background-timer features. On supported phones, the Lock Screen or Control Centre may also show a moving progress bar and countdown while you use the camera app.
 
 ## Rating the result
 
