@@ -530,10 +530,9 @@
     <p class="small">Start below where your dog first shows worry. Only affects sessions you haven't logged yet.</p>
   </div>
   <div class="field">
-    <label>Not ready for absences at all?</label>
+    <label id="modePrompt">Not ready for timed departures yet?</label>
     <button class="btn ghost" id="modeToggle"></button>
-    <p class="small">Door is a Bore works on door cues instead of duration, for dogs who panic before
-      you've even left. Switching keeps this scenario's history.</p>
+    <p class="small" id="modeHelp">Door is a Bore works on door cues instead of duration, for dogs who become worried before you've properly left. Switching keeps this scenario's history.</p>
   </div>
   <div class="field">
     <label>Sound while you're away</label>
@@ -1012,8 +1011,13 @@ function render(){
   el("warmups").value=nWarm(s);
   el("dailyCap").value=dailyCap();
   el("soundToggle").textContent = soundOn() ? "Sound on — tap to mute" : "Muted — tap to turn sound on";
+  el("modePrompt").textContent = mode(s)==="door"
+    ? "Ready for timed departures?" : "Not ready for timed departures yet?";
   el("modeToggle").textContent = mode(s)==="door"
-    ? "Switch to timed absences" : "Start with Door is a Bore instead";
+    ? "Switch to timed departures" : "Start with Door is a Bore instead";
+  el("modeHelp").textContent = mode(s)==="door"
+    ? "Move on when the door cues feel ordinary and your dog can settle. The first timed target will be a cautious 3 seconds, and this scenario's Door is a Bore history will be kept."
+    : "Door is a Bore works on door cues instead of duration, for dogs who become worried before you've properly left. Switching keeps this scenario's history.";
   el("restLen").value=restLen(s);
   el("renameTo").value=s.label;
   el("scenLabel1").textContent=s.label;
@@ -1277,9 +1281,20 @@ function drawActions(){
       ],recordDoor);
       return;
     }
-    if(phase==="idle"&&graduated){ btn(a,"Move on to timed absences",graduate); }
-    if(phase==="idle"&&capped()){ btn(a,"Done for today",null,true); return; }
-    if(phase==="idle"){ btn(a,"Start the session",startCue); return; }
+    if(phase==="idle"&&graduated){
+      btn(a,"Move on to timed departures",graduate);
+      return;
+    }
+    if(phase==="idle"&&capped()){
+      btn(a,"Done for today",null,true);
+      btn(a,"Switch to timed departures",graduate,false,true);
+      return;
+    }
+    if(phase==="idle"){
+      btn(a,"Start the session",startCue);
+      btn(a,"Switch to timed departures",graduate,false,true);
+      return;
+    }
   }
 
   if(phase==="verdictMain"){
@@ -1942,8 +1957,12 @@ el("adjSet").onclick=function(){
 el("modeToggle").onclick=function(){
   var s=scen();
   if(phase!=="idle") return;
-  if(mode(s)==="door"){ s.mode="absence"; }
-  else { s.mode="door"; if(s.doorLevel==null) s.doorLevel=0; }
+  if(mode(s)==="door"){
+    graduate();
+    return;
+  }
+  s.mode="door";
+  if(s.doorLevel==null) s.doorLevel=0;
   graduated=false; save(); render();
 };
 el("soundToggle").onclick=function(){

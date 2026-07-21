@@ -22,6 +22,8 @@ You do not rate every individual cue. At the end, rate the session overall and a
 
 Following you, watching from the door or gate, or choosing to lie nearby is not automatically a sign of stress. Choose **Relaxed** when your dog remained calm overall and could settle, even if they followed. Use **Some unease** for persistent alertness or slower settling, and **Not settled** for clear inability to relax, escalating vocalising, pacing, panting or distress.
 
+When your dog is ready to begin very short absences, use **Switch to timed departures** directly beneath the Door is a Bore session button. The same option appears in **Settings and data** under **Ready for timed departures?** Door is a Bore history is retained and a scenario with no previous timed sessions begins cautiously at three seconds.
+
 ## Running a session
 
 1. Check today's target and reduce it when your dog has had an unsettled day.

@@ -35,7 +35,7 @@ Keep your existing icon files in the repository: `icon-192.png`, `icon-512.png`,
 
 ## Deploying the update
 
-Replace `index.html`, `sw.js` and `manifest.webmanifest` in the repository root. Commit and push them to the branch used by GitHub Pages. The service worker is already bumped to `threshold-v10`.
+Replace `index.html`, `sw.js` and `manifest.webmanifest` in the repository root. Commit and push them to the branch used by GitHub Pages. The service worker is already bumped to `threshold-v14`.
 
 Existing data stored under `threshold.v2` is normalised in place and receives stable session IDs. A backup before deployment is still sensible.
 
@@ -61,3 +61,8 @@ Milestone share images use a refined ivory certificate with a double border, res
 ## Version 13 — shorter warm-ups
 
 Warm-up absences are now capped at 90 seconds. For main targets longer than three minutes, the warm-up plan is drawn from a fixed short-duration range rather than remaining a percentage of the full target. This prevents long targets from producing multi-minute warm-ups.
+
+
+## Version 14 — easier move to timed departures
+
+Door is a Bore now shows **Switch to timed departures** directly on the main session screen, including after the daily Door is a Bore limit has been reached. In settings, the mode prompt changes dynamically between **Not ready for timed departures yet?** and **Ready for timed departures?**. Moving from Door is a Bore preserves its history and starts a scenario with no timed history at a cautious three seconds.
