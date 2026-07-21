@@ -1,7 +1,8 @@
 /* Threshold service worker.
    Two jobs: make the app work with no signal, and make it installable.
    Bump CACHE when you change any file, or browsers will serve the old one. */
-var CACHE = "threshold-v7";
+var PREFIX = "threshold-";
+var CACHE = PREFIX + "v8";
 var SHELL = [
   "./",
   "./index.html",
@@ -26,7 +27,7 @@ self.addEventListener("activate", function(e){
   e.waitUntil(
     caches.keys().then(function(keys){
       return Promise.all(keys.map(function(k){
-        return k===CACHE ? null : caches.delete(k);
+        return k===CACHE || k.indexOf(PREFIX)!==0 ? null : caches.delete(k);
       }));
     }).then(function(){ return self.clients.claim(); })
   );
@@ -43,8 +44,10 @@ self.addEventListener("fetch", function(e){
     // Network first, so a redeploy reaches people; cache is the fallback.
     e.respondWith(
       fetch(req).then(function(res){
-        var copy = res.clone();
-        caches.open(CACHE).then(function(c){ c.put("./index.html", copy); });
+        if(res && res.ok){
+          var copy = res.clone();
+          caches.open(CACHE).then(function(c){ c.put("./index.html", copy); });
+        }
         return res;
       }).catch(function(){
         return caches.match("./index.html").then(function(r){ return r || caches.match("./"); });

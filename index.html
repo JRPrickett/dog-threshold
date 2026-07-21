@@ -13,9 +13,6 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icon-512.png">
 <link rel="icon" href="./icon-512.png" sizes="32x32">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#2E2A26;
@@ -49,17 +46,18 @@
     --shadow-sm:0 1px 2px rgba(46,42,38,.05);
   }
   *{box-sizing:border-box}
+  [hidden]{display:none!important}
   html,body{margin:0;padding:0}
   body{
     background:var(--page);color:var(--ink);
-    font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
     padding:0 18px 80px;
   }
   .wrap{max-width:680px;margin:0 auto}
-  .num,td.num,.clock,.pip,.stat .n,.badge .t,.adjustRow input{font-family:"DM Mono",ui-monospace,monospace}
+  .num,td.num,.clock,.pip,.stat .n,.badge .t,.adjustRow input{font-family:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace}
   button{font:inherit;color:inherit;cursor:pointer;border-radius:var(--r-ctl)}
-  button:focus-visible,input:focus-visible,summary:focus-visible{
+  button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{
     outline:2px solid var(--amber);outline-offset:2px}
 
   header{padding:30px 0 4px;display:flex;justify-content:space-between;align-items:center;gap:12px}
@@ -82,7 +80,7 @@
   .tabs::-webkit-scrollbar{display:none}
   .tab{border:0;background:var(--card);box-shadow:var(--shadow-sm);padding:8px 15px;font-size:14px;
     white-space:nowrap;color:var(--muted);font-weight:500;border-radius:var(--r-pill)}
-  .tab[aria-selected=true]{background:var(--ink);color:#fff}
+  .tab[aria-pressed=true]{background:var(--ink);color:#fff}
   .tab.add{padding:8px 13px}
   .newrow{display:none;gap:8px;margin-top:10px}
   .newrow.on{display:flex}
@@ -124,7 +122,7 @@
   .pip.done{background:var(--line);color:var(--muted)}
   .reps .arrow{color:var(--faint);font-size:11px}
   .repsNote{font-size:12.5px;color:var(--muted);margin:10px 0 0;line-height:1.5}
-  .repsNote b{color:var(--ink);font-family:"DM Mono",monospace;font-weight:500}
+  .repsNote b{color:var(--ink);font-family:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-weight:500}
 
   .actions{display:flex;flex-direction:column;gap:10px;margin-top:20px}
   .btn{border:0;background:var(--ink);color:#fff;padding:16px 18px;font-size:16px;font-weight:600;
@@ -196,7 +194,8 @@
   .toNext .track{height:9px;background:var(--line-soft);border-radius:var(--r-pill);overflow:hidden}
   .toNext .fill{height:100%;background:var(--amber);border-radius:var(--r-pill)}
 
-  table{width:100%;border-collapse:collapse;font-size:14px}
+  .tableWrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;min-width:650px;border-collapse:collapse;font-size:14px}
   th{text-align:left;font-size:11.5px;font-weight:500;color:var(--muted);
     padding:0 8px 8px 0;border-bottom:1px solid var(--line)}
   td{padding:11px 8px 11px 0;border-bottom:1px solid var(--line-soft);vertical-align:top}
@@ -205,6 +204,42 @@
   .undo{background:none;border:0;color:var(--muted);font-size:12.5px;text-decoration:underline;padding:10px 0}
   .logNote{font-size:13px;color:var(--muted);padding:0 0 11px}
   .logNote .chip{pointer-events:none;font-size:11.5px;padding:3px 9px;margin-right:4px}
+  .logTools{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+  .logTools .btn{width:auto;padding:9px 13px;font-size:13px}
+  .sessionAction{border:0;background:none;color:var(--muted);font-size:12px;text-decoration:underline;
+    text-underline-offset:2px;padding:2px 4px}
+  .guideSteps{padding-left:20px;margin:12px 0}
+  .guideSteps li{margin:7px 0}
+  .privacy{padding:12px 14px;background:var(--green-bg);color:#2F6B4E;border-radius:var(--r-ctl)}
+
+  .modal{position:fixed;inset:0;z-index:1000;background:rgba(36,31,27,.56);padding:18px;
+    display:flex;align-items:center;justify-content:center}
+  .modalCard{width:min(100%,560px);max-height:calc(100vh - 36px);overflow:auto;background:var(--card);
+    border-radius:18px;box-shadow:0 20px 60px rgba(36,31,27,.25);padding:24px}
+  .modalCard h2{font-size:21px;margin:0 0 6px}
+  .modalCard .sub{margin-bottom:18px}
+  .modalActions{display:flex;gap:9px;margin-top:20px;flex-wrap:wrap}
+  .modalActions .btn{flex:1;min-width:130px}
+  .modalGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .checkline{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--muted);margin-top:12px}
+  .checkline input{margin-top:3px}
+  select{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r-ctl);
+    background:var(--page);font:inherit;color:inherit}
+  .danger{background:var(--red-bg)!important;color:#8C3A2A!important}
+  body.modalOpen{overflow:hidden}
+
+  .toast{position:fixed;z-index:1200;left:50%;bottom:22px;transform:translateX(-50%);
+    width:min(calc(100% - 28px),520px);background:var(--night);color:var(--paper);padding:12px 14px;
+    border-radius:12px;box-shadow:0 10px 30px rgba(36,31,27,.25);display:flex;align-items:center;
+    justify-content:space-between;gap:12px;font-size:14px}
+  .toast button{border:0;background:var(--paper);color:var(--night);font-size:12.5px;font-weight:600;
+    padding:7px 11px;border-radius:var(--r-pill);flex-shrink:0}
+
+  @media(max-width:520px){
+    .modalGrid{grid-template-columns:1fr}
+    .modalCard{padding:20px}
+    .row.stackSmall{flex-direction:column}
+  }
 
   details{margin-top:26px;background:var(--card);border-radius:var(--r-card);
     box-shadow:var(--shadow-sm);padding:16px 18px}
@@ -270,6 +305,94 @@
 <p class="warnbar" id="storageWarn" hidden></p>
 <div class="installbar" id="installBar" hidden></div>
 
+<div class="modal" id="setupModal" role="dialog" aria-modal="true" aria-labelledby="setupTitle" hidden>
+  <div class="modalCard">
+    <h2 id="setupTitle">Set up Threshold</h2>
+    <p class="sub">Choose a starting point your dog can already manage comfortably. This is not a test of their maximum.</p>
+    <div class="field">
+      <label for="setupName">Dog's name</label>
+      <input type="text" id="setupName" placeholder="your dog" maxlength="40" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="setupStart">Comfortable starting absence, in seconds</label>
+      <input type="number" id="setupStart" min="1" max="7200" step="1" value="5" inputmode="numeric">
+      <p class="small">Use a duration below the first sign of worry. Five seconds is only a placeholder.</p>
+    </div>
+    <div class="field">
+      <label for="setupMode">What can your dog manage now?</label>
+      <select id="setupMode">
+        <option value="absence">They can cope with a brief absence</option>
+        <option value="door">The leaving cues cause worry before I go</option>
+      </select>
+    </div>
+    <label class="checkline"><input type="checkbox" id="setupCamera"> <span>I understand that I should watch my dog on a camera and return before distress escalates.</span></label>
+    <div class="modalActions">
+      <button class="btn" type="button" id="setupSave">Save and start</button>
+      <button class="btn ghost" type="button" id="setupSkip">Skip for now</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="recoveryModal" role="dialog" aria-modal="true" aria-labelledby="recoveryTitle" hidden>
+  <div class="modalCard">
+    <h2 id="recoveryTitle">Unfinished session found</h2>
+    <p id="recoveryText" class="sub"></p>
+    <div class="modalActions">
+      <button class="btn" type="button" id="recoveryResume">Resume</button>
+      <button class="btn ghost" type="button" id="recoveryDiscard">Discard it</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="sessionModal" role="dialog" aria-modal="true" aria-labelledby="sessionTitle" hidden>
+  <div class="modalCard">
+    <h2 id="sessionTitle">Edit session</h2>
+    <p class="sub" id="sessionSub"></p>
+    <form id="sessionForm">
+      <div class="field">
+        <label for="sessionWhen">Date and time</label>
+        <input type="datetime-local" id="sessionWhen" required>
+      </div>
+      <div class="modalGrid" id="timedSessionFields">
+        <div class="field">
+          <label for="sessionTarget">Target, in seconds</label>
+          <input type="number" id="sessionTarget" min="1" max="14400" required>
+        </div>
+        <div class="field">
+          <label for="sessionActual">Actual time, in seconds</label>
+          <input type="number" id="sessionActual" min="1" max="14400" required>
+        </div>
+      </div>
+      <div class="field">
+        <label for="sessionOutcome">Outcome</label>
+        <select id="sessionOutcome">
+          <option value="success">Success</option>
+          <option value="ok">OK</option>
+          <option value="bad">Not good</option>
+        </select>
+      </div>
+      <label class="checkline"><input type="checkbox" id="sessionStopped"> <span>Session was stopped early</span></label>
+      <div class="field">
+        <label for="sessionTags">Context tags, separated by commas</label>
+        <input type="text" id="sessionTags" placeholder="After a walk, Radio on" maxlength="180">
+      </div>
+      <div class="field">
+        <label for="sessionNote">Note</label>
+        <input type="text" id="sessionNote" maxlength="140" placeholder="Anything worth remembering">
+      </div>
+      <div class="modalActions">
+        <button class="btn" type="submit" id="sessionSave">Save session</button>
+        <button class="btn ghost" type="button" id="sessionCancel">Cancel</button>
+      </div>
+      <button class="btn ghost danger" type="button" id="sessionDelete" style="margin-top:10px">Delete this session</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden>
+  <span id="toastText"></span><button type="button" id="toastAction" hidden></button>
+</div>
+
 <header>
   <div class="mark"><img src="./icon-512.png" alt="">Threshold<em>separation anxiety log</em></div>
   <div class="eyebrow" id="counter"></div>
@@ -321,8 +444,29 @@
 <section>
   <h2>Sessions</h2>
   <p class="sub" id="logSub"></p>
+  <div class="logTools">
+    <button class="btn ghost" type="button" id="addPast">Add past absence</button>
+    <button class="btn ghost" type="button" id="exportCsv">Export CSV</button>
+  </div>
   <div id="logBody"></div>
 </section>
+
+<details id="userGuide">
+  <summary>How to use Threshold</summary>
+  <div class="field">
+    <p class="privacy"><b>Your training data stays on this device.</b> Threshold has no account, analytics, server or third-party fonts.</p>
+    <ol class="guideSteps">
+      <li>Choose the scenario that matches the departure you are practising.</li>
+      <li>Check that today's target is below your dog's first sign of worry.</li>
+      <li>Watch on a camera, complete the varied warm-ups, and allow the settle breaks.</li>
+      <li>Return early whenever needed. Do not stay away merely to complete the clock.</li>
+      <li>Rate the whole session honestly: Success, OK, or Not good.</li>
+      <li>Download a backup occasionally, especially before changing phones or clearing browser data.</li>
+    </ol>
+    <p class="small"><b>Success</b> means settled and relaxed. <b>OK</b> means the dog coped but showed unease. <b>Not good</b> means clear distress, vocalising, panic or an inability to settle.</p>
+    <p class="small">The daily limit is a ceiling, not a target. This is a planning aid rather than a substitute for a qualified separation-anxiety trainer or veterinary behaviour professional.</p>
+  </div>
+</details>
 
 <details>
   <summary>Settings and data</summary>
@@ -400,13 +544,16 @@
       history to another phone or send it to your trainer.</p>
   </div>
   <div class="field">
+    <button class="btn ghost" id="restartSetup">Run the setup guide again</button>
+  </div>
+  <div class="field">
     <button class="btn ghost" id="wipe">Delete everything and start over</button>
   </div>
 </details>
 
 <footer>
   Built around Julie Naismith's approach: absences grow by tiny increments, only after your dog was
-  genuinely relaxed. This is a planning aid, not a substitute for a qualified separation anxiety trainer.
+  genuinely relaxed. Your training data stays on this device. This is a planning aid, not a substitute for a qualified separation anxiety trainer.
 </footer>
 
 </div>
@@ -416,10 +563,65 @@
 "use strict";
 
 /* ================= storage ================= */
-var KEY="threshold.v2", OLD="threshold.v1", mem=null, canSave=true;
+var SCHEMA=3, KEY="threshold.v2", OLD="threshold.v1", mem=null, canSave=true;
 function readRaw(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function makeId(prefix){ return (prefix||"id")+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function intIn(v,min,max,fallback){ v=parseInt(v,10); return isFinite(v)&&v>=min&&v<=max?v:fallback; }
+function textIn(v,max){ return typeof v==="string"?v.slice(0,max||500):""; }
+function validOutcome(v){ return v==="success"||v==="ok"||v==="bad"?v:"bad"; }
+function cleanSession(p,start){
+  if(!p||typeof p!=="object") throw new Error("Invalid session");
+  var door=p.kind==="door", target=intIn(p.target,1,14400,intIn(p.base,1,14400,start));
+  var out={
+    id:textIn(p.id,80)||makeId("p"), kind:door?"door":"absence",
+    at:intIn(p.at,1,Number.MAX_SAFE_INTEGER,Date.now()), outcome:validOutcome(p.outcome),
+    stopped:!!p.stopped, tags:Array.isArray(p.tags)?p.tags.map(function(t){return textIn(t,40).trim();}).filter(Boolean).slice(0,20):[],
+    note:textIn(p.note,140).trim()
+  };
+  if(door){
+    out.level=intIn(p.level,0,7,0); out.steps=intIn(p.steps,0,50,0);
+    out.planned=intIn(p.planned,1,50,Math.max(1,out.steps)); out.wobbles=intIn(p.wobbles,0,50,0);
+  } else {
+    out.target=target; out.actual=intIn(p.actual,1,14400,target); out.base=intIn(p.base,1,14400,target);
+    out.easy=!!p.easy; out.warmups=intIn(p.warmups,0,20,0); out.warmDone=intIn(p.warmDone,0,20,out.warmups);
+    out.warmTimes=Array.isArray(p.warmTimes)?p.warmTimes.map(function(x){return intIn(x,0,14400,0);}).slice(0,20):[];
+  }
+  return out;
+}
+function fresh(){
+  return { version:SCHEMA, name:"", active:"morning", setupDone:false, scenarios:[
+    { id:"morning",  label:"Morning",  start:5, warmups:4, rest:60, sessions:[], override:null },
+    { id:"daytime",  label:"Daytime",  start:5, warmups:4, rest:60, sessions:[], override:null },
+    { id:"evening",  label:"Evening",  start:5, warmups:4, rest:60, sessions:[], override:null }
+  ]};
+}
+function normaliseState(input){
+  if(!input||typeof input!=="object"||!Array.isArray(input.scenarios)||!input.scenarios.length) throw new Error("Invalid Threshold data");
+  var n=fresh(), ids={}, sessionIds={};
+  n.name=textIn(input.name,40); n.soundOff=!!input.soundOff; n.dailyCap=intIn(input.dailyCap,1,3,2);
+  n.lastBackup=intIn(input.lastBackup,1,Number.MAX_SAFE_INTEGER,0)||undefined;
+  n.persisted=!!input.persisted; n.installDismissedAt=intIn(input.installDismissedAt,1,Number.MAX_SAFE_INTEGER,0);
+  if(!n.installDismissedAt&&input.installDismissed) n.installDismissedAt=Date.now();
+  n.setupDone=input.setupDone===true || input.scenarios.some(function(s){return s&&Array.isArray(s.sessions)&&s.sessions.length;});
+  n.scenarios=input.scenarios.slice(0,20).map(function(s,i){
+    if(!s||typeof s!=="object") throw new Error("Invalid scenario");
+    var id=textIn(s.id,80)||makeId("s"); while(ids[id]) id=makeId("s"); ids[id]=true;
+    var start=intIn(s.start,1,7200,5);
+    return { id:id, label:textIn(s.label,24).trim()||("Scenario "+(i+1)), start:start,
+      warmups:intIn(s.warmups,0,6,4), rest:intIn(s.rest,0,600,60),
+      sessions:Array.isArray(s.sessions)?s.sessions.map(function(p){
+        var clean=cleanSession(p,start); while(sessionIds[clean.id]) clean.id=makeId("p"); sessionIds[clean.id]=true; return clean;
+      }):[],
+      override:s.override==null?null:intIn(s.override,1,14400,null),
+      mode:s.mode==="door"?"door":"absence", doorLevel:intIn(s.doorLevel,0,7,0) };
+  });
+  n.active=n.scenarios.some(function(s){return s.id===input.active;})?input.active:n.scenarios[0].id;
+  n.activeRun=input.activeRun&&typeof input.activeRun==="object"?input.activeRun:null;
+  n.version=SCHEMA;
+  return n;
+}
 function save(){
-  mem=state;
+  state.version=SCHEMA; mem=state;
   try{
     localStorage.setItem(KEY, JSON.stringify(state));
     if(!canSave){ canSave=true; drawStorageWarning(); }
@@ -428,31 +630,21 @@ function save(){
   }
 }
 function drawStorageWarning(){
-  var el=document.getElementById("storageWarn");
-  if(!el) return;
-  el.hidden=canSave;
-  el.textContent="This browser isn't letting the app save anything. Progress will vanish when you "+
+  var e=document.getElementById("storageWarn");
+  if(!e) return;
+  e.hidden=canSave;
+  e.textContent="This browser isn't letting the app save anything. Progress will vanish when you "+
     "close the tab. Private or incognito browsing is the usual cause — open the page in a normal window.";
-}
-function fresh(){
-  return { name:"", active:"morning", scenarios:[
-    { id:"morning",  label:"Morning",  start:30, warmups:4, rest:60, sessions:[], override:null },
-    { id:"daytime",  label:"Daytime",  start:30, warmups:4, rest:60, sessions:[], override:null },
-    { id:"evening",  label:"Evening",  start:30, warmups:4, rest:60, sessions:[], override:null }
-  ]};
 }
 function boot(){
   var raw=readRaw(KEY);
-  if(raw){ try{ var s=JSON.parse(raw); if(s&&Array.isArray(s.scenarios)&&s.scenarios.length) return s; }catch(e){} }
+  if(raw){ try{ return normaliseState(JSON.parse(raw)); }catch(e){} }
   var old=readRaw(OLD);
-  if(old){                                  // carry over a v1 log
+  if(old){
     try{
       var o=JSON.parse(old), n=fresh();
-      n.name=o.name||"";
-      n.scenarios[0].start=o.start||30;
-      n.scenarios[0].sessions=o.sessions||[];
-      n.scenarios[0].label="Morning";
-      return n;
+      n.name=o.name||""; n.scenarios[0].start=o.start||5; n.scenarios[0].sessions=o.sessions||[];
+      n.scenarios[0].label="Morning"; n.setupDone=true; return normaliseState(n);
     }catch(e){}
   }
   return mem||fresh();
@@ -660,12 +852,14 @@ function fmt(s){
   return Math.floor(m/60)+"h "+(m%60)+"m";
 }
 function dogName(){ return (state.name||"").trim()||"your dog"; }
+function dogNameHtml(){ return esc(dogName()); }
 function el(id){ return document.getElementById(id); }
 var COLOUR={ success:"var(--green)", ok:"var(--ochre)", bad:"var(--red)" };
 var LABEL={ success:"Success", ok:"OK", bad:"Not good" };
 var CLS={ success:"v-good", ok:"v-ok", bad:"v-bad" };
 var LINES=["#4F7A6B","#4A6B84","#B58135","#7B6480","#96574B","#3F6B63"];
 function esc(t){ return String(t).replace(/[<>&]/g,function(c){return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c];}); }
+function escAttr(t){ return esc(t).replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
 
 /* ================= state of play ================= */
 /* phase: idle | running | rest | cue | verdictMain
@@ -674,7 +868,26 @@ function esc(t){ return String(t).replace(/[<>&]/g,function(c){return {"<":"&lt;
 var phase="idle", startedAt=0, tick=null, restEnds=0;
 var plan=null, pending=null, chartMode="one";
 var reps=[], repIdx=0, repLog=[], retries=0, shuffle=0, justEarned=[];
-var tags=[], note="", graduated=false;
+var tags=[], note="", graduated=false, editingIndex=null;
+
+function persistActiveRun(){
+  if(phase==="idle"){ state.activeRun=null; save(); return; }
+  state.activeRun={ scenarioId:state.active, savedAt:Date.now(), phase:phase, startedAt:startedAt,
+    restEnds:restEnds, plan:plan, pending:pending, reps:reps, repIdx:repIdx, repLog:repLog,
+    tags:tags, note:note, shuffle:shuffle, graduated:graduated };
+  save();
+}
+function clearActiveRun(){ state.activeRun=null; }
+function restoreRun(r){
+  if(!r||!state.scenarios.some(function(s){return s.id===r.scenarioId;})) return false;
+  if(["running","rest","cue","verdictMain","wobble"].indexOf(r.phase)<0) return false;
+  state.active=r.scenarioId; phase=r.phase; startedAt=Number(r.startedAt)||Date.now(); restEnds=Number(r.restEnds)||Date.now();
+  plan=r.plan||planFor(scen()); pending=r.pending||null; reps=Array.isArray(r.reps)?r.reps:[];
+  repIdx=intIn(r.repIdx,0,Math.max(0,reps.length-1),0); repLog=Array.isArray(r.repLog)?r.repLog:[];
+  tags=Array.isArray(r.tags)?r.tags:[]; note=textIn(r.note,140); shuffle=intIn(r.shuffle,0,9999,0); graduated=!!r.graduated;
+  if(!reps.length) return false;
+  return true;
+}
 
 function render(){
   var s=scen();
@@ -690,7 +903,7 @@ function render(){
 
   var coach=el("coach");
   if(mode(s)==="door"&&phase==="idle"&&graduated){
-    coach.innerHTML="<b>The door means nothing to "+dogName()+" now.</b> That's the whole ladder clean. "+
+    coach.innerHTML="<b>The door means nothing to "+dogNameHtml()+" now.</b> That's the whole ladder clean. "+
       "Time to start timed absences — this scenario will begin at 3 seconds.";
     coach.className="note"; coach.hidden=false;
   } else if(mode(s)==="door"&&phase==="idle"){
@@ -841,17 +1054,18 @@ function tagPanel(parent){
     b.onclick=function(){
       var t=b.textContent, i=tags.indexOf(t);
       if(i>-1) tags.splice(i,1); else tags.push(t);
-      b.setAttribute("aria-pressed", i>-1?"false":"true");
+      b.setAttribute("aria-pressed", i>-1?"false":"true"); persistActiveRun();
     };
   });
   var input=box.querySelector("#noteIn");
   input.value=note;
-  input.oninput=function(){ note=this.value; };
+  input.oninput=function(){ note=this.value; persistActiveRun(); };
 }
 
 /* ---- door is a bore: one cue at a time, nothing timed ---- */
 function startCue(){
-  phase="cue"; clearInterval(tick);
+  if(phase==="idle") startedAt=Date.now();
+  phase="cue"; clearInterval(tick); persistActiveRun();
   render();
 }
 
@@ -873,7 +1087,7 @@ function recordDoor(stopped){
   var wobbles=done.filter(function(x){ return !x.ok; }).length;
   var outcome = stopped ? "bad" : wobbles===0 ? "success" : wobbles===1 ? "ok" : "bad";
   var lvl=doorLevel(s);
-  s.sessions.push({ kind:"door", at:Date.now(), level:lvl, steps:done.length,
+  s.sessions.push({ id:makeId("p"), kind:"door", at:Date.now(), level:lvl, steps:done.length,
                     planned:reps.length, wobbles:wobbles, outcome:outcome, stopped:!!stopped,
                     tags:tags.slice(), note:note.trim() });
   graduated=false;
@@ -883,9 +1097,11 @@ function recordDoor(stopped){
   } else if(outcome==="bad"){
     s.doorLevel=Math.max(0,lvl-1);
   }
-  phase="idle"; repIdx=0; repLog=[]; tags=[]; note=""; shuffle=0;
+  var saved=s.sessions[s.sessions.length-1];
+  phase="idle"; repIdx=0; repLog=[]; tags=[]; note=""; shuffle=0; clearActiveRun();
   clearInterval(tick);
   save(); render();
+  showToast("Door session saved.","Undo",function(){ removeSessionById(s.id,saved.id); });
 }
 
 function graduate(){
@@ -1012,69 +1228,60 @@ function ask(parent,question,opts,fn){
 
 function startRep(){
   phase="running"; startedAt=Date.now(); chimed=false;
-  audioStart();
-  var label = current().kind==="main" ? "Main absence" : "Warm-up "+(repIdx+1)+" of "+(reps.length-1);
-  nowPlaying(label+" · "+fmt(current().target), dogName()+" · "+scen().label);
-  clearInterval(tick);
+  persistActiveRun(); audioStart();
   drawActions(); drawTabs(); drawHeadline(); drawReps();
-  el("coach").hidden=true;
+  el("coach").hidden=true; runTicker();
+}
+
+function runTicker(){
+  clearInterval(tick);
   var c=el("clock"), target=current().target;
-  var label = current().kind==="main" ? "Main absence" : "Warm-up "+(repIdx+1)+" of "+(reps.length-1);
-  tick=setInterval(function(){
-    var e=Math.round((Date.now()-startedAt)/1000), left=target-e;
+  var label=current().kind==="main"?"Main absence":"Warm-up "+(repIdx+1)+" of "+(reps.length-1);
+  nowPlaying(label+" · "+fmt(target),dogName()+" · "+scen().label);
+  function paint(){
+    var e=Math.max(0,Math.round((Date.now()-startedAt)/1000)), left=target-e;
     if(left>=0){ c.className="clock live"; c.textContent=fmt(left); }
     else { c.className="clock over"; c.textContent="+"+fmt(-left); }
-    el("delta").textContent = left>=0 ? "Time out of the room."
-      : "Target reached — come back whenever you like.";
-    if(left<=0&&!chimed){ chimed=true; playChime(); nowPlaying("Time to head back", dogName()+" · "+scen().label); }
-    else if(left>0&&e%5===0) nowPlaying(label+" · "+fmt(left)+" left", dogName()+" · "+scen().label);
-  },250);
+    el("delta").textContent=left>=0?"Time out of the room.":"Target reached — come back whenever you like.";
+    if(left<=0&&!chimed){ chimed=true; playChime(); nowPlaying("Time to head back",dogName()+" · "+scen().label); }
+    else if(left>0&&e%5===0) nowPlaying(label+" · "+fmt(left)+" left",dogName()+" · "+scen().label);
+  }
+  paint(); tick=setInterval(paint,250);
 }
 
 function stopRep(){
   clearInterval(tick);
-  var actual=Math.max(1,Math.round((Date.now()-startedAt)/1000));
-  var rep=current();
-  if(actual<3){                       // a mis-tap, not a rep
-    phase = repIdx===0 ? "idle" : "rest";
-    if(phase==="rest") restEnds=Date.now();
+  var actual=Math.max(1,Math.round((Date.now()-startedAt)/1000)), rep=current();
+  if(actual<3){
+    audioStop(); phase=repIdx===0?"idle":"rest";
+    if(phase==="rest") restEnds=Date.now(); else clearActiveRun();
     el("clock").className="clock"; el("clock").textContent=fmt(rep.target);
     el("delta").textContent="That was under three seconds — nothing logged.";
-    drawActions(); drawTabs(); drawHeadline(); drawReps();
-    return;
+    if(phase==="rest") persistActiveRun(); else save();
+    drawActions(); drawTabs(); drawHeadline(); drawReps(); return;
   }
-  el("clock").className="clock"; el("clock").textContent=fmt(actual);
+  audioStop(); el("clock").className="clock"; el("clock").textContent=fmt(actual);
   if(rep.kind==="warm"){
-    repLog[repIdx]={ target:rep.target, actual:actual, done:true };
-    repIdx++;
-    toRest();
-    return;
-  } else {
-    pending={ base:plan.base, target:rep.target, actual:actual, easy:!!plan.easy,
-              warmups:reps.length-1, warmDone:reps.length-1,
-              warmTimes:repLog.map(function(x){ return x?x.actual:0; }) };
-    phase="verdictMain";
-    el("delta").textContent="You were gone "+fmt(actual)+" of a "+fmt(rep.target)+" target.";
+    repLog[repIdx]={target:rep.target,actual:actual,done:true}; repIdx++; toRest(false); return;
   }
-  drawActions(); drawTabs(); drawHeadline(); drawReps();
+  pending={base:plan.base,target:rep.target,actual:actual,easy:!!plan.easy,
+    warmups:reps.length-1,warmDone:reps.length-1,warmTimes:repLog.map(function(x){return x?x.actual:0;})};
+  phase="verdictMain"; el("delta").textContent="You were gone "+fmt(actual)+" of a "+fmt(rep.target)+" target.";
+  persistActiveRun(); drawActions(); drawTabs(); drawHeadline(); drawReps();
 }
 
-
-function toRest(){
-  var s=scen(), wait=Math.min(restLen(s), mode(s)==="door"?30:restLen(s));
-  nowPlaying("Settle break · next "+fmt(current().target), dogName()+" · "+s.label);
-  phase="rest"; restEnds=Date.now()+wait*1000;
-  drawActions(); drawHeadline(); drawReps();
-  el("coach").hidden=true;
-  clearInterval(tick);
+function toRest(resume){
+  var s=scen(), wait=Math.min(restLen(s),mode(s)==="door"?30:restLen(s));
+  phase="rest"; if(!resume) restEnds=Date.now()+wait*1000;
+  nowPlaying(mode(s)==="door"?"Settle break":"Settle break · next "+fmt(current().target),dogName()+" · "+s.label);
+  persistActiveRun(); drawActions(); drawHeadline(); drawReps(); el("coach").hidden=true; clearInterval(tick);
   var c=el("clock");
   function paint(){
     var left=Math.round((restEnds-Date.now())/1000);
     if(left>0){
-      c.className="clock rest"; c.textContent=fmt(left);
-      el("delta").textContent = mode(scen())==="door"
-        ? "Let "+dogName()+" settle before the next step."
-        : "Let "+dogName()+" come back down. Next up: "+fmt(current().target)+".";
+      if(mode(scen())!=="door"){ c.className="clock rest"; c.textContent=fmt(left); }
+      el("delta").textContent=mode(scen())==="door"?"Let "+dogName()+" settle before the next step.":
+        "Let "+dogName()+" come back down. Next up: "+fmt(current().target)+".";
     } else {
       clearInterval(tick);
       if(mode(scen())==="door"){ el("delta").textContent="Ready when "+dogName()+" is."; return; }
@@ -1082,38 +1289,30 @@ function toRest(){
       el("delta").textContent="Ready when "+dogName()+" is. Next up: "+fmt(current().target)+".";
     }
   }
-  paint();
-  if(wait>0) tick=setInterval(paint,250);
+  paint(); if(restEnds>Date.now()) tick=setInterval(paint,250);
 }
 
-/* Session abandoned during warm-ups: that is information, and it counts. */
 function endEarly(){
-  clearInterval(tick);
+  clearInterval(tick); audioStop();
   var reached=repLog[repIdx]?repLog[repIdx].actual:(repLog[repIdx-1]?repLog[repIdx-1].actual:1);
-  pending={ base:plan.base, target:reps[reps.length-1].target, actual:reached, easy:!!plan.easy,
-            warmups:reps.length-1, warmDone:repIdx, stopped:true,
-            warmTimes:repLog.map(function(x){ return x?x.actual:0; }) };
+  pending={base:plan.base,target:reps[reps.length-1].target,actual:reached,easy:!!plan.easy,
+    warmups:reps.length-1,warmDone:repIdx,stopped:true,warmTimes:repLog.map(function(x){return x?x.actual:0;})};
   record("bad");
 }
 
 function record(outcome){
   var s=scen(), before=badges();
-  pending.outcome=outcome; pending.at=Date.now();
+  pending.id=makeId("p"); pending.outcome=outcome; pending.at=Date.now(); pending.kind="absence";
   pending.tags=tags.slice(); pending.note=note.trim();
   if(pending.easy&&outcome==="success") pending.base=plan.base;
-  // Coming back early means you haven't proven the target — but one short rep
-  // shouldn't wipe out weeks, so the base can't fall below half of where it was.
   var floor=Math.max(1,Math.round(pending.base*0.5));
   if(pending.actual<pending.target*0.75) pending.base=Math.max(floor,pending.actual);
   if(outcome==="bad"&&pending.actual<pending.base) pending.base=Math.max(floor,pending.actual);
-  audioStop();
-  s.sessions.push(pending);
-  var after=badges();
-  justEarned=MILESTONES.filter(function(m){ return after[m.s]&&!before[m.s]; });
-  s.override=null; pending=null; phase="idle"; repLog=[]; repIdx=0; retries=0; shuffle=0;
-  tags=[]; note="";
-  clearInterval(tick);
-  save(); render();
+  audioStop(); s.sessions.push(pending); var saved=pending;
+  var after=badges(); justEarned=MILESTONES.filter(function(m){return after[m.s]&&!before[m.s];});
+  s.override=null; pending=null; phase="idle"; repLog=[]; repIdx=0; retries=0; shuffle=0; tags=[]; note="";
+  clearActiveRun(); clearInterval(tick); save(); render();
+  showToast("Session saved.","Undo",function(){ removeSessionById(s.id,saved.id); });
 }
 
 /* ================= milestone board ================= */
@@ -1131,7 +1330,7 @@ function drawBadges(){
     var cls="badge"+(g?" on":(next&&next.s===m.s?" next":""));
     var sub = g ? new Date(g.at).toLocaleDateString(undefined,{day:"numeric",month:"short"})
                 : (next&&next.s===m.s ? "next up" : "&nbsp;");
-    return '<div class="'+cls+'"'+(g?' title="'+esc(g.scenario)+', '+fmt(g.actual)+'"':'')+
+    return '<div class="'+cls+'"'+(g?' title="'+escAttr(g.scenario)+', '+fmt(g.actual)+'"':'')+
       '><div class="t">'+m.l+'</div><div class="w">'+sub+'</div></div>';
   }).join("");
 
@@ -1151,41 +1350,32 @@ function drawBadges(){
 }
 
 function drawCheer(){
-  var c=el("cheer");
+  var c=el("cheer"), got=badges();
+  justEarned=justEarned.filter(function(m){return !!got[m.s];});
   if(!justEarned.length){ c.hidden=true; return; }
-  var got=badges();
   c.hidden=false;
   var top=justEarned[justEarned.length-1], g=got[top.s];
-  var text = justEarned.length>2
-    ? '<b>'+justEarned.length+' milestones at once, up to '+top.l+' alone.</b> '+
-      dogName()+' managed '+fmt(g.actual)+' in '+esc(g.scenario)+'.'
-    : justEarned.map(function(m){
-        var x=got[m.s];
-        return '<b>Milestone: '+m.l+' alone.</b> '+dogName()+' managed '+fmt(x.actual)+' in '+esc(x.scenario)+'.';
-      }).join("<br>");
-  c.innerHTML=text+'<button type="button" class="reshuffle" id="cheerX">dismiss</button>';
-  el("cheerX").onclick=function(){ justEarned=[]; drawCheer(); };
+  var text=justEarned.length>2
+    ? '<b>'+justEarned.length+' milestones at once, up to '+top.l+' alone.</b> '+dogNameHtml()+' managed '+fmt(g.actual)+' in '+esc(g.scenario)+'.'
+    : justEarned.map(function(m){var x=got[m.s]; return '<b>Milestone: '+m.l+' alone.</b> '+dogNameHtml()+' managed '+fmt(x.actual)+' in '+esc(x.scenario)+'.';}).join("<br>");
+  c.innerHTML=text+' <button type="button" class="reshuffle" id="cheerX">dismiss</button>';
+  el("cheerX").onclick=function(){justEarned=[];drawCheer();};
 }
 
 /* ================= tabs ================= */
 function drawTabs(){
   var t=el("tabs"); t.innerHTML="";
   state.scenarios.forEach(function(s){
-    var b=document.createElement("button");
-    b.className="tab"; b.type="button"; b.setAttribute("role","tab");
-    b.setAttribute("aria-selected", s.id===state.active?"true":"false");
-    b.textContent=s.label;
-    b.disabled = phase!=="idle" && s.id!==state.active;
+    var b=document.createElement("button"); b.className="tab"; b.type="button";
+    b.setAttribute("aria-pressed",s.id===state.active?"true":"false"); b.textContent=s.label;
+    b.disabled=phase!=="idle"&&s.id!==state.active;
     if(b.disabled) b.style.opacity=".4";
-    b.onclick=function(){ if(phase!=="idle") return; state.active=s.id; pending=null; save(); render(); };
+    b.onclick=function(){if(phase!=="idle")return;state.active=s.id;pending=null;save();render();};
     t.appendChild(b);
   });
-  var add=document.createElement("button");
-  add.className="tab add"; add.type="button"; add.textContent="+";
-  add.setAttribute("aria-label","Add a scenario");
-  if(phase!=="idle"){ add.disabled=true; add.style.opacity=".4"; }
-  add.onclick=function(){ el("newrow").classList.add("on"); el("newName").focus(); };
-  t.appendChild(add);
+  var add=document.createElement("button"); add.className="tab add"; add.type="button"; add.textContent="+";
+  add.setAttribute("aria-label","Add a scenario"); if(phase!=="idle"){add.disabled=true;add.style.opacity=".4";}
+  add.onclick=function(){el("newrow").classList.add("on");el("newName").focus();}; t.appendChild(add);
 }
 
 /* ================= charts ================= */
@@ -1301,7 +1491,7 @@ function chartScenarios(){
     return '<div style="margin-bottom:12px">'+
       '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">'+
         '<span>'+esc(x.label)+(x.id===state.active?' <span style="color:var(--muted)">· showing</span>':'')+'</span>'+
-        '<span class="num" style="font-family:IBM Plex Mono,monospace">'+fmt(b)+'</span></div>'+
+        '<span class="num" style="font-family:ui-monospace,monospace">'+fmt(b)+'</span></div>'+
       '<div style="height:8px;background:var(--line-soft);border-radius:2px;overflow:hidden">'+
         '<div style="height:100%;width:'+w.toFixed(1)+'%;background:'+COLOUR[lastOut]+'"></div></div></div>';
   }).join("");
@@ -1329,7 +1519,7 @@ function chartTags(){
     var col = r>=67?"var(--green)":r>=34?"var(--ochre)":"var(--red)";
     return '<div style="margin-bottom:11px">'+
       '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">'+
-      '<span>'+esc(t)+'</span><span style="font-family:IBM Plex Mono,monospace;color:var(--muted)">'+
+      '<span>'+esc(t)+'</span><span style="font-family:ui-monospace,monospace;color:var(--muted)">'+
       r+'% · '+by[t].n+'</span></div>'+
       '<div style="height:8px;background:var(--line-soft);border-radius:2px;overflow:hidden">'+
       '<div style="height:100%;width:'+r+'%;background:'+col+'"></div></div></div>';
@@ -1345,42 +1535,105 @@ function card(title, body, pre){
 
 /* ================= log ================= */
 function drawLog(){
-  var s=scen(), b=el("logBody");
-  el("logSub").textContent=s.label;
-  if(!s.sessions.length){
-    b.innerHTML='<p class="empty">Nothing logged in '+esc(s.label)+' yet. Your first session will appear here.</p>';
-    return;
-  }
+  var s=scen(), b=el("logBody"); el("logSub").textContent=s.label;
+  if(!s.sessions.length){b.innerHTML='<p class="empty">Nothing logged in '+esc(s.label)+' yet. Your first session will appear here.</p>';return;}
   var rows=s.sessions.slice().reverse().map(function(p,idx){
-    var n=s.sessions.length-idx, d=new Date(p.at);
-    var extra="";
+    var original=s.sessions.length-1-idx, n=original+1, d=new Date(p.at), extra="";
     if((p.tags&&p.tags.length)||p.note){
-      extra="<tr><td colspan='6' class='logNote'>"+
-        (p.tags||[]).map(function(t){ return '<span class="chip">'+esc(t)+'</span>'; }).join("")+
+      extra="<tr><td colspan='7' class='logNote'>"+(p.tags||[]).map(function(t){return '<span class="chip">'+esc(t)+'</span>';}).join("")+
         (p.note?" "+esc(p.note):"")+"</td></tr>";
     }
+    var edit="<button type='button' class='sessionAction' data-edit-index='"+original+"'>Edit</button>";
     if(p.kind==="door"){
-      return "<tr><td class='num'>"+n+"</td><td class='num'>"+
-        d.toLocaleDateString(undefined,{day:"numeric",month:"short"})+
-        "</td><td class='num' title='Door is a Bore, level "+(p.level+1)+"'>L"+(p.level+1)+
-        "</td><td class='num'>"+p.steps+"/"+(p.planned||p.steps)+" steps</td><td class='num'>—</td>"+
-        "<td class='tag "+CLS[p.outcome]+"'>"+(p.stopped?"Stopped":LABEL[p.outcome])+"</td></tr>"+extra;
+      return "<tr><td class='num'>"+n+"</td><td class='num'>"+d.toLocaleDateString(undefined,{day:"numeric",month:"short"})+
+        "</td><td class='num' title='Door is a Bore, level "+(p.level+1)+"'>L"+(p.level+1)+"</td><td class='num'>"+
+        p.steps+"/"+(p.planned||p.steps)+" steps</td><td class='num'>—</td><td class='tag "+CLS[p.outcome]+"'>"+
+        (p.stopped?"Stopped":LABEL[p.outcome])+"</td><td>"+edit+"</td></tr>"+extra;
     }
-    var w = p.warmups==null ? "—"
-      : (p.stopped ? p.warmDone+"/"+p.warmups : String(p.warmups));
-    var wt = p.warmTimes&&p.warmTimes.length
-      ? " title='Warm-ups: "+p.warmTimes.map(fmt).join(", ")+" — not counted as time alone'" : "";
-    return "<tr><td class='num'>"+n+"</td><td class='num'>"+
-      d.toLocaleDateString(undefined,{day:"numeric",month:"short"})+"</td><td class='num'"+wt+">"+w+
-      "</td><td class='num'>"+fmt(p.target)+(p.easy?" ·":"")+"</td><td class='num'>"+
-      (p.stopped?"—":fmt(p.actual))+"</td><td class='tag "+
-      CLS[p.outcome]+"'>"+(p.stopped?"Stopped":LABEL[p.outcome])+"</td></tr>"+extra;
+    var w=p.warmups==null?"—":(p.stopped?p.warmDone+"/"+p.warmups:String(p.warmups));
+    var wt=p.warmTimes&&p.warmTimes.length?" title='Warm-ups: "+p.warmTimes.map(fmt).join(", ")+" — not counted as time alone'":"";
+    return "<tr><td class='num'>"+n+"</td><td class='num'>"+d.toLocaleDateString(undefined,{day:"numeric",month:"short"})+
+      "</td><td class='num'"+wt+">"+w+"</td><td class='num'>"+fmt(p.target)+(p.easy?" ·":"")+"</td><td class='num'>"+
+      (p.stopped?"—":fmt(p.actual))+"</td><td class='tag "+CLS[p.outcome]+"'>"+(p.stopped?"Stopped":LABEL[p.outcome])+"</td><td>"+edit+"</td></tr>"+extra;
   }).join("");
-  b.innerHTML="<table><thead><tr><th>#</th><th>Date</th><th title='Warm-ups completed'>W/up</th><th>Target</th><th>Actual</th><th>How it went</th></tr></thead><tbody>"+
-    rows+"</tbody></table><button class='undo' id='undo'>Delete the last session in "+esc(s.label)+"</button>";
+  b.innerHTML='<div class="tableWrap"><table><thead><tr><th>#</th><th>Date</th><th title="Warm-ups completed">W/up</th><th>Target</th><th>Actual</th><th>How it went</th><th></th></tr></thead><tbody>'+rows+
+    '</tbody></table></div><button class="undo" id="undo">Delete the last session in '+esc(s.label)+'</button>';
+  b.querySelectorAll("[data-edit-index]").forEach(function(x){x.onclick=function(){openSessionEditor(parseInt(this.getAttribute("data-edit-index"),10));};});
   el("undo").onclick=function(){
-    if(confirm("Delete the most recent "+s.label+" session?")){ s.sessions.pop(); save(); render(); }
+    if(confirm("Delete the most recent "+s.label+" session?")){
+      var removed=s.sessions.pop(); justEarned=[]; save(); render();
+      showToast("Last session deleted.","Undo",function(){s.sessions.push(removed);save();render();});
+    }
   };
+}
+
+/* ================= editing, export and notices ================= */
+var toastTimer=null, toastUndo=null;
+function showToast(message,action,fn){
+  clearTimeout(toastTimer); var t=el("toast"); el("toastText").textContent=message; toastUndo=fn||null;
+  var b=el("toastAction"); b.hidden=!action; b.textContent=action||""; t.hidden=false;
+  toastTimer=setTimeout(function(){t.hidden=true;toastUndo=null;},6000);
+}
+el("toastAction").onclick=function(){var fn=toastUndo;el("toast").hidden=true;toastUndo=null;if(fn)fn();};
+function removeSessionById(scenarioId,id){
+  var s=state.scenarios.filter(function(x){return x.id===scenarioId;})[0]; if(!s)return;
+  var i=s.sessions.findIndex(function(p){return p.id===id;}); if(i<0)return;
+  s.sessions.splice(i,1); justEarned=[]; save(); render();
+}
+function localDateValue(ms){
+  var d=new Date(ms), z=d.getTimezoneOffset()*60000; return new Date(d.getTime()-z).toISOString().slice(0,16);
+}
+function closeModal(id){el(id).hidden=true;if(!document.querySelector(".modal:not([hidden])"))document.body.classList.remove("modalOpen");}
+function openModal(id){el(id).hidden=false;document.body.classList.add("modalOpen");}
+function openSessionEditor(index){
+  editingIndex=index==null?null:index; var s=scen(), p=editingIndex==null?null:s.sessions[editingIndex];
+  el("sessionTitle").textContent=p?"Edit session":"Add past absence";
+  el("sessionSub").textContent=p?"Correct the saved details. Progress and milestones will recalculate automatically.":"Add an absence completed without running the timer.";
+  el("sessionWhen").value=localDateValue(p?p.at:Date.now());
+  var door=p&&p.kind==="door"; el("timedSessionFields").hidden=!!door;
+  el("sessionTarget").required=!door; el("sessionActual").required=!door;
+  var suggested=planFor(s).target;
+  el("sessionTarget").value=p&&!door?p.target:suggested; el("sessionActual").value=p&&!door?p.actual:suggested;
+  el("sessionOutcome").value=p?p.outcome:"success"; el("sessionStopped").checked=!!(p&&p.stopped);
+  el("sessionTags").value=p&&p.tags?p.tags.join(", "):""; el("sessionNote").value=p?p.note||"":"";
+  el("sessionDelete").hidden=!p; openModal("sessionModal"); el("sessionWhen").focus();
+}
+el("sessionCancel").onclick=function(){closeModal("sessionModal");};
+el("sessionForm").onsubmit=function(e){
+  e.preventDefault(); var s=scen(), existing=editingIndex==null?null:s.sessions[editingIndex], door=existing&&existing.kind==="door";
+  var at=new Date(el("sessionWhen").value).getTime(); if(!isFinite(at)){alert("Choose a valid date and time.");return;}
+  var p=existing||{id:makeId("p"),kind:"absence",warmups:0,warmDone:0,warmTimes:[],easy:false};
+  p.at=at; p.outcome=validOutcome(el("sessionOutcome").value); p.stopped=el("sessionStopped").checked;
+  p.tags=el("sessionTags").value.split(",").map(function(x){return x.trim().slice(0,40);}).filter(Boolean).slice(0,20);
+  p.note=el("sessionNote").value.trim().slice(0,140);
+  if(!door){
+    var target=intIn(el("sessionTarget").value,1,14400,0), actual=intIn(el("sessionActual").value,1,14400,0);
+    if(!target||!actual){alert("Enter valid target and actual times.");return;}
+    p.target=target;p.actual=actual;p.base=target;p.kind="absence";
+    var floor=Math.max(1,Math.round(target*0.5));
+    if(actual<target*0.75) p.base=Math.max(floor,actual);
+    if(p.outcome==="bad"&&actual<p.base) p.base=Math.max(floor,actual);
+  }
+  if(existing){s.sessions[editingIndex]=p;}else{s.sessions.push(p);s.sessions.sort(function(a,b){return a.at-b.at;});}
+  justEarned=[]; closeModal("sessionModal"); save(); render();
+  if(!existing)showToast("Past absence added.","Undo",function(){removeSessionById(s.id,p.id);}); else showToast("Session updated.");
+};
+el("sessionDelete").onclick=function(){
+  if(editingIndex==null)return; var s=scen(); if(!confirm("Delete this session?"))return;
+  var removed=s.sessions.splice(editingIndex,1)[0], where=editingIndex; justEarned=[]; closeModal("sessionModal"); save(); render();
+  showToast("Session deleted.","Undo",function(){s.sessions.splice(where,0,removed);save();render();});
+};
+function csvCell(v){v=String(v==null?"":v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function downloadBlob(name,type,content){
+  var blob=new Blob([content],{type:type}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+function exportCsv(){
+  var rows=[["scenario","type","date","target_seconds","actual_seconds","outcome","stopped_early","warmups_completed","tags","note"]];
+  state.scenarios.forEach(function(s){s.sessions.forEach(function(p){rows.push([s.label,p.kind==="door"?"door exercise":"timed absence",new Date(p.at).toISOString(),
+    p.kind==="door"?"":p.target,p.kind==="door"?"":p.actual,p.outcome,p.stopped?"yes":"no",p.kind==="door"?p.steps:(p.warmDone==null?"":p.warmDone),
+    (p.tags||[]).join(" | "),p.note||""]);});});
+  downloadBlob("threshold-sessions-"+new Date().toISOString().slice(0,10)+".csv","text/csv;charset=utf-8","\ufeff"+rows.map(function(r){return r.map(csvCell).join(",");}).join("\r\n"));
 }
 
 /* ================= wiring ================= */
@@ -1392,12 +1645,14 @@ el("addGo").onclick=function(){
   var v=el("newName").value.trim();
   if(!v) return;
   var id="s"+Date.now();
-  state.scenarios.push({ id:id, label:v, start:30, warmups:3, rest:60, sessions:[], override:null });
+  state.scenarios.push({ id:id, label:v, start:scen().start||5, warmups:4, rest:60, sessions:[], override:null });
   state.active=id; el("newName").value=""; el("newrow").classList.remove("on");
   save(); render();
 };
 el("newName").addEventListener("keydown",function(e){ if(e.key==="Enter") el("addGo").click(); });
 el("addCancel").onclick=function(){ el("newrow").classList.remove("on"); el("newName").value=""; };
+el("addPast").onclick=function(){openSessionEditor(null);};
+el("exportCsv").onclick=exportCsv;
 el("dogName").oninput=function(){ state.name=this.value; save(); render(); };
 el("startDur").oninput=function(){
   var v=parseInt(this.value,10); if(v>0){ scen().start=v; save(); render(); }
@@ -1438,11 +1693,7 @@ el("restLen").oninput=function(){
   if(v>=0&&v<=600){ scen().rest=v; save(); render(); }
 };
 el("dlBackup").onclick=function(){
-  var blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
-  var url=URL.createObjectURL(blob), a=document.createElement("a");
-  a.href=url; a.download="threshold-"+new Date().toISOString().slice(0,10)+".json";
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(url); },1000);
+  downloadBlob("threshold-"+new Date().toISOString().slice(0,10)+".json","application/json",JSON.stringify(state,null,2));
   state.lastBackup=Date.now(); save(); backupWhen();
 };
 el("pickFile").onclick=function(){ el("restoreFile").click(); };
@@ -1455,11 +1706,11 @@ el("restoreFile").onchange=function(){
 };
 function applyImport(text){
   try{
-    var s=JSON.parse(text);
-    if(!s||!Array.isArray(s.scenarios)||!s.scenarios.length) throw 0;
-    state=s; if(!scen()) state.active=state.scenarios[0].id;
-    save(); el("dogName").value=state.name||""; render();
-  }catch(e){ alert("That file isn't a Threshold backup. Look for one named threshold-YYYY-MM-DD.json."); }
+    var imported=normaliseState(JSON.parse(text));
+    if(!confirm("Replace the log on this device with the imported backup?")) return;
+    audioStop(); phase="idle"; state=imported; clearActiveRun(); justEarned=[];
+    save(); el("dogName").value=state.name||""; render(); showToast("Backup restored.");
+  }catch(e){ alert("That file is not a valid Threshold backup, or it contains damaged session data."); }
 }
 function backupWhen(){
   var n=0; state.scenarios.forEach(function(s){ n+=s.sessions.length; });
@@ -1578,7 +1829,7 @@ window.addEventListener("beforeinstallprompt",function(e){
   e.preventDefault(); deferredPrompt=e; drawInstallBar();
 });
 window.addEventListener("appinstalled",function(){
-  deferredPrompt=null; state.installDismissed=true; save(); drawInstallBar();
+  deferredPrompt=null; state.installDismissedAt=Date.now(); save(); drawInstallBar();
 });
 
 function askPersist(){
@@ -1600,7 +1851,8 @@ function storageStatus(){
 
 function drawInstallBar(){
   var bar=el("installBar"); if(!bar) return;
-  if(standalone()||state.installDismissed){ bar.hidden=true; return; }
+  var recentlyDismissed=state.installDismissedAt&&Date.now()-state.installDismissedAt<14*86400000;
+  if(standalone()||recentlyDismissed){ bar.hidden=true; return; }
   var msg, acts;
   if(deferredPrompt){
     msg="<b>Install Threshold.</b> Keeps your log safe from browser clean-ups, and works without a signal.";
@@ -1619,9 +1871,39 @@ function drawInstallBar(){
     deferredPrompt.userChoice.then(function(){ deferredPrompt=null; drawInstallBar(); });
   };
   if(el("noInstall")) el("noInstall").onclick=function(){
-    state.installDismissed=true; save(); drawInstallBar();
+    state.installDismissedAt=Date.now(); save(); drawInstallBar();
   };
 }
+
+function showSetup(force){
+  if(!force&&state.setupDone) return;
+  el("setupName").value=state.name||""; el("setupStart").value=scen().start||5; el("setupMode").value=mode(scen());
+  el("setupCamera").checked=false; openModal("setupModal");
+}
+el("setupSave").onclick=function(){
+  var v=intIn(el("setupStart").value,1,7200,0); if(!v){alert("Enter a valid starting duration.");return;}
+  if(!el("setupCamera").checked&&!confirm("Continue without confirming that you will watch on a camera?"))return;
+  state.name=el("setupName").value.trim().slice(0,40); state.scenarios.forEach(function(s){s.start=v;s.mode=el("setupMode").value==="door"?"door":"absence";});
+  state.setupDone=true; closeModal("setupModal"); el("dogName").value=state.name; save(); render();
+};
+el("setupSkip").onclick=function(){state.setupDone=true;closeModal("setupModal");save();};
+el("restartSetup").onclick=function(){showSetup(true);};
+
+function offerRecovery(){
+  var r=state.activeRun; if(!r)return false;
+  var age=Math.max(0,Math.round((Date.now()-(Number(r.startedAt)||Number(r.savedAt)||Date.now()))/1000));
+  var sc=state.scenarios.filter(function(s){return s.id===r.scenarioId;})[0];
+  el("recoveryText").textContent="An unfinished "+(sc?sc.label.toLowerCase()+" ":"")+"session was saved "+fmt(age)+" ago. Resume from the recorded step, or discard it without adding a result.";
+  openModal("recoveryModal"); return true;
+}
+el("recoveryResume").onclick=function(){
+  var r=state.activeRun; closeModal("recoveryModal");
+  if(!restoreRun(r)){state.activeRun=null;save();render();showToast("The unfinished session could not be recovered.");return;}
+  render(); if(phase==="running"){audioStart();runTicker();}else if(phase==="rest"){toRest(true);} persistActiveRun();
+};
+el("recoveryDiscard").onclick=function(){
+  closeModal("recoveryModal"); audioStop(); phase="idle"; state.activeRun=null; save(); render(); showToast("Unfinished session discarded.");
+};
 
 el("renameGo").onclick=function(){
   var v=el("renameTo").value.trim(); if(v){ scen().label=v; save(); render(); }
@@ -1641,7 +1923,7 @@ el("copyData").onclick=function(){
 el("loadData").onclick=function(){ applyImport(el("data").value); };
 el("wipe").onclick=function(){
   if(confirm("Delete every scenario and session, and start again?")){
-    var n=state.name; state=fresh(); state.name=n; save(); render();
+    audioStop(); phase="idle"; state=fresh(); justEarned=[]; save(); render(); showSetup(true);
   }
 };
 
@@ -1649,6 +1931,7 @@ el("dogName").value=state.name||"";
 save();
 render();
 askPersist();
+if(!offerRecovery()) showSetup(false);
 })();
 </script>
 </body>
