@@ -1,0 +1,68 @@
+/* Threshold service worker.
+   Two jobs: make the app work with no signal, and make it installable.
+   Bump CACHE when you change any file, or browsers will serve the old one. */
+var CACHE = "threshold-v2";
+var SHELL = [
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./apple-touch-icon.png"
+];
+
+self.addEventListener("install", function(e){
+  e.waitUntil(
+    caches.open(CACHE).then(function(c){
+      // don't let one missing file sink the whole install
+      return Promise.all(SHELL.map(function(u){
+        return c.add(u).catch(function(){});
+      }));
+    }).then(function(){ return self.skipWaiting(); })
+  );
+});
+
+self.addEventListener("activate", function(e){
+  e.waitUntil(
+    caches.keys().then(function(keys){
+      return Promise.all(keys.map(function(k){
+        return k===CACHE ? null : caches.delete(k);
+      }));
+    }).then(function(){ return self.clients.claim(); })
+  );
+});
+
+self.addEventListener("fetch", function(e){
+  var req = e.request;
+  if(req.method !== "GET") return;
+
+  var isPage = req.mode === "navigate" ||
+    (req.headers.get("accept")||"").indexOf("text/html") > -1;
+
+  if(isPage){
+    // Network first, so a redeploy reaches people; cache is the fallback.
+    e.respondWith(
+      fetch(req).then(function(res){
+        var copy = res.clone();
+        caches.open(CACHE).then(function(c){ c.put("./index.html", copy); });
+        return res;
+      }).catch(function(){
+        return caches.match("./index.html").then(function(r){ return r || caches.match("./"); });
+      })
+    );
+    return;
+  }
+
+  // Everything else (icons, fonts): cache first, fill in behind.
+  e.respondWith(
+    caches.match(req).then(function(hit){
+      return hit || fetch(req).then(function(res){
+        if(res && (res.status===200 || res.type==="opaque")){
+          var copy = res.clone();
+          caches.open(CACHE).then(function(c){ c.put(req, copy); });
+        }
+        return res;
+      }).catch(function(){ return hit; });
+    })
+  );
+});
