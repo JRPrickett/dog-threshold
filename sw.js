@@ -1,7 +1,7 @@
 /* Threshold service worker.
    Two jobs: make the app work with no signal, and make it installable.
    Bump CACHE when you change any file, or browsers will serve the old one. */
-var CACHE = "threshold-v2";
+var CACHE = "threshold-v4";
 var SHELL = [
   "./",
   "./index.html",
