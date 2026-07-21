@@ -264,6 +264,12 @@
   summary::after{content:"+";color:var(--muted);font-size:18px}
   details[open] summary::after{content:"–"}
   .field{margin:18px 0}
+  .scenarioRename{padding:16px;background:var(--page);border:1px solid var(--line);
+    border-radius:var(--r-ctl)}
+  .scenarioRename label{font-size:14px;margin-bottom:8px}
+  .scenarioRename .renameActions{display:flex;flex-direction:column;gap:9px}
+  .scenarioRename .renameActions .btn{padding:12px 15px;font-size:14px}
+  .scenarioRename .small{margin-top:9px}
   label{display:block;font-size:13.5px;color:var(--ink);margin-bottom:6px;font-weight:500}
   input[type=text],input[type=number],textarea{width:100%;padding:11px 13px;border:1px solid var(--line);
     border-radius:var(--r-ctl);background:var(--page);font:inherit;color:inherit}
@@ -409,7 +415,7 @@
       </div>
       <div class="field">
         <label for="sessionTags">Context tags, separated by commas</label>
-        <input type="text" id="sessionTags" placeholder="After a walk, Radio on" maxlength="180">
+        <input type="text" id="sessionTags" placeholder="After a walk, Radio or TV on" maxlength="180">
       </div>
       <div class="field">
         <label for="sessionNote">Note</label>
@@ -520,6 +526,7 @@
 
 <details>
   <summary>Settings and data</summary>
+  <p class="small" id="settingsSaved" aria-live="polite">Changes save automatically on this device.</p>
   <div class="field">
     <label for="dogName">Dog's name</label>
     <input type="text" id="dogName" placeholder="your dog" autocomplete="off">
@@ -533,6 +540,14 @@
     <label id="modePrompt">Not ready for timed departures yet?</label>
     <button class="btn ghost" id="modeToggle"></button>
     <p class="small" id="modeHelp">Door is a Bore works on door cues instead of duration, for dogs who become worried before you've properly left. Switching keeps this scenario's history.</p>
+  </div>
+  <div class="field scenarioRename">
+    <label for="renameTo">Scenario name</label>
+    <div class="renameActions">
+      <input type="text" id="renameTo" maxlength="24" autocomplete="off" aria-describedby="renameHelp">
+      <button class="btn ghost" id="renameGo">Save scenario name</button>
+    </div>
+    <p class="small" id="renameHelp">This changes the <b id="scenLabel2">current scenario</b> label shown at the top. Its existing sessions stay attached to it.</p>
   </div>
   <div class="field">
     <label>Sound while you're away</label>
@@ -558,13 +573,6 @@
     <input type="number" id="restLen" min="0" max="600" step="5">
     <p class="small">Time for your dog to come back down before the next step. Nothing starts on its own —
       you always press to leave.</p>
-  </div>
-  <div class="field">
-    <label for="renameTo">Rename <b id="scenLabel2">this scenario</b></label>
-    <div class="row">
-      <input type="text" id="renameTo" maxlength="24" autocomplete="off">
-      <button class="btn ghost" style="flex:0 0 auto" id="renameGo">Rename</button>
-    </div>
   </div>
   <div class="field">
     <button class="btn ghost" id="delScen">Delete this scenario and its sessions</button>
@@ -726,12 +734,10 @@ function trailing(s,k){
   }
   return n;
 }
-
-function trailingStopped(sessions,outcome){
+function trailingStopped(s,k){
   var n=0;
-  for(var i=sessions.length-1;i>=0;i--){
-    var p=sessions[i];
-    if(p.stopped&&p.outcome===outcome) n++; else break;
+  for(var i=s.length-1;i>=0;i--){
+    if(s[i].stopped && s[i].outcome===k) n++; else break;
   }
   return n;
 }
@@ -742,31 +748,28 @@ function nextBase(sessions,start){
     reason:"First session here. Pick something your dog can already do without a flicker of worry." };
   var last=sessions[sessions.length-1], base=last.base;
   if(last.stopped){
-    var planned=Math.max(1,last.target||base||start);
+    var stoppedRun=trailingStopped(sessions,last.outcome), held=Math.max(1,last.target||base);
     if(last.outcome==="success"){
-      return {base:planned,target:planned,holdExact:true,
-        reason:"The last session ended early while your dog was relaxed. Repeating the same planned duration."};
+      return {base:held,target:held,holdExact:true,
+        reason:"The last session ended early but went well. Repeating the same planned duration."};
     }
     if(last.outcome==="ok"){
-      var stoppedOk=trailingStopped(sessions,"ok");
-      if(stoppedOk<2){
-        return {base:planned,target:planned,holdExact:true,
-          reason:"The session ended early with some unease. Holding the planned duration once before changing it."};
+      if(stoppedRun>=2){
+        var okDown=Math.max(Math.round(held*0.05),minStep(held));
+        return {base:Math.max(1,held-okDown),target:Math.max(1,held-okDown),holdExact:true,
+          reason:stoppedRun+" stopped sessions with some unease. Reducing the planned duration by 5%."};
       }
-      var okDown=Math.max(Math.round(planned*0.05),minStep(planned));
-      var okNext=Math.max(1,planned-okDown);
-      return {base:okNext,target:okNext,holdExact:true,
-        reason:stoppedOk+" early-ended OK sessions in a row. Easing back 5%."};
+      return {base:held,target:held,holdExact:true,
+        reason:"The session ended early with some unease. Holding the same planned duration once before reducing it."};
     }
-    var stoppedBad=trailingStopped(sessions,"bad");
-    if(stoppedBad<2){
-      return {base:planned,target:planned,holdExact:true,
-        reason:"The session ended early and was difficult. Holding once, then reducing if it happens again."};
+    if(stoppedRun>=2){
+      var badPct=stoppedRun>=3?0.30:0.20;
+      var badTarget=Math.max(1,Math.round(held*(1-badPct)));
+      return {base:badTarget,target:badTarget,holdExact:true,reset:stoppedRun>=3,
+        reason:stoppedRun+" stopped difficult sessions in a row. Reducing the planned duration by "+Math.round(badPct*100)+"%."};
     }
-    var badPct=stoppedBad>=3?0.30:0.20;
-    var badNext=Math.max(1,Math.round(planned*(1-badPct)));
-    return {base:badNext,target:badNext,holdExact:true,reset:stoppedBad>=3,
-      reason:stoppedBad+" difficult early-ended sessions in a row. Down "+Math.round(badPct*100)+"%."};
+    return {base:held,target:held,holdExact:true,
+      reason:"The session ended early and was difficult. Holding once; another similar result will reduce the target."};
   }
   if(last.outcome==="success"){
     var run=trailing(sessions,"success");
@@ -873,7 +876,7 @@ function routineLength(reps,rest){
 }
 
 /* ================= context tags ================= */
-var TAGS=["Pre-walk","After a walk","Pre-meal","After a meal", "Radio on","New place"];
+var TAGS=["Not walked yet","After a walk","Before food","After food","Radio or TV on"];
 
 /* ================= door is a bore =================
    For dogs who aren't ready for any absence at all. The door itself has become
@@ -1166,7 +1169,7 @@ function tagPanel(parent){
     TAGS.map(function(t){
       return '<button type="button" class="chip" aria-pressed="'+(tags.indexOf(t)>-1)+'">'+t+'</button>';
     }).join("")+'</div>'+
-    '<input class="noteIn" type="text" id="noteIn" maxlength="140" placeholder="Anything worth remembering">';
+    '<input class="noteIn" type="text" id="noteIn" maxlength="140" placeholder="Any other notes">';
   parent.appendChild(box);
   box.querySelectorAll(".chip").forEach(function(b){
     b.onclick=function(){
@@ -1486,8 +1489,8 @@ function record(outcome){
     if(pending.actual<pending.target*0.75) pending.base=Math.max(floor,pending.actual);
     if(outcome==="bad"&&pending.actual<pending.base) pending.base=Math.max(floor,pending.actual);
   } else {
-    // An early finish does not prove a shorter duration. Progression is decided
-    // next time from the consecutive stopped-session rating, not the actual time.
+    // A stopped session never changes its baseline immediately. The next-plan
+    // rules decide whether to hold or reduce after repeated stopped outcomes.
     pending.base=plan.base;
   }
   audioStop(); s.sessions.push(pending); var saved=pending;
@@ -1974,10 +1977,8 @@ el("newName").addEventListener("keydown",function(e){ if(e.key==="Enter") el("ad
 el("addCancel").onclick=function(){ el("newrow").classList.remove("on"); el("newName").value=""; };
 el("addPast").onclick=function(){openSessionEditor(null);};
 el("exportCsv").onclick=exportCsv;
-el("dogName").oninput=function(){ state.name=this.value; save(); render(); };
-el("startDur").oninput=function(){
-  var v=parseInt(this.value,10); if(v>0){ scen().start=v; save(); render(); }
-};
+el("dogName").oninput=function(){ state.name=this.value; save(); };
+el("dogName").onchange=function(){ markSettingsSaved(); render(); };
 el("adjustOpen").onclick=function(){ el("adjustRow").hidden=false; drawAdjust(); el("adjVal").focus(); };
 el("adjCancel").onclick=function(){ el("adjustRow").hidden=true; drawAdjust(); };
 el("adjMinus").onclick=function(){ adjStep(-1); };
@@ -2005,18 +2006,74 @@ el("soundToggle").onclick=function(){
   if(state.soundOff) audioStop(); 
   save(); render();
 };
-el("dailyCap").oninput=function(){
-  var v=parseInt(this.value,10);
-  if(v>=1&&v<=3){ state.dailyCap=v; save(); render(); }
-};
-el("warmups").oninput=function(){
-  var v=parseInt(this.value,10);
-  if(v>=0&&v<=6&&phase==="idle"){ scen().warmups=v; save(); render(); }
-};
-el("restLen").oninput=function(){
-  var v=parseInt(this.value,10);
-  if(v>=0&&v<=600){ scen().rest=v; save(); render(); }
-};
+var settingsSavedTimer=null;
+function markSettingsSaved(){
+  var status=el("settingsSaved");
+  if(!status) return;
+  clearTimeout(settingsSavedTimer);
+  status.textContent="Saved on this device.";
+  settingsSavedTimer=setTimeout(function(){
+    status.textContent="Changes save automatically on this device.";
+  },2500);
+}
+function bindNumberSetting(id,min,max,getValue,setValue,canEdit){
+  var input=el(id);
+  function commit(showConfirmation){
+    if(canEdit&&!canEdit()){
+      input.value=getValue();
+      if(showConfirmation) showToast("Finish the current session before changing this setting.");
+      return false;
+    }
+    var raw=String(input.value).trim();
+    if(raw==="") return false;
+    var value=parseInt(raw,10);
+    if(!isFinite(value)||value<min||value>max){
+      input.value=getValue();
+      if(showConfirmation) showToast("Enter a value from "+min+" to "+max+".");
+      return false;
+    }
+    setValue(value);
+    save();
+    input.value=value;
+    if(showConfirmation) markSettingsSaved();
+    return true;
+  }
+  input.addEventListener("input",function(){ commit(false); });
+  input.addEventListener("change",function(){ commit(true); });
+  input.addEventListener("blur",function(){ commit(false); });
+  input.addEventListener("keydown",function(e){
+    if(e.key==="Enter"){
+      e.preventDefault();
+      if(commit(true)) input.blur();
+    }
+  });
+  return function(){ commit(false); };
+}
+var flushStartDur=bindNumberSetting("startDur",1,7200,
+  function(){return scen().start;},
+  function(v){scen().start=v;},
+  function(){return phase==="idle";}
+);
+var flushDailyCap=bindNumberSetting("dailyCap",1,3,
+  function(){return dailyCap();},
+  function(v){state.dailyCap=v;}
+);
+var flushWarmups=bindNumberSetting("warmups",0,6,
+  function(){return nWarm(scen());},
+  function(v){scen().warmups=v;},
+  function(){return phase==="idle";}
+);
+var flushRestLen=bindNumberSetting("restLen",0,600,
+  function(){return restLen(scen());},
+  function(v){scen().rest=v;}
+);
+function flushNumberSettings(){
+  flushStartDur(); flushDailyCap(); flushWarmups(); flushRestLen(); save();
+}
+window.addEventListener("pagehide",flushNumberSettings);
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="hidden") flushNumberSettings();
+});
 el("dlBackup").onclick=function(){
   downloadBlob("threshold-"+new Date().toISOString().slice(0,10)+".json","application/json",JSON.stringify(state,null,2));
   state.lastBackup=Date.now(); save(); backupWhen();
@@ -2276,8 +2333,13 @@ el("recoveryDiscard").onclick=function(){
 };
 
 el("renameGo").onclick=function(){
-  var v=el("renameTo").value.trim(); if(v){ scen().label=v; save(); render(); }
+  var v=el("renameTo").value.trim().slice(0,24);
+  if(!v){ el("renameTo").focus(); return; }
+  scen().label=v; save(); render(); showToast("Scenario name saved.");
 };
+el("renameTo").addEventListener("keydown",function(e){
+  if(e.key==="Enter"){ e.preventDefault(); el("renameGo").click(); }
+});
 el("delScen").onclick=function(){
   if(state.scenarios.length<2){ alert("Keep at least one scenario. Rename this one instead."); return; }
   if(confirm("Delete "+scen().label+" and every session in it?")){
