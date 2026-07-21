@@ -4,10 +4,18 @@
 2. Replace `index.html`, `sw.js`, `manifest.webmanifest` and optionally the documentation files in your GitHub repository root.
 3. Keep your existing PNG icon files.
 4. Commit and push.
-5. Open the live page once while online. Installed copies should update because the cache is now `threshold-v11`.
+5. Open the live page once while online. Installed copies should update because the cache is now `threshold-v13`.
 6. Completely close and reopen the Home Screen app before testing.
 
-## v11 behaviour changes
+## v12 certificate refinement
+
+- Milestone certificates now use a warm ivory paper design with a restrained double border.
+- The layout is cleaner and more editorial: small Threshold branding, **MILESTONE ACHIEVED**, the dog’s name, a prominent duration, date and scenario.
+- Subtle amber, green and ochre confetti marks sit in the corners without overwhelming the certificate.
+- The previous tagline has been replaced by **A new threshold reached.**
+- Long dog names, durations and scenario names automatically scale to remain within the certificate.
+
+## Previous v11 behaviour changes
 
 ### Ending a session early
 
@@ -36,3 +44,7 @@
 - Test both **Share milestone** and **Save certificate** on the phone.
 
 The v10 Media Session countdown experiment is unchanged. iOS still controls whether and how often Control Centre redraws it.
+
+## Version 13 — shorter warm-ups
+
+Warm-up absences are now capped at 90 seconds. For main targets longer than three minutes, the warm-up plan is drawn from a fixed short-duration range rather than remaining a percentage of the full target. This prevents long targets from producing multi-minute warm-ups.

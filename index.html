@@ -427,7 +427,7 @@
 <div class="modal" id="milestoneModal" role="dialog" aria-modal="true" aria-labelledby="milestoneTitle" hidden>
   <div class="modalCard certificateCard">
     <div class="celebrateBurst" aria-hidden="true">✦ 🎉 ✦</div>
-    <h2 id="milestoneTitle">A Threshold milestone!</h2>
+    <h2 id="milestoneTitle">A new threshold reached!</h2>
     <p class="sub" id="milestoneSub"></p>
     <canvas class="certificateCanvas" id="certificateCanvas" width="1200" height="675" aria-label="Milestone certificate preview"></canvas>
     <p class="certificateHint">Share the certificate as an image, or save it to your device.</p>
@@ -798,20 +798,36 @@ function hash(str){ var h=2166136261; for(var i=0;i<str.length;i++){ h^=str.char
 
 function buildReps(target,n,seed){
   if(n<=0||target<8) return [{ kind:"main", target:target }];
+
+  /* Warm-ups prepare the departure routine; they are not scaled-down main
+     absences. Once the main target is several minutes long, percentage-based
+     warm-ups become training sessions in their own right. Build them from at
+     most the first three minutes of the target and cap every warm-up at 90s. */
   var r=rng(seed), fr=[], i;
+  var reference=Math.min(target,180);
+  var ceiling=Math.min(90,target-1);
+  var floor=target<30?2:target<120?4:8;
+  var lo=target<30?0.18:0.10;
+  var hi=target<30?0.55:0.50;
+
   for(i=0;i<n;i++){
-    var mid = n===1 ? 0.35 : 0.15+0.35*(i/(n-1));
-    fr.push(Math.min(0.6,Math.max(0.1, mid+(r()-0.5)*0.26)));
+    var mid = n===1 ? (lo+hi)/2 : lo+(hi-lo)*(i/(n-1));
+    fr.push(Math.min(hi+0.06,Math.max(lo-0.04,mid+(r()-0.5)*0.16)));
   }
   for(i=fr.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)), t=fr[i]; fr[i]=fr[j]; fr[j]=t; }
   var climbing=fr.every(function(v,k){ return k===0||v>fr[k-1]; });
   if(climbing&&fr.length>2){ var a=fr[0]; fr[0]=fr[fr.length-2]; fr[fr.length-2]=a; }
+
   var reps=fr.map(function(f){
-    return { kind:"warm", target:Math.max(2,Math.min(Math.round(target*f),target-1)) };
+    return { kind:"warm", target:Math.max(floor,Math.min(Math.round(reference*f),ceiling)) };
   });
   for(i=1;i<reps.length;i++){                       // no two identical in a row
-    if(reps[i].target===reps[i-1].target && target>6)
-      reps[i].target=Math.max(2,Math.min(reps[i].target+(i%2?1:-1),target-1));
+    if(reps[i].target===reps[i-1].target && ceiling>floor){
+      var moved=reps[i].target+(i%2?1:-1);
+      reps[i].target=Math.max(floor,Math.min(moved,ceiling));
+      if(reps[i].target===reps[i-1].target)
+        reps[i].target=Math.max(floor,Math.min(reps[i].target+1,ceiling));
+    }
   }
   reps.push({ kind:"main", target:target });
   return reps;
@@ -1767,22 +1783,93 @@ function milestoneBySeconds(seconds){return MILESTONES.filter(function(m){return
 function roundedRect(ctx,x,y,w,h,r){
   ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
 }
+function fitCanvasText(ctx,text,maxWidth,startSize,minSize,weight,family){
+  var size=startSize;
+  family=family||"Georgia, Times New Roman, serif";
+  while(size>minSize){
+    ctx.font=(weight||"600")+" "+size+"px "+family;
+    if(ctx.measureText(text).width<=maxWidth)break;
+    size-=2;
+  }
+  return size;
+}
+function confettiMark(ctx,x,y,angle,length,width,colour,shape){
+  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.fillStyle=colour;
+  if(shape==="diamond"){
+    ctx.rotate(Math.PI/4);ctx.fillRect(-width/2,-width/2,width,width);
+  }else if(shape==="dot"){
+    ctx.beginPath();ctx.arc(0,0,width/2,0,Math.PI*2);ctx.fill();
+  }else{
+    roundedRect(ctx,-length/2,-width/2,length,width,width/2);ctx.fill();
+  }
+  ctx.restore();
+}
 function drawCertificate(m,g){
   var canvas=el("certificateCanvas"),ctx=canvas.getContext("2d"),W=canvas.width,H=canvas.height;
   var name=dogName(),date=new Date(g.at).toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
-  ctx.clearRect(0,0,W,H);ctx.fillStyle="#F5F1EA";ctx.fillRect(0,0,W,H);
-  ctx.fillStyle="#FFFFFF";roundedRect(ctx,34,34,W-68,H-68,30);ctx.fill();
-  ctx.strokeStyle="#E08A34";ctx.lineWidth=5;roundedRect(ctx,54,54,W-108,H-108,24);ctx.stroke();
-  var marks=[[110,115,10,"#E08A34"],[1030,115,8,"#4A9A72"],[1080,525,12,"#E08A34"],[130,545,8,"#4A9A72"],[980,560,6,"#C8912A"],[210,95,6,"#C8912A"]];
-  marks.forEach(function(x){ctx.fillStyle=x[3];ctx.beginPath();ctx.arc(x[0],x[1],x[2],0,Math.PI*2);ctx.fill();});
-  ctx.textAlign="center";ctx.fillStyle="#7C746B";ctx.font="600 25px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText("THRESHOLD MILESTONE",W/2,128);
-  ctx.fillStyle="#2E2A26";ctx.font="700 52px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText(name,W/2,218);
-  ctx.fillStyle="#7C746B";ctx.font="400 27px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText("managed a relaxed absence of",W/2,270);
-  ctx.fillStyle="#4A9A72";ctx.font="700 104px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText(m.l,W/2,392);
-  ctx.fillStyle="#2E2A26";ctx.font="600 30px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText("alone",W/2,437);
-  ctx.fillStyle="#7C746B";ctx.font="400 24px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText(date+"  ·  "+g.scenario,W/2,508);
-  ctx.fillStyle="#E08A34";ctx.font="600 25px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText("Small steps. Real progress.",W/2,570);
-  ctx.fillStyle="#A79E93";ctx.font="500 18px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText("Created with Threshold · separation anxiety training log",W/2,615);
+  var scenario=String(g.scenario||"");
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="#F5F1EA";ctx.fillRect(0,0,W,H);
+
+  /* warm paper panel and understated double border */
+  ctx.fillStyle="#FFFDFC";roundedRect(ctx,28,28,W-56,H-56,28);ctx.fill();
+  ctx.strokeStyle="#D5C6B5";ctx.lineWidth=2;roundedRect(ctx,45,45,W-90,H-90,22);ctx.stroke();
+  ctx.strokeStyle="#E8DED2";ctx.lineWidth=1;roundedRect(ctx,57,57,W-114,H-114,17);ctx.stroke();
+
+  /* restrained confetti marks, kept to the corners */
+  var amber="#E08A34",green="#4A9A72",ochre="#C8912A",ink="#6F665D";
+  [
+    [92,95,-0.7,24,6,amber,"line"],[124,79,0.25,18,5,green,"line"],[151,111,0,0,9,ochre,"diamond"],
+    [1087,92,0.72,24,6,green,"line"],[1057,76,-0.2,18,5,amber,"line"],[1029,111,0,0,9,ochre,"diamond"],
+    [95,574,0.65,23,6,green,"line"],[128,595,-0.25,18,5,amber,"line"],[158,565,0,0,8,ochre,"diamond"],
+    [1086,578,-0.72,23,6,amber,"line"],[1054,598,0.25,18,5,green,"line"],[1025,565,0,0,8,ochre,"diamond"]
+  ].forEach(function(x){confettiMark(ctx,x[0],x[1],x[2],x[3],x[4],x[5],x[6]);});
+
+  ctx.textAlign="center";ctx.textBaseline="alphabetic";
+
+  /* brand */
+  ctx.fillStyle="#2E2A26";ctx.font="700 24px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText("THRESHOLD",W/2,98);
+  ctx.fillStyle="#8A8178";ctx.font="500 14px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText("SEPARATION ANXIETY TRAINING",W/2,122);
+
+  /* accolade */
+  ctx.fillStyle=amber;ctx.font="700 18px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText("MILESTONE ACHIEVED",W/2,170);
+  ctx.fillStyle="#D8CFC5";ctx.fillRect(W/2-74,187,148,2);
+
+  /* dog name */
+  var nameSize=fitCanvasText(ctx,name,W-260,66,38,"600","Georgia, Times New Roman, serif");
+  ctx.fillStyle="#2E2A26";ctx.font="600 "+nameSize+"px Georgia, Times New Roman, serif";
+  ctx.fillText(name,W/2,257);
+
+  ctx.fillStyle="#7C746B";ctx.font="400 22px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText("completed a calm absence of",W/2,300);
+
+  /* milestone */
+  var milestone=String(m.l).toUpperCase();
+  var milestoneSize=fitCanvasText(ctx,milestone,W-250,112,74,"700","system-ui, -apple-system, Segoe UI, sans-serif");
+  ctx.fillStyle=green;ctx.font="700 "+milestoneSize+"px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText(milestone,W/2,408);
+  ctx.fillStyle="#2E2A26";ctx.font="700 20px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText("CALMLY ALONE",W/2,445);
+
+  /* detail rule and record */
+  ctx.fillStyle="#E8DED2";ctx.fillRect(275,475,W-550,2);
+  var detail=date+"  ·  "+scenario;
+  var detailSize=fitCanvasText(ctx,detail,W-240,22,16,"500","system-ui, -apple-system, Segoe UI, sans-serif");
+  ctx.fillStyle="#746B62";ctx.font="500 "+detailSize+"px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText(detail,W/2,516);
+
+  /* simple seal */
+  ctx.strokeStyle="#D9CEC1";ctx.lineWidth=2;ctx.beginPath();ctx.arc(W/2,551,24,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle=green;ctx.font="700 22px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText("✓",W/2,559);
+
+  ctx.fillStyle=ink;ctx.font="600 23px Georgia, Times New Roman, serif";
+  ctx.fillText("A new threshold reached.",W/2,594);
+  ctx.fillStyle="#A79E93";ctx.font="500 14px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText("Recorded with Threshold",W/2,618);
 }
 function openMilestone(seconds,celebrating){
   var m=milestoneBySeconds(seconds),g=badges()[seconds];if(!m||!g)return;

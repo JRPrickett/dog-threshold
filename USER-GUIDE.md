@@ -50,7 +50,7 @@ Use **Edit** beside any session to correct its date, target, actual time, result
 
 Milestones are earned only by successful completed main absences. Deliberately shorter sessions are normal.
 
-Tap any earned milestone to open a personalised celebration certificate. Choose **Share milestone** to open the phone's share sheet, or **Save certificate** to keep the image and share it later. A newly earned milestone opens automatically after the session is saved.
+Tap any earned milestone to open a personalised ivory milestone certificate. Choose **Share milestone** to open the phone's share sheet, or **Save certificate** to keep the image and share it later. A newly earned milestone opens automatically after the session is saved.
 
 Use **Export CSV** for a readable spreadsheet or trainer report. Stopped sessions include their reason in the export.
 
@@ -61,3 +61,7 @@ Everything saves automatically on this device. Open **Settings and data** and ch
 ## Important
 
 The daily limit is a ceiling, not a target. Rest and gaps between sessions are part of training. Threshold is a planning aid and does not replace a qualified separation-anxiety trainer or veterinary behaviour professional.
+
+## Version 13 — shorter warm-ups
+
+Warm-up absences are now capped at 90 seconds. For main targets longer than three minutes, the warm-up plan is drawn from a fixed short-duration range rather than remaining a percentage of the full target. This prevents long targets from producing multi-minute warm-ups.
