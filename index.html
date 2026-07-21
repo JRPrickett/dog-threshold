@@ -526,14 +526,14 @@
 
 <details>
   <summary>Settings and data</summary>
-  <p class="small" id="settingsSaved" aria-live="polite">Changes save automatically on this device.</p>
+  <p class="small" id="settingsSaved" aria-live="polite">Changes save when you leave a field or press Enter.</p>
   <div class="field">
     <label for="dogName">Dog's name</label>
     <input type="text" id="dogName" placeholder="your dog" autocomplete="off">
   </div>
   <div class="field">
     <label for="startDur">Starting absence for <b id="scenLabel1">this scenario</b>, in seconds</label>
-    <input type="number" id="startDur" min="1" max="7200" step="1">
+    <input type="number" id="startDur" min="1" max="7200" step="1" inputmode="numeric">
     <p class="small">Start below where your dog first shows worry. Only affects sessions you haven't logged yet.</p>
   </div>
   <div class="field">
@@ -558,19 +558,19 @@
   </div>
   <div class="field">
     <label for="dailyCap">Most sessions per day, across all scenarios</label>
-    <input type="number" id="dailyCap" min="1" max="3" step="1">
+    <input type="number" id="dailyCap" min="1" max="3" step="1" inputmode="numeric">
     <p class="small">Two is the sensible ceiling. Rest days between sessions are not lost time —
       they're when the learning sticks.</p>
   </div>
   <div class="field">
     <label for="warmups">Warm-up steps before the main absence</label>
-    <input type="number" id="warmups" min="0" max="6" step="1">
+    <input type="number" id="warmups" min="0" max="6" step="1" inputmode="numeric">
     <p class="small">Three or four is usual. Short absences that build up to the real one, so the main
       absence isn't the first time your dog sees you leave that day.</p>
   </div>
   <div class="field">
     <label for="restLen">Settle break between steps, in seconds</label>
-    <input type="number" id="restLen" min="0" max="600" step="5">
+    <input type="number" id="restLen" min="0" max="600" step="5" inputmode="numeric">
     <p class="small">Time for your dog to come back down before the next step. Nothing starts on its own —
       you always press to leave.</p>
   </div>
@@ -2013,32 +2013,51 @@ function markSettingsSaved(){
   clearTimeout(settingsSavedTimer);
   status.textContent="Saved on this device.";
   settingsSavedTimer=setTimeout(function(){
-    status.textContent="Changes save automatically on this device.";
+    status.textContent="Changes save when you leave a field or press Enter.";
   },2500);
 }
 function bindNumberSetting(id,min,max,getValue,setValue,canEdit){
   var input=el(id);
+  var editing=false;
+
   function commit(showConfirmation){
     if(canEdit&&!canEdit()){
       input.value=getValue();
       if(showConfirmation) showToast("Finish the current session before changing this setting.");
+      editing=false;
       return false;
     }
+
     var raw=String(input.value).trim();
-    if(raw==="") return false;
-    var value=parseInt(raw,10);
-    if(!isFinite(value)||value<min||value>max){
+    if(raw===""){
       input.value=getValue();
-      if(showConfirmation) showToast("Enter a value from "+min+" to "+max+".");
+      editing=false;
       return false;
     }
+
+    var value=Number(raw);
+    if(!Number.isInteger(value)||value<min||value>max){
+      input.value=getValue();
+      if(showConfirmation) showToast("Enter a whole number from "+min+" to "+max+".");
+      editing=false;
+      return false;
+    }
+
     setValue(value);
     save();
     input.value=value;
+    editing=false;
     if(showConfirmation) markSettingsSaved();
     return true;
   }
-  input.addEventListener("input",function(){ commit(false); });
+
+  input.addEventListener("focus",function(){
+    editing=true;
+    window.setTimeout(function(){ input.select(); },0);
+  });
+  input.addEventListener("click",function(){
+    if(editing) input.select();
+  });
   input.addEventListener("change",function(){ commit(true); });
   input.addEventListener("blur",function(){ commit(false); });
   input.addEventListener("keydown",function(e){
@@ -2046,8 +2065,18 @@ function bindNumberSetting(id,min,max,getValue,setValue,canEdit){
       e.preventDefault();
       if(commit(true)) input.blur();
     }
+    if(e.key==="Escape"){
+      e.preventDefault();
+      input.value=getValue();
+      editing=false;
+      input.blur();
+    }
   });
-  return function(){ commit(false); };
+
+  return function(){
+    if(document.activeElement===input) input.blur();
+    else commit(false);
+  };
 }
 var flushStartDur=bindNumberSetting("startDur",1,7200,
   function(){return scen().start;},

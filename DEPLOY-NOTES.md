@@ -1,22 +1,23 @@
-# Threshold v18 deployment
+# Threshold v19 deployment
 
 Replace `index.html` and `sw.js` together.
 
-## Settings persistence fix
+## Numeric settings editing fix
 
-Numeric settings now use one shared save routine:
+The previous autosave routine validated numeric fields on every keystroke. If a field
+already contained `2`, typing `3` could briefly produce `23`, causing the field to be
+rejected and reset to `2`.
 
-- Starting absence
-- Most sessions per day
-- Warm-up steps
-- Settle break length
+Numeric settings now:
 
-Changes are saved as the value is edited and committed again on change, blur, Enter,
-when the app is hidden, and when the page closes.
+- Select the current value when tapped or focused
+- Allow normal typing without validation interrupting the edit
+- Save when the field loses focus, changes, or Enter is pressed
+- Restore the previous value only if the completed entry is invalid
+- Support Escape to cancel an edit
+- Use a numeric mobile keyboard hint
 
-The app no longer redraws the entire interface during every numeric keystroke, which
-could interrupt number-field edits on mobile and installed PWAs.
+This applies to starting absence, maximum sessions per day, warm-up steps, and settle
+break length.
 
-A small status message confirms when settings have been saved on the device.
-
-The service-worker cache is `threshold-v18`.
+The service-worker cache is `threshold-v19`.
