@@ -183,11 +183,20 @@
   .toggle button[aria-pressed=true]{background:var(--ink);color:#fff}
 
   .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:9px}
-  .badge{background:var(--page);border-radius:12px;padding:12px 5px 10px;text-align:center;color:var(--faint)}
+  .badge{background:var(--page);border:0;border-radius:12px;padding:12px 5px 10px;text-align:center;color:var(--faint);font:inherit;width:100%}
   .badge .t{font-size:14px;font-weight:500}
   .badge .w{font-size:10.5px;margin-top:3px}
-  .badge.on{background:var(--green);color:#fff}
+  .badge.on{background:var(--green);color:#fff;cursor:pointer;box-shadow:var(--shadow-sm)}
+  .badge.on:hover{filter:brightness(.96);transform:translateY(-1px)}
+  .badge.on .w::after{content:" · share";opacity:.86}
   .badge.next{background:var(--amber-bg);color:#A25E15}
+  .stopBanner{background:var(--amber-bg);color:#8B591A;border-radius:var(--r-ctl);padding:12px 14px;margin:0 0 14px;font-size:13.5px;line-height:1.5}
+  .stopReason{margin:0 0 16px}
+  .certificateCard{width:min(100%,680px);text-align:center;overflow:hidden;position:relative}
+  .celebrateBurst{font-size:38px;letter-spacing:9px;line-height:1;margin:0 0 12px;animation:celebratePop .55s ease-out both}
+  .certificateCanvas{display:block;width:100%;height:auto;border-radius:14px;box-shadow:var(--shadow);background:var(--page);margin:16px 0 8px}
+  .certificateHint{font-size:12.5px;color:var(--muted);margin:0}
+  @keyframes celebratePop{from{opacity:0;transform:scale(.65) rotate(-5deg)}to{opacity:1;transform:scale(1) rotate(0)}}
   .toNext{margin-bottom:16px}
   .toNext .row2{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:7px}
   .toNext .num{color:var(--muted)}
@@ -394,6 +403,10 @@
         </select>
       </div>
       <label class="checkline"><input type="checkbox" id="sessionStopped"> <span>Session was stopped early</span></label>
+      <div class="field" id="sessionStopReasonField">
+        <label for="sessionStopReason">Reason for stopping</label>
+        <input type="text" id="sessionStopReason" maxlength="80" placeholder="Dog showed concern, interruption, needed a break…">
+      </div>
       <div class="field">
         <label for="sessionTags">Context tags, separated by commas</label>
         <input type="text" id="sessionTags" placeholder="After a walk, Radio on" maxlength="180">
@@ -408,6 +421,21 @@
       </div>
       <button class="btn ghost danger" type="button" id="sessionDelete" style="margin-top:10px">Delete this session</button>
     </form>
+  </div>
+</div>
+
+<div class="modal" id="milestoneModal" role="dialog" aria-modal="true" aria-labelledby="milestoneTitle" hidden>
+  <div class="modalCard certificateCard">
+    <div class="celebrateBurst" aria-hidden="true">✦ 🎉 ✦</div>
+    <h2 id="milestoneTitle">A Threshold milestone!</h2>
+    <p class="sub" id="milestoneSub"></p>
+    <canvas class="certificateCanvas" id="certificateCanvas" width="1200" height="675" aria-label="Milestone certificate preview"></canvas>
+    <p class="certificateHint">Share the certificate as an image, or save it to your device.</p>
+    <div class="modalActions">
+      <button class="btn" type="button" id="shareMilestone">Share milestone</button>
+      <button class="btn ghost" type="button" id="downloadCertificate">Save certificate</button>
+      <button class="btn ghost" type="button" id="closeMilestone">Close</button>
+    </div>
   </div>
 </div>
 
@@ -585,7 +613,7 @@
 "use strict";
 
 /* ================= storage ================= */
-var SCHEMA=3, KEY="threshold.v2", OLD="threshold.v1", mem=null, canSave=true;
+var SCHEMA=4, KEY="threshold.v2", OLD="threshold.v1", mem=null, canSave=true;
 function readRaw(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function makeId(prefix){ return (prefix||"id")+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
 function intIn(v,min,max,fallback){ v=parseInt(v,10); return isFinite(v)&&v>=min&&v<=max?v:fallback; }
@@ -597,7 +625,8 @@ function cleanSession(p,start){
   var out={
     id:textIn(p.id,80)||makeId("p"), kind:door?"door":"absence",
     at:intIn(p.at,1,Number.MAX_SAFE_INTEGER,Date.now()), outcome:validOutcome(p.outcome),
-    stopped:!!p.stopped, tags:Array.isArray(p.tags)?p.tags.map(function(t){return textIn(t,40).trim();}).filter(Boolean).slice(0,20):[],
+    stopped:!!p.stopped, stopReason:textIn(p.stopReason,80).trim(),
+    tags:Array.isArray(p.tags)?p.tags.map(function(t){return textIn(t,40).trim();}).filter(Boolean).slice(0,20):[],
     note:textIn(p.note,140).trim()
   };
   if(door){
@@ -691,13 +720,22 @@ function scen(){
    not good -> hold; two in a row -20%; three or more -40% and a rethink
 ================================================== */
 function minStep(b){ return b<60?2:b<300?5:10; }
-function trailing(s,k){ var n=0; for(var i=s.length-1;i>=0;i--){ if(s[i].outcome===k)n++; else break; } return n; }
+function trailing(s,k){
+  var n=0;
+  for(var i=s.length-1;i>=0;i--){
+    if(s[i].outcome===k && !(k==="success"&&s[i].stopped)) n++; else break;
+  }
+  return n;
+}
 
 function nextBase(sessions,start){
   sessions=sessions.filter(function(p){ return p.kind!=="door"; });
   if(!sessions.length) return { base:start,
     reason:"First session here. Pick something your dog can already do without a flicker of worry." };
   var last=sessions[sessions.length-1], base=last.base;
+  if(last.stopped&&last.outcome!=="bad"){
+    return {base:base, reason:"The last session ended early. Holding the duration rather than treating it as a completed progression session."};
+  }
   if(last.outcome==="success"){
     var run=trailing(sessions,"success");
     var pct=run>=3?0.10:run===2?0.08:0.05;
@@ -974,6 +1012,7 @@ function drawHeadline(){
   var s=scen(), h=el("headline");
   if(mode(s)==="door"){
     h.textContent = phase==="idle" ? (capped()?"Done for today":"Door is a bore")
+      : phase==="doorVerdict" ? "Rate the session"
       : phase==="rest" ? "Pause" : "Step "+(repIdx+1)+" of "+reps.length;
     return;
   }
@@ -993,6 +1032,7 @@ function drawClock(){
     c.hidden=true; cue.hidden=false;
     cue.textContent = phase==="idle"
       ? "Level "+(doorLevel(s)+1)+" of "+CUES.length+" — "+CUES[doorLevel(s)].toLowerCase()
+      : phase==="doorVerdict" ? ((pending&&pending.stopped)?"Session ended early — record how it went.":"Session complete — record how it went.")
       : phase==="rest" ? "Give it a moment, then carry on."
       : CUES[reps[repIdx].cue];
     return;
@@ -1085,6 +1125,26 @@ function tagPanel(parent){
   input.oninput=function(){ note=this.value; persistActiveRun(); };
 }
 
+var STOP_REASONS=["Dog showed concern","External interruption","Dog needed a break","The plan felt too difficult","Other"];
+function stopReasonPanel(parent){
+  var box=document.createElement("div"); box.className="stopReason";
+  box.innerHTML='<div class="stopBanner"><b>Session ended early.</b> Rate how your dog coped up to that point. A relaxed rating will be saved, but it will not increase the next target.</div>'+ 
+    '<label for="stopReasonSelect">Why did you stop?</label><select id="stopReasonSelect"><option value="">Choose a reason (optional)</option>'+ 
+    STOP_REASONS.map(function(x){return '<option value="'+escAttr(x)+'">'+esc(x)+'</option>';}).join("")+'</select>'+ 
+    '<input type="text" id="stopReasonOther" maxlength="80" placeholder="Add a little more detail" style="margin-top:8px" hidden>';
+  parent.appendChild(box);
+  var sel=box.querySelector("#stopReasonSelect"), other=box.querySelector("#stopReasonOther");
+  var existing=pending&&pending.stopReason?pending.stopReason:"";
+  if(STOP_REASONS.indexOf(existing)>-1){sel.value=existing;}else if(existing){sel.value="Other";other.hidden=false;other.value=existing;}
+  sel.onchange=function(){
+    other.hidden=this.value!=="Other";
+    pending.stopReason=this.value==="Other"?(other.value.trim()||"Other"):this.value;
+    persistActiveRun();
+    if(!other.hidden) other.focus();
+  };
+  other.oninput=function(){pending.stopReason=this.value.trim()||"Other";persistActiveRun();};
+}
+
 /* ---- door is a bore: one cue at a time, nothing timed ---- */
 function startCue(){
   if(phase==="idle") startedAt=Date.now();
@@ -1104,7 +1164,7 @@ function endDoorEarly(){ finishDoor(true); }
 
 function finishDoor(stopped){
   audioStop();
-  pending={ stopped:!!stopped, steps:repLog.filter(Boolean).length, planned:reps.length };
+  pending={ stopped:!!stopped, stopReason:"", steps:repLog.filter(Boolean).length, planned:reps.length };
   phase="doorVerdict"; persistActiveRun(); render();
 }
 
@@ -1114,6 +1174,7 @@ function recordDoor(outcome){
   var planned=pending?pending.planned:reps.length;
   s.sessions.push({ id:makeId("p"), kind:"door", at:Date.now(), level:lvl, steps:steps,
                     planned:planned, wobbles:outcome==="bad"?1:0, outcome:outcome, stopped:stopped,
+                    stopReason:stopped&&pending?textIn(pending.stopReason,80).trim():"",
                     tags:tags.slice(), note:note.trim() });
   graduated=false;
   if(outcome==="success"&&!stopped){
@@ -1182,15 +1243,16 @@ function drawActions(){
   if(mode(sc)==="door"){
     if(phase==="cue"){
       btn(a,"Step done",cueDone);
-      btn(a,"Stop the session",endDoorEarly,false,true);
+      btn(a,"End session early",endDoorEarly,false,true);
       return;
     }
     if(phase==="rest"){
       btn(a,"Next step",startCue);
-      btn(a,"Stop the session",endDoorEarly,false,true);
+      btn(a,"End session early",endDoorEarly,false,true);
       return;
     }
     if(phase==="doorVerdict"){
+      if(pending&&pending.stopped) stopReasonPanel(a);
       tagPanel(a);
       ask(a,"How was "+dogName()+" across the session?",[
         ["success","Relaxed","Calm overall. Following you or waiting by the door is fine if they could settle."],
@@ -1205,6 +1267,7 @@ function drawActions(){
   }
 
   if(phase==="verdictMain"){
+    if(pending&&pending.stopped) stopReasonPanel(a);
     tagPanel(a);
     ask(a,"How was "+dogName()+"?",[
       ["success","Success","Settled quickly and stayed relaxed the whole time."],
@@ -1217,7 +1280,7 @@ function drawActions(){
   if(phase==="rest"){
     var next=reps[repIdx];
     btn(a,(next.kind==="main"?"Start the main absence":"Start warm-up "+(repIdx+1)),startRep);
-    btn(a,"Stop the session",endEarly,false,true);
+    btn(a,"End session early",endEarly,false,true);
     return;
   }
 
@@ -1343,22 +1406,29 @@ function endEarly(){
   clearInterval(tick); audioStop();
   var reached=repLog[repIdx]?repLog[repIdx].actual:(repLog[repIdx-1]?repLog[repIdx-1].actual:1);
   pending={base:plan.base,target:reps[reps.length-1].target,actual:reached,easy:!!plan.easy,
-    warmups:reps.length-1,warmDone:repIdx,stopped:true,warmTimes:repLog.map(function(x){return x?x.actual:0;})};
-  record("bad");
+    warmups:reps.length-1,warmDone:repIdx,stopped:true,stopReason:"",warmTimes:repLog.map(function(x){return x?x.actual:0;})};
+  phase="verdictMain"; persistActiveRun(); render();
 }
 
 function record(outcome){
   var s=scen(), before=badges();
   pending.id=makeId("p"); pending.outcome=outcome; pending.at=Date.now(); pending.kind="absence";
-  pending.tags=tags.slice(); pending.note=note.trim();
+  pending.tags=tags.slice(); pending.note=note.trim(); pending.stopReason=pending.stopped?textIn(pending.stopReason,80).trim():"";
   if(pending.easy&&outcome==="success") pending.base=plan.base;
   var floor=Math.max(1,Math.round(pending.base*0.5));
-  if(pending.actual<pending.target*0.75) pending.base=Math.max(floor,pending.actual);
-  if(outcome==="bad"&&pending.actual<pending.base) pending.base=Math.max(floor,pending.actual);
+  if(!pending.stopped){
+    if(pending.actual<pending.target*0.75) pending.base=Math.max(floor,pending.actual);
+    if(outcome==="bad"&&pending.actual<pending.base) pending.base=Math.max(floor,pending.actual);
+  } else if(outcome==="bad"&&pending.actual<pending.base){
+    pending.base=Math.max(floor,pending.actual);
+  } else {
+    pending.base=plan.base;
+  }
   audioStop(); s.sessions.push(pending); var saved=pending;
   var after=badges(); justEarned=MILESTONES.filter(function(m){return after[m.s]&&!before[m.s];});
   s.override=null; pending=null; phase="idle"; repLog=[]; repIdx=0; retries=0; shuffle=0; tags=[]; note="";
   clearActiveRun(); clearInterval(tick); save(); render();
+  if(justEarned.length){ var earned=justEarned[justEarned.length-1]; setTimeout(function(){openMilestone(earned.s,true);},0); }
   showToast("Session saved.","Undo",function(){ removeSessionById(s.id,saved.id); });
 }
 
@@ -1377,8 +1447,8 @@ function drawBadges(){
     var cls="badge"+(g?" on":(next&&next.s===m.s?" next":""));
     var sub = g ? new Date(g.at).toLocaleDateString(undefined,{day:"numeric",month:"short"})
                 : (next&&next.s===m.s ? "next up" : "&nbsp;");
-    return '<div class="'+cls+'"'+(g?' title="'+escAttr(g.scenario)+', '+fmt(g.actual)+'"':'')+
-      '><div class="t">'+m.l+'</div><div class="w">'+sub+'</div></div>';
+    if(g) return '<button type="button" class="'+cls+'" data-share-milestone="'+m.s+'" title="Celebrate and share '+escAttr(m.l)+' milestone"><div class="t">'+m.l+'</div><div class="w">'+sub+'</div></button>';
+    return '<div class="'+cls+'"><div class="t">'+m.l+'</div><div class="w">'+sub+'</div></div>';
   }).join("");
 
   var bar="";
@@ -1394,6 +1464,9 @@ function drawBadges(){
     bar='<p class="small" style="margin:0 0 12px">Every milestone earned. That is a dog who can be left alone.</p>';
   }
   box.innerHTML=bar+'<div class="badges">'+grid+'</div>';
+  box.querySelectorAll("[data-share-milestone]").forEach(function(b){
+    b.onclick=function(){openMilestone(parseInt(this.getAttribute("data-share-milestone"),10),false);};
+  });
 }
 
 function drawCheer(){
@@ -1405,7 +1478,8 @@ function drawCheer(){
   var text=justEarned.length>2
     ? '<b>'+justEarned.length+' milestones at once, up to '+top.l+' alone.</b> '+dogNameHtml()+' managed '+fmt(g.actual)+' in '+esc(g.scenario)+'.'
     : justEarned.map(function(m){var x=got[m.s]; return '<b>Milestone: '+m.l+' alone.</b> '+dogNameHtml()+' managed '+fmt(x.actual)+' in '+esc(x.scenario)+'.';}).join("<br>");
-  c.innerHTML=text+' <button type="button" class="reshuffle" id="cheerX">dismiss</button>';
+  c.innerHTML=text+' <button type="button" class="reshuffle" id="cheerOpen">celebrate &amp; share</button> · <button type="button" class="reshuffle" id="cheerX">dismiss</button>';
+  el("cheerOpen").onclick=function(){var m=justEarned[justEarned.length-1];if(m)openMilestone(m.s,true);};
   el("cheerX").onclick=function(){justEarned=[];drawCheer();};
 }
 
@@ -1586,8 +1660,9 @@ function drawLog(){
   if(!s.sessions.length){b.innerHTML='<p class="empty">Nothing logged in '+esc(s.label)+' yet. Your first session will appear here.</p>';return;}
   var rows=s.sessions.slice().reverse().map(function(p,idx){
     var original=s.sessions.length-1-idx, n=original+1, d=new Date(p.at), extra="";
-    if((p.tags&&p.tags.length)||p.note){
-      extra="<tr><td colspan='7' class='logNote'>"+(p.tags||[]).map(function(t){return '<span class="chip">'+esc(t)+'</span>';}).join("")+
+    if((p.tags&&p.tags.length)||p.note||p.stopReason){
+      extra="<tr><td colspan='7' class='logNote'>"+(p.stopReason?'<span class="chip">Stopped: '+esc(p.stopReason)+'</span> ':"")+
+        (p.tags||[]).map(function(t){return '<span class="chip">'+esc(t)+'</span>';}).join("")+
         (p.note?" "+esc(p.note):"")+"</td></tr>";
     }
     var edit="<button type='button' class='sessionAction' data-edit-index='"+original+"'>Edit</button>";
@@ -1642,15 +1717,18 @@ function openSessionEditor(index){
   var suggested=planFor(s).target;
   el("sessionTarget").value=p&&!door?p.target:suggested; el("sessionActual").value=p&&!door?p.actual:suggested;
   el("sessionOutcome").value=p?p.outcome:"success"; el("sessionStopped").checked=!!(p&&p.stopped);
+  el("sessionStopReason").value=p?p.stopReason||"":""; el("sessionStopReasonField").hidden=!el("sessionStopped").checked;
   el("sessionTags").value=p&&p.tags?p.tags.join(", "):""; el("sessionNote").value=p?p.note||"":"";
   el("sessionDelete").hidden=!p; openModal("sessionModal"); el("sessionWhen").focus();
 }
 el("sessionCancel").onclick=function(){closeModal("sessionModal");};
+el("sessionStopped").onchange=function(){el("sessionStopReasonField").hidden=!this.checked;if(!this.checked)el("sessionStopReason").value="";};
 el("sessionForm").onsubmit=function(e){
   e.preventDefault(); var s=scen(), existing=editingIndex==null?null:s.sessions[editingIndex], door=existing&&existing.kind==="door";
   var at=new Date(el("sessionWhen").value).getTime(); if(!isFinite(at)){alert("Choose a valid date and time.");return;}
   var p=existing||{id:makeId("p"),kind:"absence",warmups:0,warmDone:0,warmTimes:[],easy:false};
   p.at=at; p.outcome=validOutcome(el("sessionOutcome").value); p.stopped=el("sessionStopped").checked;
+  p.stopReason=p.stopped?el("sessionStopReason").value.trim().slice(0,80):"";
   p.tags=el("sessionTags").value.split(",").map(function(x){return x.trim().slice(0,40);}).filter(Boolean).slice(0,20);
   p.note=el("sessionNote").value.trim().slice(0,140);
   if(!door){
@@ -1676,12 +1754,71 @@ function downloadBlob(name,type,content){
   a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},1000);
 }
 function exportCsv(){
-  var rows=[["scenario","type","date","target_seconds","actual_seconds","outcome","stopped_early","warmups_completed","tags","note"]];
+  var rows=[["scenario","type","date","target_seconds","actual_seconds","outcome","stopped_early","stop_reason","warmups_completed","tags","note"]];
   state.scenarios.forEach(function(s){s.sessions.forEach(function(p){rows.push([s.label,p.kind==="door"?"door exercise":"timed absence",new Date(p.at).toISOString(),
-    p.kind==="door"?"":p.target,p.kind==="door"?"":p.actual,p.outcome,p.stopped?"yes":"no",p.kind==="door"?p.steps:(p.warmDone==null?"":p.warmDone),
+    p.kind==="door"?"":p.target,p.kind==="door"?"":p.actual,p.outcome,p.stopped?"yes":"no",p.stopReason||"",p.kind==="door"?p.steps:(p.warmDone==null?"":p.warmDone),
     (p.tags||[]).join(" | "),p.note||""]);});});
   downloadBlob("threshold-sessions-"+new Date().toISOString().slice(0,10)+".csv","text/csv;charset=utf-8","\ufeff"+rows.map(function(r){return r.map(csvCell).join(",");}).join("\r\n"));
 }
+
+/* ================= milestone certificates and sharing ================= */
+var activeMilestone=null;
+function milestoneBySeconds(seconds){return MILESTONES.filter(function(m){return m.s===seconds;})[0]||null;}
+function roundedRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+}
+function drawCertificate(m,g){
+  var canvas=el("certificateCanvas"),ctx=canvas.getContext("2d"),W=canvas.width,H=canvas.height;
+  var name=dogName(),date=new Date(g.at).toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
+  ctx.clearRect(0,0,W,H);ctx.fillStyle="#F5F1EA";ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="#FFFFFF";roundedRect(ctx,34,34,W-68,H-68,30);ctx.fill();
+  ctx.strokeStyle="#E08A34";ctx.lineWidth=5;roundedRect(ctx,54,54,W-108,H-108,24);ctx.stroke();
+  var marks=[[110,115,10,"#E08A34"],[1030,115,8,"#4A9A72"],[1080,525,12,"#E08A34"],[130,545,8,"#4A9A72"],[980,560,6,"#C8912A"],[210,95,6,"#C8912A"]];
+  marks.forEach(function(x){ctx.fillStyle=x[3];ctx.beginPath();ctx.arc(x[0],x[1],x[2],0,Math.PI*2);ctx.fill();});
+  ctx.textAlign="center";ctx.fillStyle="#7C746B";ctx.font="600 25px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText("THRESHOLD MILESTONE",W/2,128);
+  ctx.fillStyle="#2E2A26";ctx.font="700 52px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText(name,W/2,218);
+  ctx.fillStyle="#7C746B";ctx.font="400 27px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText("managed a relaxed absence of",W/2,270);
+  ctx.fillStyle="#4A9A72";ctx.font="700 104px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText(m.l,W/2,392);
+  ctx.fillStyle="#2E2A26";ctx.font="600 30px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText("alone",W/2,437);
+  ctx.fillStyle="#7C746B";ctx.font="400 24px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText(date+"  ·  "+g.scenario,W/2,508);
+  ctx.fillStyle="#E08A34";ctx.font="600 25px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText("Small steps. Real progress.",W/2,570);
+  ctx.fillStyle="#A79E93";ctx.font="500 18px system-ui, -apple-system, Segoe UI, sans-serif";ctx.fillText("Created with Threshold · separation anxiety training log",W/2,615);
+}
+function openMilestone(seconds,celebrating){
+  var m=milestoneBySeconds(seconds),g=badges()[seconds];if(!m||!g)return;
+  activeMilestone={m:m,g:g};
+  el("milestoneTitle").textContent=celebrating?"A new Threshold milestone!":"Celebrate "+m.l+" alone";
+  var extra=celebrating&&justEarned.length>1?" You unlocked "+justEarned.length+" milestones in this session.":"";
+  el("milestoneSub").textContent=dogName()+" managed "+fmt(g.actual)+" relaxed in "+g.scenario+"."+extra;
+  drawCertificate(m,g);openModal("milestoneModal");
+}
+function certificateName(){
+  if(!activeMilestone)return "threshold-milestone.png";
+  return "threshold-"+dogName().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-"+activeMilestone.m.l.replace(/\s+/g,"-")+".png";
+}
+function certificateBlob(){
+  return new Promise(function(resolve,reject){el("certificateCanvas").toBlob(function(b){b?resolve(b):reject(new Error("Could not create certificate"));},"image/png");});
+}
+function saveBlob(blob,name){
+  var url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+async function shareCurrentMilestone(){
+  if(!activeMilestone)return;
+  var text=dogName()+" reached a new separation anxiety training milestone: "+activeMilestone.m.l+" relaxed alone!";
+  try{
+    var blob=await certificateBlob(),file=new File([blob],certificateName(),{type:"image/png"});
+    if(navigator.share){
+      if(!navigator.canShare||navigator.canShare({files:[file]})) await navigator.share({title:"Threshold milestone",text:text,files:[file]});
+      else await navigator.share({title:"Threshold milestone",text:text});
+      return;
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(text);showToast("Share text copied. Use Save certificate for the image.");return;}
+    saveBlob(blob,certificateName());showToast("Certificate saved — share it from your photos or files.");
+  }catch(e){if(e&&e.name==="AbortError")return;showToast("Sharing was not available. Try saving the certificate instead.");}
+}
+el("shareMilestone").onclick=shareCurrentMilestone;
+el("downloadCertificate").onclick=async function(){try{saveBlob(await certificateBlob(),certificateName());showToast("Certificate saved.");}catch(e){showToast("The certificate could not be saved.");}};
+el("closeMilestone").onclick=function(){closeModal("milestoneModal");};
 
 /* ================= wiring ================= */
 el("charts").addEventListener("click",function(e){

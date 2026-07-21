@@ -30,6 +30,8 @@ Following you, watching from the door or gate, or choosing to lie nearby is not 
 4. Complete the main absence only when the warm-ups were comfortable.
 5. Return early whenever needed; do not stay out merely to complete the clock.
 
+During a settle break, choose **End session early** when you do not want to continue. You can record why you stopped and still rate how your dog coped up to that point. A stopped session rated relaxed is saved but will not increase the next target.
+
 Keep **Sound while you're away** switched on for the target chime and background-timer features. On supported phones, the Lock Screen or Control Centre may also show a moving progress bar and countdown while you use the camera app.
 
 ## Rating the result
@@ -46,7 +48,11 @@ Use **Edit** beside any session to correct its date, target, actual time, result
 
 ## Progress and sharing
 
-Milestones are earned only by successful main absences. Deliberately shorter sessions are normal. Use **Export CSV** for a readable spreadsheet or trainer report.
+Milestones are earned only by successful completed main absences. Deliberately shorter sessions are normal.
+
+Tap any earned milestone to open a personalised celebration certificate. Choose **Share milestone** to open the phone's share sheet, or **Save certificate** to keep the image and share it later. A newly earned milestone opens automatically after the session is saved.
+
+Use **Export CSV** for a readable spreadsheet or trainer report. Stopped sessions include their reason in the export.
 
 ## Backups
 

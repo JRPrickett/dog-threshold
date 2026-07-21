@@ -1,23 +1,38 @@
 # Deployment notes
 
 1. Download the updated package.
-2. Replace `index.html`, `sw.js`, `manifest.webmanifest` and optionally `README.md` in your GitHub repository root.
+2. Replace `index.html`, `sw.js`, `manifest.webmanifest` and optionally the documentation files in your GitHub repository root.
 3. Keep your existing PNG icon files.
 4. Commit and push.
-5. Open the live page once online. Installed copies should update because the cache has been bumped to `threshold-v10`.
-6. Test setup, one short dummy session, edit, undo, CSV export, backup and restore before sending the link to a friend.
+5. Open the live page once while online. Installed copies should update because the cache is now `threshold-v11`.
+6. Completely close and reopen the Home Screen app before testing.
 
+## v11 behaviour changes
 
-## v10 behaviour changes
+### Ending a session early
 
-- Door is a Bore no longer asks for a rating or note after every cue. Each cue is marked **Step done**, followed by one overall session rating and optional notes at the end.
-- Following or waiting by the door is explicitly treated as compatible with a relaxed result when the dog can settle.
-- Timed absences now play a softer early warning: 3 seconds before targets of 8–14 seconds, and 5 seconds before targets of 15 seconds or longer. The normal target chime still plays at zero.
-- Mobile browser use is strongly gated by an installation screen. Browsers cannot force installation, so users may deliberately continue in the browser; the gate returns after seven days and the install banner remains visible until standalone mode is detected.
+- **Stop the session** is now labelled **End session early**.
+- Ending during a settle break no longer automatically records a **Not good** result.
+- The user chooses an optional reason and then rates how the dog coped up to that point.
+- Suggested reasons include dog concern, an external interruption, needing a break, or the plan feeling too difficult.
+- The reason appears in the session log, session editor and CSV export.
+- A stopped session rated relaxed is saved honestly but does not increase the next target. A stopped session rated **Not good** still feeds into the cautious step-back logic.
+- Door is a Bore uses the same end-early and final-rating flow.
 
+### Milestone celebrations
 
-### Lock-screen countdown test
+- Every earned milestone is now tappable.
+- Tapping it opens a certificate-style celebration image containing the dog name, milestone, date and scenario.
+- **Share milestone** uses the device share sheet and includes the PNG certificate where the browser supports file sharing.
+- **Save certificate** downloads the PNG for sharing later.
+- Newly earned milestones open the celebration automatically after the session is saved.
 
-- Timed absences now publish Media Session position state, allowing supported phones to draw a system-managed moving progress bar and elapsed/remaining time.
-- The title metadata also refreshes once per second as a fallback. iOS still controls how frequently Control Centre visibly redraws it.
-- Test both a short warm-up and a main absence with the app open from the Home Screen, then switch to the camera app and inspect the Lock Screen and Control Centre.
+## Suggested checks
+
+- End a timed session during a settle break, choose an interruption reason and rate it relaxed.
+- Confirm the stopped session is logged and the next target does not increase.
+- End a Door is a Bore session early and confirm it reaches one final rating screen.
+- Complete or add a successful 30-second absence, then tap the 30-second milestone.
+- Test both **Share milestone** and **Save certificate** on the phone.
+
+The v10 Media Session countdown experiment is unchanged. iOS still controls whether and how often Control Centre redraws it.

@@ -35,7 +35,7 @@ Keep your existing icon files in the repository: `icon-192.png`, `icon-512.png`,
 
 ## Deploying the update
 
-Replace `index.html`, `sw.js` and `manifest.webmanifest` in the repository root. Commit and push them to the branch used by GitHub Pages. The service worker is already bumped to `threshold-v10`.
+Replace `index.html`, `sw.js` and `manifest.webmanifest` in the repository root. Commit and push them to the branch used by GitHub Pages. The service worker is already bumped to `threshold-v11`.
 
 Existing data stored under `threshold.v2` is normalised in place and receives stable session IDs. A backup before deployment is still sensible.
 
@@ -52,3 +52,11 @@ There is no server, account, analytics or external font request. Training data i
 ## Development notes
 
 All paths remain relative (`./`), so the app works in a GitHub Pages project subfolder. When changing any cached file, bump the cache version in `sw.js`.
+
+## Milestone sharing
+
+Every earned milestone opens a personalised canvas certificate. On supported mobile browsers, the Web Share API sends the PNG through the device share sheet; otherwise the user can save the certificate image.
+
+## Ending early
+
+Ending during a settle break now leads to an overall result screen instead of automatically logging failure. The user can store a reason for stopping. Relaxed stopped sessions hold the current baseline rather than progressing it.
