@@ -641,6 +641,9 @@ function cleanSession(p,start){
     out.planned=intIn(p.planned,1,50,Math.max(1,out.steps)); out.wobbles=intIn(p.wobbles,0,50,0);
   } else {
     out.target=target; out.actual=intIn(p.actual,1,14400,target); out.base=intIn(p.base,1,14400,target);
+    // Older versions did not automatically mark an early return made with
+    // the "I'm back" button as stopped. Repair those records on load.
+    if(out.actual<out.target) out.stopped=true;
     out.easy=!!p.easy; out.warmups=intIn(p.warmups,0,20,0); out.warmDone=intIn(p.warmDone,0,20,out.warmups);
     out.warmTimes=Array.isArray(p.warmTimes)?p.warmTimes.map(function(x){return intIn(x,0,14400,0);}).slice(0,20):[];
   }
@@ -1186,7 +1189,7 @@ function tagPanel(parent){
 var STOP_REASONS=["Dog showed concern","External interruption","Dog needed a break","The plan felt too difficult","Other"];
 function stopReasonPanel(parent){
   var box=document.createElement("div"); box.className="stopReason";
-  box.innerHTML='<div class="stopBanner"><b>Session ended early.</b> Rate how your dog coped up to that point. A relaxed rating will be saved, but it will not increase the next target.</div>'+ 
+  box.innerHTML='<div class="stopBanner"><b>Session ended before the planned target.</b> Rate how your dog coped up to that point. A Success rating will repeat the same target next time rather than increasing or reducing it.</div>'+ 
     '<label for="stopReasonSelect">Why did you stop?</label><select id="stopReasonSelect"><option value="">Choose a reason (optional)</option>'+ 
     STOP_REASONS.map(function(x){return '<option value="'+escAttr(x)+'">'+esc(x)+'</option>';}).join("")+'</select>'+ 
     '<input type="text" id="stopReasonOther" maxlength="80" placeholder="Add a little more detail" style="margin-top:8px" hidden>';
@@ -1443,9 +1446,13 @@ function stopRep(){
   if(rep.kind==="warm"){
     repLog[repIdx]={target:rep.target,actual:actual,done:true}; repIdx++; toRest(false); return;
   }
-  pending={base:plan.base,target:rep.target,actual:actual,easy:!!plan.easy,
+  var returnedEarly=actual<rep.target;
+  pending={base:plan.base,target:rep.target,actual:actual,easy:!!plan.easy,stopped:returnedEarly,stopReason:"",
     warmups:reps.length-1,warmDone:reps.length-1,warmTimes:repLog.map(function(x){return x?x.actual:0;})};
-  phase="verdictMain"; el("delta").textContent="You were gone "+fmt(actual)+" of a "+fmt(rep.target)+" target.";
+  phase="verdictMain";
+  el("delta").textContent=returnedEarly
+    ? "You returned after "+fmt(actual)+", before the "+fmt(rep.target)+" target."
+    : "You were gone "+fmt(actual)+" of a "+fmt(rep.target)+" target.";
   persistActiveRun(); drawActions(); drawTabs(); drawHeadline(); drawReps();
 }
 
@@ -1804,9 +1811,10 @@ el("sessionForm").onsubmit=function(e){
     var target=intIn(el("sessionTarget").value,1,14400,0), actual=intIn(el("sessionActual").value,1,14400,0);
     if(!target||!actual){alert("Enter valid target and actual times.");return;}
     p.target=target;p.actual=actual;p.base=target;p.kind="absence";
+    if(actual<target) p.stopped=true;
     var floor=Math.max(1,Math.round(target*0.5));
-    if(actual<target*0.75) p.base=Math.max(floor,actual);
-    if(p.outcome==="bad"&&actual<p.base) p.base=Math.max(floor,actual);
+    if(!p.stopped&&actual<target*0.75) p.base=Math.max(floor,actual);
+    if(!p.stopped&&p.outcome==="bad"&&actual<p.base) p.base=Math.max(floor,actual);
   }
   if(existing){s.sessions[editingIndex]=p;}else{s.sessions.push(p);s.sessions.sort(function(a,b){return a.at-b.at;});}
   justEarned=[]; closeModal("sessionModal"); save(); render();

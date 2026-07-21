@@ -1,23 +1,23 @@
-# Threshold v19 deployment
+# Threshold v20 deployment
 
 Replace `index.html` and `sw.js` together.
 
-## Numeric settings editing fix
+## Early-return progression fix
 
-The previous autosave routine validated numeric fields on every keystroke. If a field
-already contained `2`, typing `3` could briefly produce `23`, causing the field to be
-rejected and reset to `2`.
+Pressing **I'm back** before the main-absence target is reached now automatically
+marks the session as stopped early.
 
-Numeric settings now:
+This means:
 
-- Select the current value when tapped or focused
-- Allow normal typing without validation interrupting the edit
-- Save when the field loses focus, changes, or Enter is pressed
-- Restore the previous value only if the completed entry is invalid
-- Support Escape to cancel an edit
-- Use a numeric mobile keyboard hint
+- Returned before target + Success: repeat the exact planned target
+- Returned before target + OK: follow the stopped-OK hold/reduction rules
+- Returned before target + Not good: follow the stopped-not-good hold/reduction rules
+- Reaching or exceeding the target continues to count as a completed session
 
-This applies to starting absence, maximum sessions per day, warm-up steps, and settle
-break length.
+Older affected records are repaired when the app loads: any absence whose actual time
+is shorter than its target is treated as stopped early. This should correct the
+currently displayed next target without requiring the session to be deleted.
 
-The service-worker cache is `threshold-v19`.
+The session editor now follows the same rule.
+
+The service-worker cache is `threshold-v20`.
