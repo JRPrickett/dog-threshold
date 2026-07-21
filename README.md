@@ -1,67 +1,47 @@
 # Threshold
 
-A separation anxiety training log. Works out how long to leave your dog today,
-runs the session with varied warm-ups, and keeps a record of how it went.
+A privacy-first separation anxiety training log. It suggests a conservative absence for today, runs varied warm-ups, and keeps a local record of how each scenario went.
 
-No server, no accounts, no database. Everything is stored in the browser on the
-person's own device, and nothing is ever sent anywhere.
+## What changed in v8
+
+- First-run setup explaining safe starting durations and camera use
+- Recovery prompt after a refresh, crash or interrupted session
+- Edit, delete and manually add past sessions
+- Undo notices after saves and deletions
+- CSV export for a trainer or spreadsheet
+- Stronger backup validation and automatic migration of existing v1/v2 logs
+- No third-party fonts or analytics; training data remains on the device
+- Install reminders return after 14 days rather than disappearing forever
+- Mobile session-table scrolling and improved keyboard focus
+- Service-worker cache cleanup is limited to Threshold caches
 
 ## Files
 
 | File | What it is |
 | --- | --- |
 | `index.html` | The whole app — markup, styles and logic |
-| `manifest.webmanifest` | Lets browsers install it to a home screen |
-| `sw.js` | Service worker: offline use, and required for Android install |
-| `icon-192.png`, `icon-512.png` | App icons |
-| `apple-touch-icon.png` | iOS home-screen icon |
-| `favicon-32.png` | Browser tab icon |
+| `manifest.webmanifest` | Installation metadata |
+| `sw.js` | Offline service worker |
+| `USER-GUIDE.md` | Friend-facing instructions |
 
-All paths are relative (`./`), so it works from a subfolder such as
-`username.github.io/dog-threshold/` without any changes.
+Keep your existing icon files in the repository: `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, and any favicon you use.
 
-## Deploying to GitHub Pages
+## Deploying the update
 
-1. Create a public repository.
-2. Upload every file in this folder to the root of it.
-3. Settings → Pages → Source: *Deploy from a branch*, branch `main`, folder `/ (root)`.
-4. Wait a minute, then open `https://username.github.io/reponame/`.
+Replace `index.html`, `sw.js` and `manifest.webmanifest` in the repository root. Commit and push them to the branch used by GitHub Pages. The service worker is already bumped to `threshold-v8`.
 
-HTTPS is required for installing and for the service worker. GitHub Pages,
-Netlify and Cloudflare Pages all provide it automatically.
+Existing data stored under `threshold.v2` is normalised in place and receives stable session IDs. A backup before deployment is still sensible.
 
-## Installing it
+## Privacy
 
-- **iPhone / iPad:** open in Safari, tap Share, then *Add to Home Screen*.
-  This matters — Safari deletes stored data for websites that haven't been
-  opened in seven days, and home-screen apps are exempt from that.
-- **Android:** Chrome shows an Install button in the app itself.
-- **Desktop:** Chrome and Edge show an install icon in the address bar.
+There is no server, account, analytics or external font request. Training data is saved in the browser's local storage. A downloaded JSON backup is the only portable copy if browsing data is cleared or the device is changed.
 
-## Updating it after a change
+## Installation
 
-Edit `index.html`, then **bump the `CACHE` version in `sw.js`** (for example
-`threshold-v1` to `threshold-v2`) and upload both. Without that bump, people who
-already installed it may keep seeing the old version from their cache.
+- **iPhone / iPad:** open in Safari, tap Share, then **Add to Home Screen**.
+- **Android:** use the Install button shown by Chrome or the app.
+- **Desktop:** Chrome and Edge usually show an install icon in the address bar.
 
-## While you're in another app
+## Development notes
 
-You'll usually be watching the dog on a camera app, not this. Live Activities
-and Picture-in-Picture aren't available to web apps on iOS, so instead:
-
-- A silent audio loop starts when you begin a step, which keeps the timer
-  running while the app is in the background.
-- A chime sounds when the absence is up.
-- The current step appears on your lock screen and in Control Centre via the
-  Media Session API — the same place music track names show.
-- The screen is kept awake while a session is running.
-
-Turn it off in Settings under *Sound while you're away*. Note that muting also
-gives up the background timer, since the silent loop is what keeps it alive.
-
-## Data
-
-Stored under the key `threshold.v2` in the browser's localStorage, roughly 2KB.
-Settings has a *Download a backup* button producing a dated `.json`, and a
-*Restore from a file* button to load one back — that file is the only copy that
-survives someone clearing their browsing data or switching devices.
+All paths remain relative (`./`), so the app works in a GitHub Pages project subfolder. When changing any cached file, bump the cache version in `sw.js`.
