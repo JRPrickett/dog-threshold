@@ -727,13 +727,46 @@ function trailing(s,k){
   return n;
 }
 
+function trailingStopped(sessions,outcome){
+  var n=0;
+  for(var i=sessions.length-1;i>=0;i--){
+    var p=sessions[i];
+    if(p.stopped&&p.outcome===outcome) n++; else break;
+  }
+  return n;
+}
+
 function nextBase(sessions,start){
   sessions=sessions.filter(function(p){ return p.kind!=="door"; });
   if(!sessions.length) return { base:start,
     reason:"First session here. Pick something your dog can already do without a flicker of worry." };
   var last=sessions[sessions.length-1], base=last.base;
-  if(last.stopped&&last.outcome!=="bad"){
-    return {base:base, reason:"The last session ended early. Holding the duration rather than treating it as a completed progression session."};
+  if(last.stopped){
+    var planned=Math.max(1,last.target||base||start);
+    if(last.outcome==="success"){
+      return {base:planned,target:planned,holdExact:true,
+        reason:"The last session ended early while your dog was relaxed. Repeating the same planned duration."};
+    }
+    if(last.outcome==="ok"){
+      var stoppedOk=trailingStopped(sessions,"ok");
+      if(stoppedOk<2){
+        return {base:planned,target:planned,holdExact:true,
+          reason:"The session ended early with some unease. Holding the planned duration once before changing it."};
+      }
+      var okDown=Math.max(Math.round(planned*0.05),minStep(planned));
+      var okNext=Math.max(1,planned-okDown);
+      return {base:okNext,target:okNext,holdExact:true,
+        reason:stoppedOk+" early-ended OK sessions in a row. Easing back 5%."};
+    }
+    var stoppedBad=trailingStopped(sessions,"bad");
+    if(stoppedBad<2){
+      return {base:planned,target:planned,holdExact:true,
+        reason:"The session ended early and was difficult. Holding once, then reducing if it happens again."};
+    }
+    var badPct=stoppedBad>=3?0.30:0.20;
+    var badNext=Math.max(1,Math.round(planned*(1-badPct)));
+    return {base:badNext,target:badNext,holdExact:true,reset:stoppedBad>=3,
+      reason:stoppedBad+" difficult early-ended sessions in a row. Down "+Math.round(badPct*100)+"%."};
   }
   if(last.outcome==="success"){
     var run=trailing(sessions,"success");
@@ -762,7 +795,9 @@ function nextBase(sessions,start){
 function planFor(s){
   var abs=absOf(s), plan=nextBase(abs,s.start), n=abs.length;
   plan.easy=false;
-  if(trailing(s.sessions,"success")>=3 && n%4===0){
+  if(plan.holdExact){
+    plan.target=plan.base;
+  } else if(trailing(s.sessions,"success")>=3 && n%4===0){
     plan.target=Math.max(1,Math.round(plan.base*0.6)); plan.easy=true;
   } else if(n>0){
     var seed=((n*9301+49297)%233280)/233280;
@@ -1450,9 +1485,9 @@ function record(outcome){
   if(!pending.stopped){
     if(pending.actual<pending.target*0.75) pending.base=Math.max(floor,pending.actual);
     if(outcome==="bad"&&pending.actual<pending.base) pending.base=Math.max(floor,pending.actual);
-  } else if(outcome==="bad"&&pending.actual<pending.base){
-    pending.base=Math.max(floor,pending.actual);
   } else {
+    // An early finish does not prove a shorter duration. Progression is decided
+    // next time from the consecutive stopped-session rating, not the actual time.
     pending.base=plan.base;
   }
   audioStop(); s.sessions.push(pending); var saved=pending;
