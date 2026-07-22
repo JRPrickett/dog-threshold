@@ -1,34 +1,41 @@
-# Threshold v28 deployment
+# Threshold v29 deployment
 
-## Save-session fix
+## Startup fix
 
-The session editor used `validOutcome(...)` without importing it. That produced
-a runtime error when **Save session** was pressed. The missing import is fixed.
+v28 called `storageStatus()` during the first render. That function checked an
+undefined variable named `canSave`, causing a JavaScript runtime error.
 
-## Richer usage events
+Effects included:
 
-`session_started` and `session_saved` can now include:
+- The page appearing to stall after partially drawing
+- First-run setup not opening
+- Later startup code not running
 
-- Dog name entered in Threshold
-- Planned target time
-- Whether the saved session was stopped early
-- Session type: timed absence or door exercise
-- Broad device type: mobile, tablet or desktop
-- Browser family
+v29 calls `storage.canSave()` correctly.
 
-Threshold does not send the full user-agent string or create a device/user ID.
+## First-run setup
 
-Scenario names, notes, ratings, actual duration and full training history are
-not sent.
+A fresh installation now reaches the setup guide and asks for:
 
-## Existing database
+- Dog name
+- Comfortable starting absence
+- Timed absence or Door is a Bore mode
+- Camera acknowledgement
 
-Run `cloudflare-worker/migration-v28.sql` once, then replace the deployed Worker
-code with `cloudflare-worker/src/index.js`.
+**Skip for now** no longer permanently marks setup as complete. The guide will
+be offered again on a later launch, and remains available from Settings.
 
-## Configuration
+## Reset fix
 
-- App version: `v28`
+**Delete everything and start over** previously called an undefined `fresh()`
+helper. It now uses the exported `freshState()` function and reliably opens the
+setup guide afterward.
+
+## Existing analytics
+
+The v28 Worker and D1 metadata changes remain included and unchanged.
+
+- App version: `v29`
 - Web Analytics token: configured
 - Event endpoint: configured
-- Service-worker cache: `threshold-v28`
+- Service-worker cache: `threshold-v29`

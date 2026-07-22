@@ -1,5 +1,5 @@
 import {
-  createStorage, makeId, intIn, textIn, validOutcome, normaliseState
+  createStorage, makeId, intIn, textIn, validOutcome, normaliseState, freshState
 } from "./storage.js";
 import {
   planFor, nextBase, trailing, trailingStopped, minStep,
@@ -1558,7 +1558,7 @@ function askPersist(){
 
 function storageStatus(){
   var p=el("storageStatus"); if(!p) return;
-  if(!canSave){ p.textContent="Not saving at all in this window — see the warning at the top."; return; }
+  if(!storage.canSave()){ p.textContent="Not saving at all in this window — see the warning at the top."; return; }
   var bits=[standalone() ? "Running as an installed app, which is the safest place for your log."
                          : "Running in the browser. Installing it to your home screen protects the log from being cleared."];
   if(state.persisted) bits.push("This browser has marked your data as protected from automatic clearing.");
@@ -1626,7 +1626,12 @@ el("setupSave").onclick=function(){
   state.name=el("setupName").value.trim().slice(0,40); state.scenarios.forEach(function(s){s.start=v;s.mode=el("setupMode").value==="door"?"door":"absence";});
   state.setupDone=true; closeModal("setupModal"); el("dogName").value=state.name; save(); render();
 };
-el("setupSkip").onclick=function(){state.setupDone=true;closeModal("setupModal");save();};
+el("setupSkip").onclick=function(){
+  state.setupDone=false;
+  closeModal("setupModal");
+  save();
+  showToast("Setup skipped for now. You can reopen it from Settings.");
+};
 el("restartSetup").onclick=function(){showSetup(true);};
 
 function offerRecovery(){
@@ -1668,7 +1673,7 @@ el("copyData").onclick=function(){
 el("loadData").onclick=function(){ applyImport(el("data").value); };
 el("wipe").onclick=function(){
   if(confirm("Delete every scenario and session, and start again?")){
-    audioStop(); phase="idle"; state=fresh(); justEarned=[]; save(); render(); showSetup(true);
+    audioStop(); phase="idle"; state=freshState(); justEarned=[]; save(); render(); showSetup(true);
   }
 };
 

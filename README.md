@@ -91,3 +91,10 @@ The session editor save failure is fixed. Saved-session analytics now record
 stopped status plus limited session and device metadata. Because dog name is now
 included, these events should be described as limited usage analytics rather
 than strictly anonymous analytics.
+
+
+## v29 startup fix
+
+The initial render no longer stops on an undefined storage-status variable.
+First-run setup opens normally, and the reset/setup-skip paths have also been
+corrected.
