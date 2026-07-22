@@ -597,12 +597,12 @@ function drawActions(){
   if(mode(sc)==="door"){
     if(phase==="cue"){
       btn(a,"Step done",cueDone);
-      btn(a,"End session early",endDoorEarly,false,true);
+      btn(a,"End session ",endDoor,false,true);
       return;
     }
     if(phase==="rest"){
       btn(a,"Next step",startCue);
-      btn(a,"End session early",endDoorEarly,false,true);
+      btn(a,"End session ",endDoor,false,true);
       return;
     }
     if(phase==="doorVerdict"){
@@ -645,7 +645,7 @@ function drawActions(){
   if(phase==="rest"){
     var next=reps[repIdx];
     btn(a,(next.kind==="main"?"Start the main absence":"Start warm-up "+(repIdx+1)),startRep);
-    btn(a,"End session early",endEarly,false,true);
+    btn(a,"End session ",end,false,true);
     return;
   }
 
@@ -721,6 +721,7 @@ function runTicker(){
       preChimed=true;
       persistActiveRun(true);
       playPreChime();
+      showReturnNotification();
     }
     if(mediaLeft!==lastMediaLeft){
       lastMediaLeft=mediaLeft;
@@ -734,7 +735,6 @@ function runTicker(){
       persistActiveRun(true);
       audioStop();
       playChime();
-      showReturnNotification();
       setTimeout(clearMediaOwnership,1200);
     }
   }
@@ -1735,7 +1735,7 @@ function showReturnNotification(){
   var icon=new URL("./assets/icons/icon-192.png",location.href).href;
   navigator.serviceWorker.ready.then(function(registration){
     return registration.showNotification("Time to head back",{
-      body:dogName()+" · "+scen().label,
+      body:"5 seconds remaining . "+dogName()+" · "+scen().label,
       icon:icon,
       badge:icon,
       tag:"threshold-return",
