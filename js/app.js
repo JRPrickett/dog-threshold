@@ -20,6 +20,8 @@ import {
   dashboardStats, timelineItems, achievementSnapshot, newlyReachedAchievements
 } from "./dashboard.js";
 
+import { friendlyTargetReason } from "./target-reason.js";
+
 /* ================= storage ================= */
 var storage=createStorage();
 var state=storage.boot();
@@ -274,16 +276,20 @@ function drawTargetReason(){
   if(mode(s)!=="absence"||phase!=="idle"||capped()){
     box.hidden=true; box.innerHTML=""; return;
   }
-  var abs=absOf(s), previous="No previous timed session in this scenario.";
-  if(abs.length){
-    var last=abs[abs.length-1];
-    previous="Previous: "+fmt(last.target)+" planned · "+fmt(last.actual)+" actual · "+
-      (last.stopped?"ended early":"completed")+" · "+LABEL[last.outcome]+".";
-  }
+
+  var reason=friendlyTargetReason(s,plan);
+  var detailRows=reason.details.map(function(row){
+    return '<div class="reasonDetailRow"><span>'+esc(row[0])+'</span><b>'+esc(row[1])+'</b></div>';
+  }).join("");
+
   box.className="targetReason"+(plan.reset?" warn":"");
-  box.innerHTML='<span class="why">Why '+esc(fmt(plan.target))+'?</span>'+
-    '<span class="rule">'+esc(plan.reason)+'</span>'+
-    '<span class="previous">'+esc(previous)+'</span>';
+  box.innerHTML=
+    '<span class="why">Why this target?</span>'+
+    '<span class="rule">'+esc(reason.summary)+'</span>'+
+    '<details class="reasonDetails">'+
+      '<summary>View details</summary>'+
+      '<div class="reasonDetailGrid">'+detailRows+'</div>'+
+    '</details>';
   box.hidden=false;
 }
 
@@ -827,7 +833,7 @@ function drawTimeline(){
       return '<div class="timelineItem">'+
         '<span class="timelineDot next"></span>'+
         '<div class="timelineMain"><div class="timelineTitle"><b>Next planned session</b></div>'+
-        '<div class="timelineMeta">'+esc(plan.reason)+'</div></div>'+
+        '<div class="timelineMeta">'+esc(friendlyTargetReason(s,plan).summary)+'</div></div>'+
         '<div class="timelineValue">'+fmt(item.target)+'</div></div>';
     }
     var date=new Date(item.at).toLocaleDateString(undefined,{day:"numeric",month:"short"});

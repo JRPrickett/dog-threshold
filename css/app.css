@@ -358,3 +358,17 @@
   .dashboardGrid{grid-template-columns:1fr}
   .dashboardCard{min-height:auto}
 }
+
+
+.targetReason .rule{font-size:14px;line-height:1.5}
+.reasonDetails{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
+.reasonDetails summary{cursor:pointer;display:inline-flex;align-items:center;min-height:32px;
+  font-size:12.5px;font-weight:600;color:var(--muted);list-style:none}
+.reasonDetails summary::-webkit-details-marker{display:none}
+.reasonDetails summary:after{content:"›";font-size:17px;margin-left:6px;transform:rotate(90deg);
+  transition:transform .15s ease}
+.reasonDetails[open] summary:after{transform:rotate(-90deg)}
+.reasonDetailGrid{display:grid;gap:7px;margin-top:8px;padding:10px 0 2px}
+.reasonDetailRow{display:flex;justify-content:space-between;gap:16px;font-size:12.5px;line-height:1.35}
+.reasonDetailRow span{color:var(--muted)}
+.reasonDetailRow b{font-weight:600;color:var(--ink);text-align:right}

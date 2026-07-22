@@ -1,41 +1,11 @@
-# Threshold v24 deployment
+# Threshold v25 deployment
 
-## User-facing changes
+The home-screen **Why this target?** box now shows one concise, user-facing sentence.
 
-### Dashboard
+Technical information is retained behind **View details**, including the previous
+target, actual time, rating, completion status, training baseline and today's target.
 
-The home screen now includes:
+The recent-progress timeline uses the same concise wording. The detailed pre-save
+review remains unchanged.
 
-- Last timed session
-- Sessions and Success ratings from the last seven days
-- Current working baseline
-- Completed calm results across the five most recent sessions
-
-### Recent-progress timeline
-
-The latest five timed sessions are shown in order with:
-
-- Outcome
-- Completed or ended-early status
-- Planned and actual duration
-- The next planned target and its explanation
-
-### Meaningful achievements
-
-Threshold now recognises newly crossed training markers:
-
-- First completed calm absence
-- Five completed calm absences
-- Five calm sessions in a row
-- One cumulative hour of completed calm absences
-
-These appear only when a newly saved session crosses the threshold. They are not
-streaks, points or daily-pressure mechanics. Undoing the session cancels the
-celebration.
-
-## Technical
-
-Dashboard statistics, timeline preparation and achievement detection live in
-`js/dashboard.js` and have dedicated tests.
-
-Service-worker cache: `threshold-v24`.
+Service-worker cache: `threshold-v25`.

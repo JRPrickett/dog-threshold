@@ -62,3 +62,8 @@ remain in `app.js` until the screen-rendering extraction.
 `js/dashboard.js` now owns pure calculations for dashboard cards, recent-progress
 timeline data and meaningful achievement detection. These features do not alter the
 progression algorithm.
+
+
+## v25 target explanations
+
+`js/target-reason.js` converts progression outcomes into concise user-facing wording, with technical details available through an optional disclosure.
