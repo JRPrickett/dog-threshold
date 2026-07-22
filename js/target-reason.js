@@ -80,7 +80,6 @@ function technicalDetails(last,plan){
     ["Actual time",fmt(last.actual)],
     ["Rating",OUTCOME_LABELS[last.outcome]||last.outcome],
     ["Session status",last.stopped?"Ended early":"Completed"],
-    ["Training baseline",fmt(plan.base)],
     ["Today’s target",fmt(plan.target)]
   ];
 }
