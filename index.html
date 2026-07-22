@@ -146,6 +146,17 @@
   </div>
 </div>
 
+<div class="modal" id="achievementModal" role="dialog" aria-modal="true" aria-labelledby="achievementTitle" hidden>
+  <div class="modalCard achievementCard">
+    <div class="achievementMark" aria-hidden="true">✓</div>
+    <h2 id="achievementTitle"></h2>
+    <p class="sub" id="achievementDetail"></p>
+    <div class="modalActions">
+      <button class="btn" type="button" id="closeAchievement">Continue</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="milestoneModal" role="dialog" aria-modal="true" aria-labelledby="milestoneTitle" hidden>
   <div class="modalCard certificateCard">
     <div class="celebrateBurst" aria-hidden="true">✦ 🎉 ✦</div>
@@ -201,6 +212,22 @@
   <p class="note" id="coach" hidden></p>
   <div class="cheer" id="cheer" hidden></div>
 </main>
+
+<section class="dashboardSection" id="dashboardSection">
+  <div class="sectionHeading">
+    <div>
+      <h2>At a glance</h2>
+      <p class="sub" id="dashboardSub"></p>
+    </div>
+  </div>
+  <div class="dashboardGrid" id="dashboardGrid"></div>
+</section>
+
+<section id="timelineSection">
+  <h2>Recent progress</h2>
+  <p class="sub">The latest timed sessions in this scenario, followed by the next planned target.</p>
+  <div class="timeline" id="timeline"></div>
+</section>
 
 <section>
   <h2>Milestones</h2>

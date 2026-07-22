@@ -1,27 +1,41 @@
-# Threshold v23 deployment
+# Threshold v24 deployment
 
-Phase two of the structural refactor.
+## User-facing changes
 
-## Newly extracted
+### Dashboard
 
-- Session candidate creation and review-plan preview
-- Session status text
-- Active-run save/load/clear helpers
-- Numeric settings field controllers
-- Pure chart data helpers
+The home screen now includes:
 
-The visual chart rendering remains in `app.js` for now because it is tightly coupled to
-the existing HTML-string templates. This avoids an unnecessary UI rewrite during the
-same release.
+- Last timed session
+- Sessions and Success ratings from the last seven days
+- Current working baseline
+- Completed calm results across the five most recent sessions
 
-## Compatibility
+### Recent-progress timeline
 
-The storage key, schema version and user-facing behaviour are unchanged. Existing user
-data remains compatible.
+The latest five timed sessions are shown in order with:
 
-## Testing
+- Outcome
+- Completed or ended-early status
+- Planned and actual duration
+- The next planned target and its explanation
 
-The test suite now covers session previews, active-run state and chart summaries in
-addition to progression, storage and migration rules.
+### Meaningful achievements
 
-Service-worker cache: `threshold-v23`.
+Threshold now recognises newly crossed training markers:
+
+- First completed calm absence
+- Five completed calm absences
+- Five calm sessions in a row
+- One cumulative hour of completed calm absences
+
+These appear only when a newly saved session crosses the threshold. They are not
+streaks, points or daily-pressure mechanics. Undoing the session cancels the
+celebration.
+
+## Technical
+
+Dashboard statistics, timeline preparation and achievement detection live in
+`js/dashboard.js` and have dedicated tests.
+
+Service-worker cache: `threshold-v24`.

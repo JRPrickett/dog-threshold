@@ -16,6 +16,9 @@ import {
 import {
   bindNumberSetting, SETTING_LIMITS
 } from "./settings.js";
+import {
+  dashboardStats, timelineItems, achievementSnapshot, newlyReachedAchievements
+} from "./dashboard.js";
 
 /* ================= storage ================= */
 var storage=createStorage();
@@ -139,6 +142,7 @@ var plan=null, pending=null, chartMode="one";
 var reps=[], repIdx=0, repLog=[], retries=0, shuffle=0, justEarned=[];
 var tags=[], note="", graduated=false, editingIndex=null;
 var reviewCandidate=null, reviewPlan=null, milestoneTimer=null;
+var achievementQueue=[], achievementTimer=null;
 
 function persistActiveRun(){
   if(phase==="idle"){ state.activeRun=null; save(); return; }
@@ -189,7 +193,7 @@ function render(){
     coach.hidden=true;
   }
 
-  drawTabs(); drawAdjust(); drawActions(); drawCheer(); drawBadges(); drawCharts(); drawLog();
+  drawTabs(); drawAdjust(); drawActions(); drawCheer(); drawDashboard(); drawTimeline(); drawBadges(); drawCharts(); drawLog();
   el("startDur").value=s.start;
   el("warmups").value=nWarm(s);
   el("dailyCap").value=dailyCap();
@@ -675,13 +679,14 @@ function reviewSession(outcome){
 
 function commitReviewedSession(){
   if(!reviewCandidate) return;
-  var s=scen(), before=badges(), saved=reviewCandidate;
+  var s=scen(), before=badges(), achievementBefore=achievementSnapshot(state.scenarios), saved=reviewCandidate;
   saved.id=makeId("p");
   saved.at=Date.now();
   audioStop();
   s.sessions.push(saved);
-  var after=badges();
+  var after=badges(), achievementAfter=achievementSnapshot(state.scenarios);
   justEarned=MILESTONES.filter(function(m){return after[m.s]&&!before[m.s];});
+  achievementQueue=newlyReachedAchievements(achievementBefore,achievementAfter);
   s.override=null;
   reviewCandidate=null; reviewPlan=null;
   closeModal("sessionReviewModal");
@@ -698,10 +703,21 @@ function commitReviewedSession(){
       }
     },12500);
   }
+  clearTimeout(achievementTimer);
+  if(achievementQueue.length){
+    achievementTimer=setTimeout(function(){
+      achievementTimer=null;
+      if(state.scenarios.some(function(x){return x.id===s.id&&x.sessions.some(function(p){return p.id===saved.id;});})){
+        if(!document.querySelector(".modal:not([hidden])")) showNextAchievement();
+        else achievementTimer=setTimeout(showNextAchievement,1200);
+      }
+    },earned?14200:12500);
+  }
 
   var next=planFor(s);
   showToast("Session saved · next target "+fmt(next.target)+".","Undo",function(){
     clearTimeout(milestoneTimer); milestoneTimer=null;
+    clearTimeout(achievementTimer); achievementTimer=null; achievementQueue=[];
     removeSessionById(s.id,saved.id);
   },12000);
 }
@@ -762,6 +778,78 @@ function drawCheer(){
   el("cheerOpen").onclick=function(){var m=justEarned[justEarned.length-1];if(m)openMilestone(m.s,true);};
   el("cheerX").onclick=function(){justEarned=[];drawCheer();};
 }
+
+
+/* ================= dashboard and timeline ================= */
+function outcomeClass(outcome){
+  return outcome==="success"?"success":outcome==="ok"?"ok":"bad";
+}
+function drawDashboard(){
+  var box=el("dashboardGrid"), sub=el("dashboardSub"), s=scen();
+  if(mode(s)!=="absence"){
+    box.innerHTML='<div class="dashboardCard"><span class="k">Current mode</span><span class="big">Door is a Bore</span><span class="detail">Timed-session statistics will appear after switching to timed departures.</span></div>';
+    sub.textContent="A concise view of the current scenario.";
+    return;
+  }
+
+  var stats=dashboardStats(s,plan), last=stats.last;
+  sub.textContent="Current position in "+s.label+".";
+  var lastCard=last
+    ? '<div class="dashboardCard"><span class="k">Last session</span>'+
+      '<span class="big">'+fmt(last.actual)+'</span>'+
+      '<span class="detail">'+fmt(last.target)+' planned · '+(last.stopped?"ended early":"completed")+'</span>'+
+      '<span class="outcome '+outcomeClass(last.outcome)+'">'+LABEL[last.outcome]+'</span></div>'
+    : '<div class="dashboardCard"><span class="k">Last session</span><span class="big">—</span><span class="detail">No timed session logged in this scenario yet.</span></div>';
+
+  var recentDetail=stats.recentCount
+    ? stats.recentSuccess+' of the last '+stats.recentCount+' completed calmly'
+    : "No recent timed sessions";
+
+  box.innerHTML=lastCard+
+    '<div class="dashboardCard"><span class="k">This week</span><span class="big">'+stats.weekCount+'</span>'+
+      '<span class="detail">'+stats.weekSuccess+' marked Success</span></div>'+
+    '<div class="dashboardCard"><span class="k">Working baseline</span><span class="big">'+fmt(stats.baseline)+'</span>'+
+      '<span class="detail">Used by Threshold before any deliberate variation.</span></div>'+
+    '<div class="dashboardCard"><span class="k">Recent consistency</span><span class="big">'+
+      (stats.recentCount?stats.recentSuccess+'/'+stats.recentCount:"—")+'</span>'+
+      '<span class="detail">'+recentDetail+'</span></div>';
+}
+function drawTimeline(){
+  var box=el("timeline"), section=el("timelineSection"), s=scen();
+  if(mode(s)!=="absence"){
+    section.hidden=true;
+    return;
+  }
+  section.hidden=false;
+  var items=timelineItems(s,plan.target,5);
+  box.innerHTML=items.map(function(item){
+    if(item.type==="next"){
+      return '<div class="timelineItem">'+
+        '<span class="timelineDot next"></span>'+
+        '<div class="timelineMain"><div class="timelineTitle"><b>Next planned session</b></div>'+
+        '<div class="timelineMeta">'+esc(plan.reason)+'</div></div>'+
+        '<div class="timelineValue">'+fmt(item.target)+'</div></div>';
+    }
+    var date=new Date(item.at).toLocaleDateString(undefined,{day:"numeric",month:"short"});
+    return '<div class="timelineItem">'+
+      '<span class="timelineDot '+outcomeClass(item.outcome)+'"></span>'+
+      '<div class="timelineMain"><div class="timelineTitle">'+LABEL[item.outcome]+
+        ' · '+(item.stopped?"ended early":"completed")+'</div>'+
+      '<div class="timelineMeta">'+date+' · '+fmt(item.target)+' planned</div></div>'+
+      '<div class="timelineValue">'+fmt(item.actual)+'</div></div>';
+  }).join("");
+}
+function showNextAchievement(){
+  if(!achievementQueue.length) return;
+  var achievement=achievementQueue.shift();
+  el("achievementTitle").textContent=achievement.title;
+  el("achievementDetail").textContent=achievement.detail;
+  openModal("achievementModal");
+}
+el("closeAchievement").onclick=function(){
+  closeModal("achievementModal");
+  if(achievementQueue.length) setTimeout(showNextAchievement,250);
+};
 
 /* ================= tabs ================= */
 function drawTabs(){

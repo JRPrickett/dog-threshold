@@ -55,3 +55,10 @@ The service-worker cache is `threshold-v22`.
 Session review calculations, active-run persistence, numeric settings controllers and
 pure chart-data preparation are now separated from `app.js`. Visual chart templates
 remain in `app.js` until the screen-rendering extraction.
+
+
+## v24 dashboard and engagement layer
+
+`js/dashboard.js` now owns pure calculations for dashboard cards, recent-progress
+timeline data and meaningful achievement detection. These features do not alter the
+progression algorithm.
