@@ -8,7 +8,7 @@ export const ANALYTICS_CONFIG=Object.freeze({
   appVersion:"v26",
 
   // Copy only the token value from Cloudflare's Web Analytics snippet.
-  cloudflareWebAnalyticsToken:"",
+  cloudflareWebAnalyticsToken:"560cdae680184b58a8fb7da59b990fb0",
 
   // Example: https://threshold-events.YOUR-SUBDOMAIN.workers.dev/events
   eventEndpoint:""
