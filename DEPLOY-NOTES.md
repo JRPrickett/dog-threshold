@@ -1,31 +1,27 @@
-# Threshold v22 deployment
+# Threshold v23 deployment
 
-This is a structural refactor rather than a feature release.
+Phase two of the structural refactor.
 
-## Before deployment
+## Newly extracted
 
-Copy the existing app icons into `assets/icons/`:
+- Session candidate creation and review-plan preview
+- Session status text
+- Active-run save/load/clear helpers
+- Numeric settings field controllers
+- Pure chart data helpers
 
-- `icon-192.png`
-- `icon-512.png`
-- `apple-touch-icon.png`
+The visual chart rendering remains in `app.js` for now because it is tightly coupled to
+the existing HTML-string templates. This avoids an unnecessary UI rewrite during the
+same release.
 
-## Behaviour
+## Compatibility
 
-The existing UI, progression rules, local-storage key and schema version are retained.
-Users should keep their existing data because the production origin and storage key do
-not change.
+The storage key, schema version and user-facing behaviour are unchanged. Existing user
+data remains compatible.
 
-## Technical changes
+## Testing
 
-- Inline CSS moved to `css/app.css`
-- Inline JavaScript moved to ES modules
-- Storage/migrations isolated in `js/storage.js`
-- Progression/warm-ups isolated in `js/progression.js`
-- Duration and UI helpers isolated
-- Node-based regression tests added
-- GitHub Actions test workflow added
-- Service-worker shell updated for all module files
-- Cache version bumped to `threshold-v22`
+The test suite now covers session previews, active-run state and chart summaries in
+addition to progression, storage and migration rules.
 
-Run `npm test` before deployment.
+Service-worker cache: `threshold-v23`.

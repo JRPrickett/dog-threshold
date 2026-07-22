@@ -7,6 +7,15 @@ import {
 } from "./progression.js";
 import { fmt } from "./timer.js";
 import { el, esc, escAttr } from "./ui.js";
+import {
+  makeCandidateSession, previewPlanWithCandidate, sessionStatusText
+} from "./sessions.js";
+import {
+  saveActiveRunState, clearActiveRunState, loadActiveRun
+} from "./state.js";
+import {
+  bindNumberSetting, SETTING_LIMITS
+} from "./settings.js";
 
 /* ================= storage ================= */
 var storage=createStorage();
@@ -138,16 +147,9 @@ function persistActiveRun(){
     tags:tags, note:note, shuffle:shuffle, graduated:graduated };
   save();
 }
-function clearActiveRun(){ state.activeRun=null; }
-function restoreRun(r){
-  if(!r||!state.scenarios.some(function(s){return s.id===r.scenarioId;})) return false;
-  if(["running","rest","cue","doorVerdict","verdictMain","wobble"].indexOf(r.phase)<0) return false;
-  state.active=r.scenarioId; phase=r.phase; startedAt=Number(r.startedAt)||Date.now(); restEnds=Number(r.restEnds)||Date.now();
-  plan=r.plan||planFor(scen()); pending=r.pending||null; reps=Array.isArray(r.reps)?r.reps:[];
-  repIdx=intIn(r.repIdx,0,Math.max(0,reps.length-1),0); repLog=Array.isArray(r.repLog)?r.repLog:[];
-  tags=Array.isArray(r.tags)?r.tags:[]; note=textIn(r.note,140); shuffle=intIn(r.shuffle,0,9999,0); graduated=!!r.graduated;
-  if(!reps.length) return false;
-  return true;
+function clearActiveRun(){
+  clearActiveRunState(state);
+  save();
 }
 
 function render(){
@@ -645,30 +647,17 @@ function endEarly(){
 }
 
 function candidateFor(outcome){
-  var candidate={
-    base:pending.base,target:pending.target,actual:pending.actual,easy:!!pending.easy,
-    stopped:!!pending.stopped,stopReason:pending.stopped?textIn(pending.stopReason,80).trim():"",
-    warmups:pending.warmups,warmDone:pending.warmDone,
-    warmTimes:Array.isArray(pending.warmTimes)?pending.warmTimes.slice():[],
-    outcome:outcome,at:Date.now(),kind:"absence",tags:tags.slice(),note:note.trim()
-  };
-  if(candidate.easy&&outcome==="success") candidate.base=plan.base;
-  var floor=Math.max(1,Math.round(candidate.base*0.5));
-  if(!candidate.stopped){
-    if(candidate.actual<candidate.target*0.75) candidate.base=Math.max(floor,candidate.actual);
-    if(outcome==="bad"&&candidate.actual<candidate.base) candidate.base=Math.max(floor,candidate.actual);
-  } else {
-    candidate.base=plan.base;
-  }
-  return candidate;
+  return makeCandidateSession({
+    outcome:outcome,
+    pending:pending,
+    plan:plan,
+    tags:tags,
+    note:note
+  });
 }
 
 function nextPlanWith(candidate){
-  var s=scen(), preview={};
-  Object.keys(s).forEach(function(k){ preview[k]=s[k]; });
-  preview.sessions=s.sessions.concat([candidate]);
-  preview.override=null;
-  return planFor(preview);
+  return previewPlanWithCandidate(scen(),candidate);
 }
 
 function reviewSession(outcome){
@@ -676,7 +665,7 @@ function reviewSession(outcome){
   reviewPlan=nextPlanWith(reviewCandidate);
   el("reviewTarget").textContent=fmt(reviewCandidate.target);
   el("reviewActual").textContent=fmt(reviewCandidate.actual);
-  el("reviewStatus").textContent=reviewCandidate.stopped?"Ended early":"Completed";
+  el("reviewStatus").textContent=sessionStatusText(reviewCandidate);
   el("reviewOutcome").textContent=LABEL[reviewCandidate.outcome];
   el("reviewNextTarget").textContent=fmt(reviewPlan.target);
   el("reviewNextReason").textContent=reviewPlan.reason;
@@ -1239,86 +1228,32 @@ function markSettingsSaved(){
     status.textContent="Changes save when you leave a field or press Enter.";
   },2500);
 }
-function bindNumberSetting(id,min,max,getValue,setValue,canEdit){
-  var input=el(id);
-  var editing=false;
-
-  function commit(showConfirmation){
-    if(canEdit&&!canEdit()){
-      input.value=getValue();
-      if(showConfirmation) showToast("Finish the current session before changing this setting.");
-      editing=false;
-      return false;
-    }
-
-    var raw=String(input.value).trim();
-    if(raw===""){
-      input.value=getValue();
-      editing=false;
-      return false;
-    }
-
-    var value=Number(raw);
-    if(!Number.isInteger(value)||value<min||value>max){
-      input.value=getValue();
-      if(showConfirmation) showToast("Enter a whole number from "+min+" to "+max+".");
-      editing=false;
-      return false;
-    }
-
-    setValue(value);
-    save();
-    input.value=value;
-    editing=false;
-    if(showConfirmation) markSettingsSaved();
-    return true;
-  }
-
-  input.addEventListener("focus",function(){
-    editing=true;
-    window.setTimeout(function(){ input.select(); },0);
-  });
-  input.addEventListener("click",function(){
-    if(editing) input.select();
-  });
-  input.addEventListener("change",function(){ commit(true); });
-  input.addEventListener("blur",function(){ commit(false); });
-  input.addEventListener("keydown",function(e){
-    if(e.key==="Enter"){
-      e.preventDefault();
-      if(commit(true)) input.blur();
-    }
-    if(e.key==="Escape"){
-      e.preventDefault();
-      input.value=getValue();
-      editing=false;
-      input.blur();
-    }
-  });
-
-  return function(){
-    if(document.activeElement===input) input.blur();
-    else commit(false);
-  };
-}
-var flushStartDur=bindNumberSetting("startDur",1,7200,
-  function(){return scen().start;},
-  function(v){scen().start=v;},
-  function(){return phase==="idle";}
-);
-var flushDailyCap=bindNumberSetting("dailyCap",1,3,
-  function(){return dailyCap();},
-  function(v){state.dailyCap=v;}
-);
-var flushWarmups=bindNumberSetting("warmups",0,6,
-  function(){return nWarm(scen());},
-  function(v){scen().warmups=v;},
-  function(){return phase==="idle";}
-);
-var flushRestLen=bindNumberSetting("restLen",0,600,
-  function(){return restLen(scen());},
-  function(v){scen().rest=v;}
-);
+var flushStartDur=bindNumberSetting({
+  input:el("startDur"),limits:SETTING_LIMITS.startDuration,
+  getValue:function(){return scen().start;},
+  setValue:function(value){scen().start=value;},
+  canEdit:function(){return phase==="idle";},
+  save:save,confirm:markSettingsSaved,toast:showToast
+});
+var flushDailyCap=bindNumberSetting({
+  input:el("dailyCap"),limits:SETTING_LIMITS.dailyCap,
+  getValue:function(){return dailyCap();},
+  setValue:function(value){state.dailyCap=value;},
+  save:save,confirm:markSettingsSaved,toast:showToast
+});
+var flushWarmups=bindNumberSetting({
+  input:el("warmups"),limits:SETTING_LIMITS.warmups,
+  getValue:function(){return nWarm(scen());},
+  setValue:function(value){scen().warmups=value;},
+  canEdit:function(){return phase==="idle";},
+  save:save,confirm:markSettingsSaved,toast:showToast
+});
+var flushRestLen=bindNumberSetting({
+  input:el("restLen"),limits:SETTING_LIMITS.restLength,
+  getValue:function(){return restLen(scen());},
+  setValue:function(value){scen().rest=value;},
+  save:save,confirm:markSettingsSaved,toast:showToast
+});
 function flushNumberSettings(){
   flushStartDur(); flushDailyCap(); flushWarmups(); flushRestLen(); save();
 }

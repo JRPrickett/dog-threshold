@@ -48,3 +48,10 @@ The service-worker cache is `threshold-v22`.
 3. Charts
 4. Settings controllers
 5. DOM rendering components
+
+
+## Phase two
+
+Session review calculations, active-run persistence, numeric settings controllers and
+pure chart-data preparation are now separated from `app.js`. Visual chart templates
+remain in `app.js` until the screen-rendering extraction.
