@@ -1,5 +1,5 @@
 import {
-  createStorage, makeId, intIn, textIn, normaliseState
+  createStorage, makeId, intIn, textIn, validOutcome, normaliseState
 } from "./storage.js";
 import {
   planFor, nextBase, trailing, trailingStopped, minStep,
@@ -384,7 +384,11 @@ function stopReasonPanel(parent){
 function startCue(){
   if(phase==="idle"){
     startedAt=Date.now();
-    analytics.track("session_started");
+    analytics.track("session_started",{
+      dogName:dogName(),
+      sessionType:"door",
+      targetSeconds:null
+    });
   }
   phase="cue"; clearInterval(tick); persistActiveRun();
   render();
@@ -425,7 +429,12 @@ function recordDoor(outcome){
   phase="idle"; pending=null; repIdx=0; repLog=[]; tags=[]; note=""; shuffle=0; clearActiveRun();
   clearInterval(tick);
   save(); render();
-  analytics.track("session_saved");
+  analytics.track("session_saved",{
+    dogName:dogName(),
+    sessionType:"door",
+    targetSeconds:null,
+    stopped:!!saved.stopped
+  });
   showToast("Door session saved.","Undo",function(){ removeSessionById(s.id,saved.id); });
 }
 
@@ -463,8 +472,8 @@ function adjNote(){
   p.hidden=false;
   if(v>from*1.25){
     p.className="adjNote warn";
-    p.textContent="That's "+pc+"% above where the plan is. Big jumps are how dogs get frightened again — "+
-      "this method moves in single digits. It'll be logged as the new baseline either way.";
+    p.textContent="That's "+pc+"% above the current plan. Big jumps can make training harder — "+
+      "future sessions will continue from the time you choose.";
   } else if(v<from*0.5){
     p.className="adjNote";
     p.textContent="Well below the plan. Fine if you're rebuilding after a bad patch — tomorrow will build from here.";
@@ -573,7 +582,11 @@ function ask(parent,question,opts,fn){
 function startRep(){
   var beginsSession=phase==="idle"&&repIdx===0;
   phase="running"; startedAt=Date.now(); chimed=false; preChimed=false;
-  if(beginsSession) analytics.track("session_started");
+  if(beginsSession) analytics.track("session_started",{
+    dogName:dogName(),
+    sessionType:"absence",
+    targetSeconds:reps.length?reps[reps.length-1].target:null
+  });
   persistActiveRun(); audioStart();
   drawActions(); drawTabs(); drawHeadline(); drawReps();
   el("coach").hidden=true; runTicker();
@@ -708,7 +721,12 @@ function commitReviewedSession(){
   closeModal("sessionReviewModal");
   pending=null; phase="idle"; repLog=[]; repIdx=0; retries=0; shuffle=0; tags=[]; note="";
   clearActiveRun(); clearInterval(tick); save(); render();
-  analytics.track("session_saved");
+  analytics.track("session_saved",{
+    dogName:dogName(),
+    sessionType:"absence",
+    targetSeconds:saved.target,
+    stopped:!!saved.stopped
+  });
 
   clearTimeout(milestoneTimer);
   var earned=justEarned.length?justEarned[justEarned.length-1]:null;
@@ -825,8 +843,11 @@ function drawDashboard(){
   box.innerHTML=lastCard+
     '<div class="dashboardCard"><span class="k">This week</span><span class="big">'+stats.weekCount+'</span>'+
       '<span class="detail">'+stats.weekSuccess+' marked Success</span></div>'+
-    '<div class="dashboardCard"><span class="k">Working baseline</span><span class="big">'+fmt(stats.baseline)+'</span>'+
-      '<span class="detail">Used by Threshold before any deliberate variation.</span></div>'+
+    '<div class="dashboardCard"><span class="k">Longest calm absence</span><span class="big">'+
+      (stats.longestCalmSeconds?fmt(stats.longestCalmSeconds):"—")+'</span>'+
+      '<span class="detail">'+(stats.longestCalmSeconds
+        ?"Longest completed session marked Success."
+        :"No completed Success session yet.")+'</span></div>'+
     '<div class="dashboardCard"><span class="k">Recent consistency</span><span class="big">'+
       (stats.recentCount?stats.recentSuccess+'/'+stats.recentCount:"—")+'</span>'+
       '<span class="detail">'+recentDetail+'</span></div>';

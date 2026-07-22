@@ -67,3 +67,27 @@ progression algorithm.
 ## v25 target explanations
 
 `js/target-reason.js` converts progression outcomes into concise user-facing wording, with technical details available through an optional disclosure.
+
+
+## v26 anonymous analytics
+
+`js/analytics.js` provides privacy-limited page analytics setup and an offline
+queue for `session_started` and `session_saved`. The event receiver is included
+under `cloudflare-worker/` and stores the aggregate events in Cloudflare D1.
+See `ANALYTICS-SETUP.md`.
+
+
+## v27 plain-language update
+
+Internal planning terminology is no longer shown in the interface. The dashboard
+uses **Longest calm absence**, and optional target details contain only directly
+recognisable session information. Cloudflare Web Analytics is enabled using the
+configured token.
+
+
+## v28 save fix and usage metadata
+
+The session editor save failure is fixed. Saved-session analytics now record
+stopped status plus limited session and device metadata. Because dog name is now
+included, these events should be described as limited usage analytics rather
+than strictly anonymous analytics.

@@ -15,7 +15,7 @@ const stats=dashboardStats(scenario,{base:340},now);
 assert.equal(stats.weekCount,2);
 assert.equal(stats.weekSuccess,2);
 assert.equal(stats.recentSuccess,2);
-assert.equal(stats.baseline,340);
+assert.equal(stats.longestCalmSeconds,320);
 
 const timeline=timelineItems(scenario,345,5);
 assert.equal(timeline.at(-1).type,"next");

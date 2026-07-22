@@ -1,11 +1,34 @@
-# Threshold v25 deployment
+# Threshold v28 deployment
 
-The home-screen **Why this target?** box now shows one concise, user-facing sentence.
+## Save-session fix
 
-Technical information is retained behind **View details**, including the previous
-target, actual time, rating, completion status, training baseline and today's target.
+The session editor used `validOutcome(...)` without importing it. That produced
+a runtime error when **Save session** was pressed. The missing import is fixed.
 
-The recent-progress timeline uses the same concise wording. The detailed pre-save
-review remains unchanged.
+## Richer usage events
 
-Service-worker cache: `threshold-v25`.
+`session_started` and `session_saved` can now include:
+
+- Dog name entered in Threshold
+- Planned target time
+- Whether the saved session was stopped early
+- Session type: timed absence or door exercise
+- Broad device type: mobile, tablet or desktop
+- Browser family
+
+Threshold does not send the full user-agent string or create a device/user ID.
+
+Scenario names, notes, ratings, actual duration and full training history are
+not sent.
+
+## Existing database
+
+Run `cloudflare-worker/migration-v28.sql` once, then replace the deployed Worker
+code with `cloudflare-worker/src/index.js`.
+
+## Configuration
+
+- App version: `v28`
+- Web Analytics token: configured
+- Event endpoint: configured
+- Service-worker cache: `threshold-v28`

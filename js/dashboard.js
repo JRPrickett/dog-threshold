@@ -14,11 +14,15 @@ export function dashboardStats(scenario,plan,now=Date.now()){
     session.outcome==="success"&&!session.stopped&&session.actual>=session.target
   ).length;
 
+  const calm=sessions.filter(session=>
+    session.outcome==="success"&&!session.stopped&&session.actual>=session.target
+  );
+
   return {
     last,
     weekCount:week.length,
     weekSuccess:week.filter(session=>session.outcome==="success").length,
-    baseline:plan.base,
+    longestCalmSeconds:calm.reduce((best,session)=>Math.max(best,session.actual),0),
     recentCount:recent.length,
     recentSuccess:completedSuccess
   };

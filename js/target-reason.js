@@ -71,7 +71,6 @@ export function friendlyTargetReason(scenario,plan){
 function technicalDetails(last,plan){
   if(!last){
     return [
-      ["Training baseline",fmt(plan.base)],
       ["Today’s target",fmt(plan.target)]
     ];
   }

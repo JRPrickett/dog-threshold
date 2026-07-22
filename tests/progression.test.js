@@ -41,7 +41,7 @@ function absence(overrides={}){
     start:5,override:null,
     sessions:[absence({stopped:false,outcome:"success"})]
   });
-  assert.ok(plan.base>345,"Completed Success should increase the working baseline");
+  assert.ok(plan.base>345,"Completed Success should increase the internal planning time");
   assert.ok(plan.target>0);
 }
 

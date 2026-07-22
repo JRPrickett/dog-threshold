@@ -139,12 +139,12 @@ export function planFor(scenario){
   }else if(trailing(scenario.sessions,"success")>=3&&count%4===0){
     plan.target=Math.max(1,Math.round(plan.base*0.6));
     plan.easy=true;
-    plan.reason=`A deliberately shorter session after several completed Success ratings. The working baseline remains ${fmt(plan.base)}.`;
+    plan.reason="Today’s session is intentionally shorter to keep departure lengths varied.";
   }else if(count>0){
     const seed=((count*9301+49297)%233280)/233280;
     plan.target=Math.max(1,Math.round(plan.base*(1-seed*0.08)));
     if(plan.target!==plan.base){
-      plan.reason=`${progressionReason} The working baseline is ${fmt(plan.base)}; today's planned absence is varied to ${fmt(plan.target)} so duration is less predictable.`;
+      plan.reason=`${progressionReason} Today’s planned absence is varied slightly so the length is less predictable.`;
     }
   }else{
     plan.target=plan.base;

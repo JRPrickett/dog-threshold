@@ -6,14 +6,14 @@
   "workers_dev": true,
 
   "vars": {
-    "ALLOWED_ORIGINS": "https://JRPrickett.github.io"
+    "ALLOWED_ORIGINS": "https://YOUR-USERNAME.github.io,http://localhost:8000,http://127.0.0.1:8000"
   },
 
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "threshold-analytics",
-      "database_id": "6471b855-28ab-4453-8383-c3cbb190d528"
+      "database_id": "PASTE_DATABASE_ID_HERE"
     }
   ]
 }

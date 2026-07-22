@@ -1,14 +1,16 @@
 const ALLOWED_EVENTS=new Set(["session_started","session_saved"]);
+const ALLOWED_SESSION_TYPES=new Set(["absence","door"]);
+const ALLOWED_DEVICE_TYPES=new Set(["mobile","tablet","desktop","unknown"]);
 const MAX_BATCH=20;
-const MAX_BODY_BYTES=8192;
+const MAX_BODY_BYTES=16384;
 
 function allowedOrigin(request,env){
   const origin=request.headers.get("Origin")||"";
   const allowed=String(env.ALLOWED_ORIGINS||"")
     .split(",")
-    .map(value=>value.trim())
+    .map(value=>value.trim().toLowerCase())
     .filter(Boolean);
-  return allowed.includes(origin)?origin:"";
+  return allowed.includes(origin.toLowerCase())?origin:"";
 }
 
 function corsHeaders(origin){
@@ -32,7 +34,18 @@ function jsonResponse(body,status,origin){
   });
 }
 
-function normaliseEvent(event){
+function cleanText(value,max){
+  const text=typeof value==="string"?value.trim():"";
+  return text?text.slice(0,max):null;
+}
+
+function cleanInteger(value,min,max){
+  if(value===null||value===undefined||value==="") return null;
+  const number=Number(value);
+  return Number.isFinite(number)&&number>=min&&number<=max?Math.round(number):null;
+}
+
+export function normaliseEvent(event){
   if(!event||!ALLOWED_EVENTS.has(event.name)) return null;
 
   const occurredAt=Number(event.occurredAt);
@@ -45,7 +58,13 @@ function normaliseEvent(event){
   return {
     name:event.name,
     version:String(event.version||"unknown").slice(0,20),
-    occurredAt:new Date(occurredAt).toISOString()
+    occurredAt:new Date(occurredAt).toISOString(),
+    dogName:cleanText(event.dogName,40),
+    targetSeconds:cleanInteger(event.targetSeconds,1,14400),
+    stopped:typeof event.stopped==="boolean"?(event.stopped?1:0):null,
+    sessionType:ALLOWED_SESSION_TYPES.has(event.sessionType)?event.sessionType:null,
+    deviceType:ALLOWED_DEVICE_TYPES.has(event.deviceType)?event.deviceType:"unknown",
+    browser:cleanText(event.browser,30)
   };
 }
 
@@ -91,8 +110,21 @@ export default {
 
     const statements=events.map(event=>
       env.DB.prepare(
-        "INSERT INTO usage_events (event_name, app_version, occurred_at) VALUES (?1, ?2, ?3)"
-      ).bind(event.name,event.version,event.occurredAt)
+        `INSERT INTO usage_events (
+          event_name, app_version, occurred_at, dog_name, target_seconds,
+          stopped, session_type, device_type, browser
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`
+      ).bind(
+        event.name,
+        event.version,
+        event.occurredAt,
+        event.dogName,
+        event.targetSeconds,
+        event.stopped,
+        event.sessionType,
+        event.deviceType,
+        event.browser
+      )
     );
 
     await env.DB.batch(statements);

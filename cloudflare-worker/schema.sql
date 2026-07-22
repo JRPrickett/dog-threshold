@@ -4,7 +4,13 @@ CREATE TABLE IF NOT EXISTS usage_events (
     CHECK (event_name IN ('session_started', 'session_saved')),
   app_version TEXT NOT NULL,
   occurred_at TEXT NOT NULL,
-  received_at TEXT NOT NULL DEFAULT (datetime('now'))
+  received_at TEXT NOT NULL DEFAULT (datetime('now')),
+  dog_name TEXT,
+  target_seconds INTEGER,
+  stopped INTEGER CHECK (stopped IS NULL OR stopped IN (0, 1)),
+  session_type TEXT CHECK (session_type IS NULL OR session_type IN ('absence', 'door')),
+  device_type TEXT CHECK (device_type IS NULL OR device_type IN ('mobile', 'tablet', 'desktop', 'unknown')),
+  browser TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_usage_events_received
