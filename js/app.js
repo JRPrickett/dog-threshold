@@ -28,7 +28,9 @@ import { ANALYTICS_CONFIG } from "./analytics-config.js";
 var storage=createStorage();
 var state=storage.boot();
 var analytics=createAnalytics(ANALYTICS_CONFIG);
-analytics.init();
+analytics.init({
+  openDetails:function(){ return {dogName:dogName()}; }
+});
 
 function save(){
   storage.save(state);

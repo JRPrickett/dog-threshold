@@ -1,10 +1,12 @@
 const QUEUE_KEY="threshold.analytics.queue.v2";
 const OLD_QUEUE_KEY="threshold.analytics.queue.v1";
-const ALLOWED_EVENTS=new Set(["session_started","session_saved"]);
+const ALLOWED_EVENTS=new Set(["app_open","session_started","session_saved"]);
 const ALLOWED_SESSION_TYPES=new Set(["absence","door"]);
 const ALLOWED_DEVICE_TYPES=new Set(["mobile","tablet","desktop","unknown"]);
+const ALLOWED_DISPLAY_MODES=new Set(["standalone","browser"]);
 const MAX_QUEUE=50;
 const BATCH_SIZE=20;
+const OPEN_DEBOUNCE_MS=5000;
 
 export function validAnalyticsEvent(name){
   return ALLOWED_EVENTS.has(name);
@@ -24,10 +26,14 @@ export function detectDevice(navigatorRef=globalThis.navigator){
   const userAgent=String(navigatorRef&&navigatorRef.userAgent||"");
   const ua=userAgent.toLowerCase();
   const mobileHint=!!(navigatorRef&&navigatorRef.userAgentData&&navigatorRef.userAgentData.mobile);
+  const touchPoints=Number(navigatorRef&&navigatorRef.maxTouchPoints||0);
 
   let deviceType="desktop";
-  if(/ipad|tablet|playbook|silk/.test(ua)) deviceType="tablet";
-  else if(mobileHint||/mobi|iphone|ipod|android/.test(ua)) deviceType="mobile";
+  if(/ipad|tablet|playbook|silk/.test(ua)||(ua.includes("macintosh")&&touchPoints>1)){
+    deviceType="tablet";
+  }else if(mobileHint||/mobi|iphone|ipod|android/.test(ua)){
+    deviceType="mobile";
+  }
   if(!userAgent) deviceType="unknown";
 
   let browser="Other";
@@ -37,7 +43,30 @@ export function detectDevice(navigatorRef=globalThis.navigator){
   else if(/crios\//.test(ua)||/chrome\//.test(ua)) browser="Chrome";
   else if(/safari\//.test(ua)) browser="Safari";
 
-  return {deviceType,browser};
+  let operatingSystem="Other";
+  if(/iphone|ipad|ipod/.test(ua)||(ua.includes("macintosh")&&touchPoints>1)){
+    operatingSystem="iOS";
+  }else if(/android/.test(ua)){
+    operatingSystem="Android";
+  }else if(/windows/.test(ua)){
+    operatingSystem="Windows";
+  }else if(/macintosh|mac os x/.test(ua)){
+    operatingSystem="macOS";
+  }else if(/linux/.test(ua)){
+    operatingSystem="Linux";
+  }
+
+  return {deviceType,browser,operatingSystem};
+}
+
+export function detectDisplayMode(windowRef=globalThis.window,navigatorRef=globalThis.navigator){
+  try{
+    if(navigatorRef&&navigatorRef.standalone===true) return "standalone";
+    if(windowRef&&windowRef.matchMedia&&windowRef.matchMedia("(display-mode: standalone)").matches){
+      return "standalone";
+    }
+  }catch{}
+  return "browser";
 }
 
 export function sanitiseAnalyticsEvent(event,version){
@@ -45,6 +74,7 @@ export function sanitiseAnalyticsEvent(event,version){
 
   const sessionType=ALLOWED_SESSION_TYPES.has(event.sessionType)?event.sessionType:null;
   const deviceType=ALLOWED_DEVICE_TYPES.has(event.deviceType)?event.deviceType:"unknown";
+  const displayMode=ALLOWED_DISPLAY_MODES.has(event.displayMode)?event.displayMode:"browser";
 
   return {
     name:event.name,
@@ -55,7 +85,9 @@ export function sanitiseAnalyticsEvent(event,version){
     stopped:typeof event.stopped==="boolean"?event.stopped:null,
     sessionType,
     deviceType,
-    browser:cleanText(event.browser,30)
+    browser:cleanText(event.browser,30),
+    operatingSystem:cleanText(event.operatingSystem,20),
+    displayMode
   };
 }
 
@@ -70,6 +102,9 @@ export function createAnalytics(config={},dependencies={}){
   const token=String(config.cloudflareWebAnalyticsToken||"").trim();
   const endpoint=String(config.eventEndpoint||"").trim();
   let flushing=false;
+  let hiddenAt=null;
+  let lastOpenTrackedAt=0;
+  let openDetailsProvider=()=>({});
 
   function readStored(key){
     try{
@@ -106,20 +141,6 @@ export function createAnalytics(config={},dependencies={}){
     }catch{
       return false;
     }
-  }
-
-  function installWebAnalytics(){
-    if(!token||!documentRef||documentRef.querySelector("[data-threshold-web-analytics]")){
-      return false;
-    }
-
-    const script=documentRef.createElement("script");
-    script.defer=true;
-    script.src="https://static.cloudflareinsights.com/beacon.min.js";
-    script.setAttribute("data-cf-beacon",JSON.stringify({token,spa:false}));
-    script.setAttribute("data-threshold-web-analytics","true");
-    (documentRef.head||documentRef.body||documentRef.documentElement).appendChild(script);
-    return true;
   }
 
   async function flush(){
@@ -164,7 +185,9 @@ export function createAnalytics(config={},dependencies={}){
       stopped:details.stopped,
       sessionType:details.sessionType,
       deviceType:device.deviceType,
-      browser:device.browser
+      browser:device.browser,
+      operatingSystem:device.operatingSystem,
+      displayMode:detectDisplayMode(windowRef,navigatorRef)
     },version);
 
     const queue=readQueue();
@@ -174,11 +197,46 @@ export function createAnalytics(config={},dependencies={}){
     return true;
   }
 
-  function init(){
-    installWebAnalytics();
+  function recordOpen(force=false){
+    const now=Date.now();
+    if(!force&&now-lastOpenTrackedAt<OPEN_DEBOUNCE_MS) return false;
+    lastOpenTrackedAt=now;
+
+    let details={};
+    try{
+      details=openDetailsProvider()||{};
+    }catch{}
+    return track("app_open",details);
+  }
+
+  function init(options={}){
+    if(typeof options.openDetails==="function"){
+      openDetailsProvider=options.openDetails;
+    }
+
+    recordOpen(true);
+
     if(windowRef&&typeof windowRef.addEventListener==="function"){
       windowRef.addEventListener("online",()=>void flush());
+      windowRef.addEventListener("pageshow",event=>{
+        if(event&&event.persisted) recordOpen();
+      });
     }
+
+    if(documentRef&&typeof documentRef.addEventListener==="function"){
+      hiddenAt=documentRef.visibilityState==="hidden"?Date.now():null;
+      documentRef.addEventListener("visibilitychange",()=>{
+        if(documentRef.visibilityState==="hidden"){
+          hiddenAt=Date.now();
+          return;
+        }
+        if(hiddenAt!==null){
+          hiddenAt=null;
+          recordOpen();
+        }
+      });
+    }
+
     void flush();
   }
 
@@ -186,6 +244,7 @@ export function createAnalytics(config={},dependencies={}){
     init,
     track,
     flush,
+    recordOpen,
     webAnalyticsEnabled:()=>!!token,
     eventAnalyticsEnabled:()=>!!endpoint,
     queuedEvents:()=>readQueue().length

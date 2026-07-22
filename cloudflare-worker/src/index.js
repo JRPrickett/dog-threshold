@@ -1,6 +1,7 @@
-const ALLOWED_EVENTS=new Set(["session_started","session_saved"]);
+const ALLOWED_EVENTS=new Set(["app_open","session_started","session_saved"]);
 const ALLOWED_SESSION_TYPES=new Set(["absence","door"]);
 const ALLOWED_DEVICE_TYPES=new Set(["mobile","tablet","desktop","unknown"]);
+const ALLOWED_DISPLAY_MODES=new Set(["standalone","browser"]);
 const MAX_BATCH=20;
 const MAX_BODY_BYTES=16384;
 
@@ -64,8 +65,46 @@ export function normaliseEvent(event){
     stopped:typeof event.stopped==="boolean"?(event.stopped?1:0):null,
     sessionType:ALLOWED_SESSION_TYPES.has(event.sessionType)?event.sessionType:null,
     deviceType:ALLOWED_DEVICE_TYPES.has(event.deviceType)?event.deviceType:"unknown",
-    browser:cleanText(event.browser,30)
+    browser:cleanText(event.browser,30),
+    operatingSystem:cleanText(event.operatingSystem,20),
+    displayMode:ALLOWED_DISPLAY_MODES.has(event.displayMode)?event.displayMode:"browser"
   };
+}
+
+function statementFor(event,env){
+  if(event.name==="app_open"){
+    return env.DB.prepare(
+      `INSERT INTO app_open_events (
+        app_version, occurred_at, dog_name, device_type, browser,
+        operating_system, display_mode
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`
+    ).bind(
+      event.version,
+      event.occurredAt,
+      event.dogName,
+      event.deviceType,
+      event.browser,
+      event.operatingSystem,
+      event.displayMode
+    );
+  }
+
+  return env.DB.prepare(
+    `INSERT INTO usage_events (
+      event_name, app_version, occurred_at, dog_name, target_seconds,
+      stopped, session_type, device_type, browser
+    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`
+  ).bind(
+    event.name,
+    event.version,
+    event.occurredAt,
+    event.dogName,
+    event.targetSeconds,
+    event.stopped,
+    event.sessionType,
+    event.deviceType,
+    event.browser
+  );
 }
 
 export default {
@@ -108,26 +147,7 @@ export default {
       return jsonResponse({error:"Invalid event"},400,origin);
     }
 
-    const statements=events.map(event=>
-      env.DB.prepare(
-        `INSERT INTO usage_events (
-          event_name, app_version, occurred_at, dog_name, target_seconds,
-          stopped, session_type, device_type, browser
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`
-      ).bind(
-        event.name,
-        event.version,
-        event.occurredAt,
-        event.dogName,
-        event.targetSeconds,
-        event.stopped,
-        event.sessionType,
-        event.deviceType,
-        event.browser
-      )
-    );
-
-    await env.DB.batch(statements);
+    await env.DB.batch(events.map(event=>statementFor(event,env)));
     return new Response(null,{status:204,headers:corsHeaders(origin)});
   }
 };

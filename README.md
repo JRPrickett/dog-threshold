@@ -112,3 +112,10 @@ At the planned return time, Threshold replaces the browser-owned Media Session
 card with a service-worker notification whose click handler explicitly focuses
 or opens Threshold. The countdown media controls remain available before the
 target is reached.
+
+
+## v32 iOS app-open analytics
+
+Cloudflare's official beacon is now embedded directly in `index.html`.
+Foreground/resume activity is counted separately in D1 as `app_open_events`,
+including whether the app was running in standalone Home Screen mode.

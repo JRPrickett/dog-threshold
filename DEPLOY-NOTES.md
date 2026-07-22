@@ -1,26 +1,39 @@
-# Threshold v31 deployment
+# Threshold v32 deployment
 
-## Android media-card routing workaround
+## iOS Web Analytics behaviour
 
-The completed timer no longer leaves **Time to head back** in Chrome's Media
-Session card. That card's main tap target is controlled by Android/Chrome and
-was opening Chrome Remote Desktop on the reported device.
+Cloudflare Web Analytics is now installed with its exact static `type="module"`
+snippet in `index.html`, rather than being created dynamically by app code.
 
-At target time, Threshold now:
+Installed iOS PWAs may resume an existing document without another page load.
+Because a Cloudflare page view is not guaranteed in that case, Threshold now
+records `app_open` foreground events in a separate D1 table.
 
-- Stops and clears the browser media session
-- Plays the existing chime
-- Shows a regular Threshold notification when permission is granted
-- Handles the notification click in `sw.js`
-- Focuses an open Threshold client or opens the PWA URL
+## New D1 table
 
-The lock-screen/media countdown still operates before the target is reached.
+Run `cloudflare-worker/migration-v32.sql` once to create:
 
-## Additional corrections
+```text
+app_open_events
+```
 
-- Media Session artwork now points to `assets/icons/`
-- The web manifest has a stable `id`
-- App version: `v31`
-- Service-worker cache: `threshold-v31`
+Fields include:
 
-No Cloudflare or D1 changes are required.
+- App version
+- Dog name
+- Broad operating system
+- Device type
+- Browser family
+- `standalone` or `browser`
+- Event and receipt timestamps
+
+## Worker
+
+Replace the deployed Worker with the v32 Worker code so it accepts `app_open`
+and routes it to the new table.
+
+## Version
+
+- App version: `v32`
+- Service-worker cache: `threshold-v32`
+- Existing session-event table and data remain unchanged
