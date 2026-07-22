@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/progression.test.js && node tests/storage.test.js && node tests/migration.test.js && node tests/sessions.test.js && node tests/state.test.js && node tests/charts.test.js && node tests/dashboard.test.js && node tests/target-reason.test.js",
+    "test": "node tests/progression.test.js && node tests/storage.test.js && node tests/migration.test.js && node tests/sessions.test.js && node tests/state.test.js && node tests/charts.test.js && node tests/dashboard.test.js && node tests/target-reason.test.js && node tests/analytics.test.js",
     "check": "node --check js/app.js && npm test"
   }
 }
