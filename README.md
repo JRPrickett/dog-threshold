@@ -140,3 +140,10 @@ so switching apps cannot silently reset or discard the timer.
 Fresh installations start with a single **Separation training** scenario.
 Unused untouched legacy defaults are removed without deleting history or custom
 scenarios. The return notification now appears with the five-second warning.
+
+
+## v36 time-of-day context
+
+Morning, Afternoon and Evening are available as optional session tags. Guidance
+near the scenario controls explains that tags add context to one session, while
+separate scenarios maintain independent target progression.

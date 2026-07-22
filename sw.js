@@ -2,7 +2,7 @@
    Two jobs: make the app work with no signal, and make it installable.
    Bump CACHE when you change any file, or browsers will serve the old one. */
 var PREFIX = "threshold-";
-var CACHE = PREFIX + "v35";
+var CACHE = PREFIX + "v36";
 var SHELL = [
   "./",
   "./index.html",

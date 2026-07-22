@@ -53,7 +53,7 @@ function scen(){
 /* Progression and warm-up planning live in js/progression.js. */
 
 /* ================= context tags ================= */
-var TAGS=["Not walked yet","After a walk","Before food","After food","Radio or TV on"];
+var TAGS=["Morning","Afternoon","Evening","Not walked yet","After a walk","Before food","After food","Radio or TV on"];
 
 /* ================= door is a bore =================
    For dogs who aren't ready for any absence at all. The door itself has become

@@ -372,3 +372,11 @@
 .reasonDetailRow{display:flex;justify-content:space-between;gap:16px;font-size:12.5px;line-height:1.35}
 .reasonDetailRow span{color:var(--muted)}
 .reasonDetailRow b{font-weight:600;color:var(--ink);text-align:right}
+
+
+.scenario-guidance{
+  margin:.45rem 0 1rem;
+  font-size:.9rem;
+  line-height:1.4;
+  color:var(--muted);
+}
