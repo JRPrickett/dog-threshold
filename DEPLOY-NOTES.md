@@ -1,23 +1,24 @@
-# Threshold v33 deployment
+# Threshold v34 deployment
 
-## Media-card teardown
+## Active-run durability
 
-The final chime no longer uses an HTML `<audio>` element. It is generated with
-Web Audio oscillators, which prevents the chime from creating a fresh browser
-media notification after the countdown media session has been stopped.
+v34 makes running separation sessions resilient to:
 
-At target time Threshold now:
+- Accidental Control Centre taps
+- Switching to another PWA
+- iOS process suspension
+- Page reloads
+- PWA restarts
+- Browser back/forward cache restoration
+- Temporary media-session interruption
 
-1. Destroys the keeper audio element
-2. Clears Media Session metadata, position and action handlers
-3. Plays the chime through Web Audio
-4. Shows the normal Threshold notification when supported/permitted
-5. Repeats the media-session cleanup after 1.2 seconds
+The saved run includes the original start time, current repetition, plan,
+completed warm-ups, pending result, notes, tags and chime state.
 
-This removes the system media card rather than trying to control its main tap,
-which is not exposed to web applications.
+The app automatically restores recent active runs and recalculates elapsed time
+using `Date.now() - startedAt`; it does not restart the clock from zero.
 
-No analytics, D1 or Cloudflare Worker changes are required.
+No progression logic, Cloudflare Worker or D1 schema has changed.
 
-- App version: `v33`
-- Service-worker cache: `threshold-v33`
+- App version: `v34`
+- Service-worker cache: `threshold-v34`

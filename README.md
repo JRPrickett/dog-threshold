@@ -126,3 +126,10 @@ including whether the app was running in standalone Home Screen mode.
 The final chime is generated through Web Audio and the HTML media element is
 fully destroyed at target time. This prevents the system Now Playing card from
 being recreated after the countdown ends.
+
+
+## v34 interruption-proof sessions
+
+Active sessions are checkpointed during the run and whenever the app is hidden.
+A reload or PWA restart reconstructs the run from its original start timestamp,
+so switching apps cannot silently reset or discard the timer.

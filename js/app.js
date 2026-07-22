@@ -11,7 +11,7 @@ import {
   makeCandidateSession, previewPlanWithCandidate, sessionStatusText
 } from "./sessions.js";
 import {
-  saveActiveRunState, clearActiveRunState, loadActiveRun
+  saveActiveRunState, clearActiveRunState, loadActiveRun, activeRunIsRecent
 } from "./state.js";
 import {
   bindNumberSetting, SETTING_LIMITS
@@ -152,16 +152,119 @@ var tags=[], note="", graduated=false, editingIndex=null;
 var reviewCandidate=null, reviewPlan=null, milestoneTimer=null;
 var achievementQueue=[], achievementTimer=null;
 
-function persistActiveRun(){
-  if(phase==="idle"){ state.activeRun=null; save(); return; }
-  state.activeRun={ scenarioId:state.active, savedAt:Date.now(), phase:phase, startedAt:startedAt,
-    restEnds:restEnds, plan:plan, pending:pending, reps:reps, repIdx:repIdx, repLog:repLog,
-    tags:tags, note:note, shuffle:shuffle, graduated:graduated };
-  save();
+function activeRunSnapshot(){
+  return {
+    scenarioId:state.active,
+    phase:phase,
+    startedAt:startedAt,
+    restEnds:restEnds,
+    plan:plan,
+    pending:pending,
+    reps:reps,
+    repIdx:repIdx,
+    repLog:repLog,
+    tags:tags,
+    note:note,
+    shuffle:shuffle,
+    graduated:graduated,
+    chimed:chimed,
+    preChimed:preChimed
+  };
 }
+
+function persistActiveRun(quiet){
+  if(phase==="idle"){
+    clearActiveRunState(state);
+    if(quiet) storage.save(state); else save();
+    return;
+  }
+  saveActiveRunState(state,activeRunSnapshot());
+  if(quiet) storage.save(state); else save();
+}
+
 function clearActiveRun(){
   clearActiveRunState(state);
   save();
+}
+
+function restoreRun(run){
+  if(!run||typeof run!=="object") return false;
+
+  var scenario=state.scenarios.filter(function(item){
+    return item.id===run.scenarioId;
+  })[0];
+  if(!scenario) return false;
+
+  var allowed={
+    running:true,
+    rest:true,
+    cue:true,
+    doorVerdict:true,
+    verdictMain:true
+  };
+  var restoredPhase=allowed[run.phase]?run.phase:null;
+  if(!restoredPhase) return false;
+
+  var restoredReps=Array.isArray(run.reps)?run.reps:[];
+  var restoredIndex=Number.isFinite(Number(run.repIdx))
+    ?Math.max(0,Math.floor(Number(run.repIdx))):0;
+
+  if((restoredPhase==="running"||restoredPhase==="rest"||restoredPhase==="cue")&&
+     (!restoredReps.length||restoredIndex>=restoredReps.length)){
+    return false;
+  }
+
+  var restoredStartedAt=Number(run.startedAt)||0;
+  if(restoredPhase==="running"&&restoredStartedAt<=0) return false;
+
+  state.active=scenario.id;
+  phase=restoredPhase;
+  startedAt=restoredStartedAt;
+  restEnds=Number(run.restEnds)||0;
+  plan=run.plan&&typeof run.plan==="object"?run.plan:planFor(scenario);
+  pending=run.pending&&typeof run.pending==="object"?run.pending:null;
+  reps=restoredReps;
+  repIdx=restoredIndex;
+  repLog=Array.isArray(run.repLog)?run.repLog:[];
+  tags=Array.isArray(run.tags)?run.tags.slice(0,20):[];
+  note=typeof run.note==="string"?run.note.slice(0,140):"";
+  shuffle=Number.isFinite(Number(run.shuffle))?Math.floor(Number(run.shuffle)):0;
+  graduated=!!run.graduated;
+  chimed=!!run.chimed;
+  preChimed=!!run.preChimed;
+  retries=0;
+  reviewCandidate=null;
+  reviewPlan=null;
+  editingIndex=null;
+  return true;
+}
+
+function restartRestoredRun(showMessage){
+  clearInterval(tick);
+  tick=null;
+  render();
+
+  if(phase==="running"){
+    audioStart();
+    runTicker();
+  }else if(phase==="rest"){
+    toRest(true);
+  }
+
+  persistActiveRun(true);
+  if(showMessage){
+    showToast(phase==="running"
+      ?"Session restored — the timer kept its original start time."
+      :"Unfinished session restored.");
+  }
+}
+
+function autoRestoreActiveRun(){
+  var run=loadActiveRun(state);
+  if(!run||!activeRunIsRecent(run,24*60*60*1000)) return false;
+  if(!restoreRun(run)) return false;
+  restartRestoredRun(true);
+  return true;
 }
 
 function render(){
@@ -597,20 +700,27 @@ function startRep(){
 
 function runTicker(){
   clearInterval(tick);
-  var c=el("clock"), target=current().target, lastMediaLeft=null;
+  var c=el("clock"), target=current().target, lastMediaLeft=null, lastCheckpoint=0;
   var label=current().kind==="main"?"Main absence":"Warm-up "+(repIdx+1)+" of "+(reps.length-1);
   nowPlaying(label+" · "+fmt(target),dogName()+" · "+scen().label);
   setMediaCountdown(target,Math.max(0,(Date.now()-startedAt)/1000));
   function paint(){
-    var elapsed=Math.max(0,(Date.now()-startedAt)/1000);
+    var now=Date.now();
+    var elapsed=Math.max(0,(now-startedAt)/1000);
     var e=Math.round(elapsed), left=target-e;
+    if(now-lastCheckpoint>=5000){
+      lastCheckpoint=now;
+      persistActiveRun(true);
+    }
     var mediaLeft=Math.max(0,Math.ceil(target-elapsed));
     if(left>=0){ c.className="clock live"; c.textContent=fmt(left); }
     else { c.className="clock over"; c.textContent="+"+fmt(-left); }
     el("delta").textContent=left>=0?"Time out of the room.":"Target reached — come back whenever you like.";
     var early=target>=15?5:target>=8?3:0;
     if(early&&mediaLeft<=early&&mediaLeft>0&&!preChimed){
-      preChimed=true; playPreChime();
+      preChimed=true;
+      persistActiveRun(true);
+      playPreChime();
     }
     if(mediaLeft!==lastMediaLeft){
       lastMediaLeft=mediaLeft;
@@ -621,6 +731,7 @@ function runTicker(){
     }
     if(left<=0&&!chimed){
       chimed=true;
+      persistActiveRun(true);
       audioStop();
       playChime();
       showReturnNotification();
@@ -1390,10 +1501,55 @@ var flushRestLen=bindNumberSetting({
 function flushNumberSettings(){
   flushStartDur(); flushDailyCap(); flushWarmups(); flushRestLen(); save();
 }
-window.addEventListener("pagehide",flushNumberSettings);
-document.addEventListener("visibilitychange",function(){
-  if(document.visibilityState==="hidden") flushNumberSettings();
+var backgroundedAt=0;
+
+function checkpointBeforeBackground(){
+  backgroundedAt=Date.now();
+  flushNumberSettings();
+  if(phase!=="idle") persistActiveRun(true);
+}
+
+function resumeAfterInterruption(){
+  var wasAwayFor=backgroundedAt?Date.now()-backgroundedAt:0;
+  backgroundedAt=0;
+
+  if(phase==="idle"&&loadActiveRun(state)){
+    var savedRun=loadActiveRun(state);
+    if(activeRunIsRecent(savedRun,24*60*60*1000)&&restoreRun(savedRun)){
+      restartRestoredRun(wasAwayFor>1500);
+      return;
+    }
+  }
+
+  if(phase==="running"){
+    clearInterval(tick);
+    tick=null;
+    audioStart();
+    runTicker();
+    persistActiveRun(true);
+    if(wasAwayFor>1500) showToast("Session still running — timer restored.");
+  }else if(phase==="rest"){
+    clearInterval(tick);
+    tick=null;
+    toRest(true);
+    persistActiveRun(true);
+  }else if(phase!=="idle"){
+    persistActiveRun(true);
+  }
+}
+
+window.addEventListener("pagehide",checkpointBeforeBackground);
+window.addEventListener("pageshow",function(){
+  setTimeout(resumeAfterInterruption,0);
 });
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="hidden"){
+    checkpointBeforeBackground();
+  }else{
+    setTimeout(resumeAfterInterruption,0);
+  }
+});
+document.addEventListener("freeze",checkpointBeforeBackground);
 el("dlBackup").onclick=function(){
   downloadBlob("threshold-"+new Date().toISOString().slice(0,10)+".json","application/json",JSON.stringify(state,null,2));
   state.lastBackup=Date.now(); save(); backupWhen();
@@ -1492,6 +1648,15 @@ function initAudio(){
     keeper=new Audio(makeWav(function(){ return 0; },2,8000));
     keeper.loop=true; keeper.volume=0.02;
     keeper.setAttribute("playsinline","");
+    keeper.addEventListener("pause",function(){
+      setTimeout(function(){
+        if(phase!=="running"||chimed||!keeper||!keeper.paused) return;
+        try{
+          var resumed=keeper.play();
+          if(resumed&&resumed.catch) resumed.catch(function(){});
+        }catch(e){}
+      },250);
+    });
   }catch(e){ keeper=null; }
 }
 
@@ -1505,8 +1670,17 @@ function audioStart(){
     try{
       navigator.mediaSession.playbackState="playing";
       // keep the page audible if the OS tries to pause us
-      navigator.mediaSession.setActionHandler("pause",function(){ if(keeper) keeper.play().catch(function(){}); });
-      navigator.mediaSession.setActionHandler("play",function(){ if(keeper) keeper.play().catch(function(){}); });
+      var keepRunning=function(){
+        if(phase!=="running"||chimed||!keeper) return;
+        try{
+          var resumed=keeper.play();
+          if(resumed&&resumed.catch) resumed.catch(function(){});
+        }catch(e){}
+        persistActiveRun(true);
+      };
+      navigator.mediaSession.setActionHandler("pause",keepRunning);
+      navigator.mediaSession.setActionHandler("play",keepRunning);
+      navigator.mediaSession.setActionHandler("stop",keepRunning);
     }catch(e){}
   }
   if(navigator.wakeLock&&navigator.wakeLock.request&&!wakeLock){
@@ -1737,7 +1911,7 @@ function offerRecovery(){
 el("recoveryResume").onclick=function(){
   var r=state.activeRun; closeModal("recoveryModal");
   if(!restoreRun(r)){state.activeRun=null;save();render();showToast("The unfinished session could not be recovered.");return;}
-  render(); if(phase==="running"){audioStart();runTicker();}else if(phase==="rest"){toRest(true);} persistActiveRun();
+  restartRestoredRun(false);
 };
 el("recoveryDiscard").onclick=function(){
   closeModal("recoveryModal"); audioStop(); phase="idle"; state.activeRun=null; save(); render(); showToast("Unfinished session discarded.");
@@ -1777,6 +1951,7 @@ askPersist();
 var startupContinued=false;
 function continueStartup(){
   if(startupContinued) return; startupContinued=true;
+  if(autoRestoreActiveRun()) return;
   if(!offerRecovery()) showSetup(false);
 }
 if(!offerInstallGate()) continueStartup();
