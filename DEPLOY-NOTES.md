@@ -1,41 +1,28 @@
-# Threshold v29 deployment
+# Threshold v30 deployment
 
-## Startup fix
+## Session-saved analytics fix
 
-v28 called `storageStatus()` during the first render. That function checked an
-undefined variable named `canSave`, causing a JavaScript runtime error.
+In v28, a session was saved locally and then the interface was redrawn before
+the `session_saved` analytics event was queued. The v28 startup/render error
+could therefore interrupt execution after the local save but before analytics.
 
-Effects included:
+v29 fixed the render error. v30 also makes the event flow resilient:
 
-- The page appearing to stall after partially drawing
-- First-run setup not opening
-- Later startup code not running
+1. Save the session locally
+2. Queue and send `session_saved`
+3. Redraw the interface
 
-v29 calls `storage.canSave()` correctly.
+This applies to both timed-absence sessions and Door is a Bore sessions.
 
-## First-run setup
+## Stopped values
 
-A fresh installation now reaches the setup guide and asks for:
+- `session_started`: `stopped` is `NULL`, because the result is not yet known
+- Completed `session_saved`: `stopped` is `0`
+- Early-ended `session_saved`: `stopped` is `1`
 
-- Dog name
-- Comfortable starting absence
-- Timed absence or Door is a Bore mode
-- Camera acknowledgement
+## Cloudflare
 
-**Skip for now** no longer permanently marks setup as complete. The guide will
-be offered again on a later launch, and remains available from Settings.
+No additional D1 migration or Worker-code update is required after v28.
 
-## Reset fix
-
-**Delete everything and start over** previously called an undefined `fresh()`
-helper. It now uses the exported `freshState()` function and reliably opens the
-setup guide afterward.
-
-## Existing analytics
-
-The v28 Worker and D1 metadata changes remain included and unchanged.
-
-- App version: `v29`
-- Web Analytics token: configured
-- Event endpoint: configured
-- Service-worker cache: `threshold-v29`
+- App version: `v30`
+- Service-worker cache: `threshold-v30`

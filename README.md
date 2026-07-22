@@ -98,3 +98,9 @@ than strictly anonymous analytics.
 The initial render no longer stops on an undefined storage-status variable.
 First-run setup opens normally, and the reset/setup-skip paths have also been
 corrected.
+
+
+## v30 saved-event ordering
+
+`session_saved` is now queued immediately after the local save and before the
+interface redraw, so a rendering problem cannot suppress the usage event.

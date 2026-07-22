@@ -428,13 +428,14 @@ function recordDoor(outcome){
   var saved=s.sessions[s.sessions.length-1];
   phase="idle"; pending=null; repIdx=0; repLog=[]; tags=[]; note=""; shuffle=0; clearActiveRun();
   clearInterval(tick);
-  save(); render();
+  save();
   analytics.track("session_saved",{
     dogName:dogName(),
     sessionType:"door",
     targetSeconds:null,
     stopped:!!saved.stopped
   });
+  render();
   showToast("Door session saved.","Undo",function(){ removeSessionById(s.id,saved.id); });
 }
 
@@ -720,13 +721,14 @@ function commitReviewedSession(){
   reviewCandidate=null; reviewPlan=null;
   closeModal("sessionReviewModal");
   pending=null; phase="idle"; repLog=[]; repIdx=0; retries=0; shuffle=0; tags=[]; note="";
-  clearActiveRun(); clearInterval(tick); save(); render();
+  clearActiveRun(); clearInterval(tick); save();
   analytics.track("session_saved",{
     dogName:dogName(),
     sessionType:"absence",
     targetSeconds:saved.target,
     stopped:!!saved.stopped
   });
+  render();
 
   clearTimeout(milestoneTimer);
   var earned=justEarned.length?justEarned[justEarned.length-1]:null;
