@@ -2,7 +2,7 @@
    Two jobs: make the app work with no signal, and make it installable.
    Bump CACHE when you change any file, or browsers will serve the old one. */
 var PREFIX = "threshold-";
-var CACHE = PREFIX + "v30";
+var CACHE = PREFIX + "v31";
 var SHELL = [
   "./",
   "./index.html",
@@ -80,6 +80,25 @@ self.addEventListener("fetch", function(e){
         }
         return res;
       }).catch(function(){ return hit; });
+    })
+  );
+});
+
+
+self.addEventListener("notificationclick", function(e){
+  e.notification.close();
+  var target=e.notification.data&&e.notification.data.url
+    ?e.notification.data.url
+    :self.registration.scope;
+
+  e.waitUntil(
+    clients.matchAll({type:"window",includeUncontrolled:true}).then(function(list){
+      for(var i=0;i<list.length;i++){
+        if(list[i].url.indexOf(self.registration.scope)===0&&"focus" in list[i]){
+          return list[i].focus();
+        }
+      }
+      return clients.openWindow ? clients.openWindow(target) : null;
     })
   );
 });

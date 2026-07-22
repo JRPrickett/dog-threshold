@@ -104,3 +104,11 @@ corrected.
 
 `session_saved` is now queued immediately after the local save and before the
 interface redraw, so a rendering problem cannot suppress the usage event.
+
+
+## v31 notification routing
+
+At the planned return time, Threshold replaces the browser-owned Media Session
+card with a service-worker notification whose click handler explicitly focuses
+or opens Threshold. The countdown media controls remain available before the
+target is reached.

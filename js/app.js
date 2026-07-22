@@ -588,7 +588,7 @@ function startRep(){
     sessionType:"absence",
     targetSeconds:reps.length?reps[reps.length-1].target:null
   });
-  persistActiveRun(); audioStart();
+  persistActiveRun(); requestReturnNotificationPermission(); audioStart();
   drawActions(); drawTabs(); drawHeadline(); drawReps();
   el("coach").hidden=true; runTicker();
 }
@@ -618,8 +618,10 @@ function runTicker(){
       }
     }
     if(left<=0&&!chimed){
-      chimed=true; setMediaCountdown(target,target); playChime();
-      nowPlaying("Time to head back",dogName()+" · "+scen().label);
+      chimed=true;
+      audioStop();
+      playChime();
+      showReturnNotification();
     }
   }
   paint(); tick=setInterval(paint,250);
@@ -1482,9 +1484,47 @@ function audioStart(){
 function audioStop(){
   if(keeper){ try{ keeper.pause(); }catch(e){} }
   clearMediaCountdown();
-  if(navigator.mediaSession){ try{ navigator.mediaSession.playbackState="none"; }catch(e){} }
+  if(navigator.mediaSession){
+    try{ navigator.mediaSession.playbackState="none"; }catch(e){}
+    try{ navigator.mediaSession.metadata=null; }catch(e){}
+  }
   if(wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock=null; }
 }
+function installedDisplayMode(){
+  try{
+    return !!(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches)||
+      !!navigator.standalone;
+  }catch(e){
+    return false;
+  }
+}
+
+function requestReturnNotificationPermission(){
+  if(typeof Notification==="undefined"||Notification.permission!=="default") return;
+  if(!navigator.serviceWorker||!/Android/i.test(navigator.userAgent||"")||!installedDisplayMode()) return;
+  try{
+    var request=Notification.requestPermission();
+    if(request&&request.catch) request.catch(function(){});
+  }catch(e){}
+}
+
+function showReturnNotification(){
+  if(typeof Notification==="undefined"||Notification.permission!=="granted"||!navigator.serviceWorker) return;
+  var url=new URL("./",location.href).href;
+  var icon=new URL("./assets/icons/icon-192.png",location.href).href;
+  navigator.serviceWorker.ready.then(function(registration){
+    return registration.showNotification("Time to head back",{
+      body:dogName()+" · "+scen().label,
+      icon:icon,
+      badge:icon,
+      tag:"threshold-return",
+      renotify:true,
+      requireInteraction:true,
+      data:{url:url}
+    });
+  }).catch(function(){});
+}
+
 
 function playChime(){
   if(!soundOn()||!chime) return;
@@ -1500,8 +1540,8 @@ function nowPlaying(line,sub){
   try{
     navigator.mediaSession.metadata=new MediaMetadata({
       title:line, artist:sub, album:"Threshold",
-      artwork:[{src:"./icon-192.png",sizes:"192x192",type:"image/png"},
-               {src:"./icon-512.png",sizes:"512x512",type:"image/png"}]
+      artwork:[{src:"./assets/icons/icon-192.png",sizes:"192x192",type:"image/png"},
+               {src:"./assets/icons/icon-512.png",sizes:"512x512",type:"image/png"}]
     });
   }catch(e){}
 }
@@ -1626,7 +1666,8 @@ el("setupSave").onclick=function(){
   var v=intIn(el("setupStart").value,1,7200,0); if(!v){alert("Enter a valid starting duration.");return;}
   if(!el("setupCamera").checked&&!confirm("Continue without confirming that you will watch on a camera?"))return;
   state.name=el("setupName").value.trim().slice(0,40); state.scenarios.forEach(function(s){s.start=v;s.mode=el("setupMode").value==="door"?"door":"absence";});
-  state.setupDone=true; closeModal("setupModal"); el("dogName").value=state.name; save(); render();
+  state.setupDone=true; closeModal("setupModal"); el("dogName").value=state.name;
+  requestReturnNotificationPermission(); save(); render();
 };
 el("setupSkip").onclick=function(){
   state.setupDone=false;

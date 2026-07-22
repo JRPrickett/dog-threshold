@@ -1,28 +1,26 @@
-# Threshold v30 deployment
+# Threshold v31 deployment
 
-## Session-saved analytics fix
+## Android media-card routing workaround
 
-In v28, a session was saved locally and then the interface was redrawn before
-the `session_saved` analytics event was queued. The v28 startup/render error
-could therefore interrupt execution after the local save but before analytics.
+The completed timer no longer leaves **Time to head back** in Chrome's Media
+Session card. That card's main tap target is controlled by Android/Chrome and
+was opening Chrome Remote Desktop on the reported device.
 
-v29 fixed the render error. v30 also makes the event flow resilient:
+At target time, Threshold now:
 
-1. Save the session locally
-2. Queue and send `session_saved`
-3. Redraw the interface
+- Stops and clears the browser media session
+- Plays the existing chime
+- Shows a regular Threshold notification when permission is granted
+- Handles the notification click in `sw.js`
+- Focuses an open Threshold client or opens the PWA URL
 
-This applies to both timed-absence sessions and Door is a Bore sessions.
+The lock-screen/media countdown still operates before the target is reached.
 
-## Stopped values
+## Additional corrections
 
-- `session_started`: `stopped` is `NULL`, because the result is not yet known
-- Completed `session_saved`: `stopped` is `0`
-- Early-ended `session_saved`: `stopped` is `1`
+- Media Session artwork now points to `assets/icons/`
+- The web manifest has a stable `id`
+- App version: `v31`
+- Service-worker cache: `threshold-v31`
 
-## Cloudflare
-
-No additional D1 migration or Worker-code update is required after v28.
-
-- App version: `v30`
-- Service-worker cache: `threshold-v30`
+No Cloudflare or D1 changes are required.

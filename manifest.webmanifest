@@ -1,5 +1,5 @@
 {
-  "name": "Threshold \u2014 separation anxiety log",
+  "name": "Threshold — separation anxiety log",
   "short_name": "Threshold",
   "description": "Work out how long to leave your dog today, and keep a record of how it went.",
   "start_url": "./",
@@ -31,5 +31,6 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "id": "./"
 }
