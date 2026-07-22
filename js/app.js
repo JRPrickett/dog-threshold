@@ -624,6 +624,7 @@ function runTicker(){
       audioStop();
       playChime();
       showReturnNotification();
+      setTimeout(clearMediaOwnership,1200);
     }
   }
   paint(); tick=setInterval(paint,250);
@@ -1430,7 +1431,7 @@ function backupWhen(){
    Picture aren't available to web apps, so instead: a silent loop keeps the
    page alive once you've backgrounded it, a chime tells you the absence is up,
    and Media Session puts the current step on your lock screen. */
-var keeper=null, chime=null, wakeLock=null, chimed=false, preChimed=false;
+var keeper=null, toneContext=null, wakeLock=null, chimed=false, preChimed=false;
 
 function makeWav(fill, secs, rate){
   rate=rate||8000;
@@ -1446,19 +1447,51 @@ function makeWav(fill, secs, rate){
   return "data:audio/wav;base64,"+btoa(s);
 }
 
+function ensureToneContext(){
+  if(toneContext) return toneContext;
+  var AudioContextClass=window.AudioContext||window.webkitAudioContext;
+  if(!AudioContextClass) return null;
+  try{ toneContext=new AudioContextClass(); }catch(e){ toneContext=null; }
+  return toneContext;
+}
+
+function resumeToneContext(){
+  var ctx=ensureToneContext();
+  if(ctx&&ctx.state==="suspended"){
+    try{
+      var resumed=ctx.resume();
+      if(resumed&&resumed.catch) resumed.catch(function(){});
+    }catch(e){}
+  }
+  return ctx;
+}
+
+function scheduleTone(ctx,frequency,startOffset,duration,volume){
+  if(!ctx) return;
+  try{
+    var start=ctx.currentTime+Math.max(0,startOffset||0);
+    var end=start+Math.max(0.05,duration||0.2);
+    var oscillator=ctx.createOscillator();
+    var gain=ctx.createGain();
+    oscillator.type="sine";
+    oscillator.frequency.setValueAtTime(frequency,start);
+    gain.gain.setValueAtTime(0.0001,start);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.001,volume||0.12),start+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001,end);
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.start(start);
+    oscillator.stop(end+0.03);
+  }catch(e){}
+}
+
 function initAudio(){
+  resumeToneContext();
   if(keeper||typeof Audio==="undefined") return;
   try{
     keeper=new Audio(makeWav(function(){ return 0; },2,8000));
     keeper.loop=true; keeper.volume=0.02;
     keeper.setAttribute("playsinline","");
-    // two soft notes, well short of an alarm
-    chime=new Audio(makeWav(function(t){
-      var a=Math.sin(2*Math.PI*660*t)*Math.exp(-6*t);
-      var b=t>0.22 ? Math.sin(2*Math.PI*990*(t-0.22))*Math.exp(-5*(t-0.22)) : 0;
-      return 0.35*(a+b);
-    },0.9,22050));
-    chime.volume=0.9;
   }catch(e){ keeper=null; }
 }
 
@@ -1483,13 +1516,23 @@ function audioStart(){
   }
 }
 
-function audioStop(){
-  if(keeper){ try{ keeper.pause(); }catch(e){} }
+function clearMediaOwnership(){
   clearMediaCountdown();
-  if(navigator.mediaSession){
-    try{ navigator.mediaSession.playbackState="none"; }catch(e){}
-    try{ navigator.mediaSession.metadata=null; }catch(e){}
+  if(!navigator.mediaSession) return;
+  try{ navigator.mediaSession.playbackState="none"; }catch(e){}
+  try{ navigator.mediaSession.metadata=null; }catch(e){}
+  ["play","pause","stop","seekbackward","seekforward","seekto","previoustrack","nexttrack"].forEach(function(action){
+    try{ navigator.mediaSession.setActionHandler(action,null); }catch(e){}
+  });
+}
+
+function audioStop(){
+  if(keeper){
+    try{ keeper.pause(); }catch(e){}
+    try{ keeper.removeAttribute("src"); keeper.load(); }catch(e){}
+    keeper=null;
   }
+  clearMediaOwnership();
   if(wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock=null; }
 }
 function installedDisplayMode(){
@@ -1503,7 +1546,9 @@ function installedDisplayMode(){
 
 function requestReturnNotificationPermission(){
   if(typeof Notification==="undefined"||Notification.permission!=="default") return;
-  if(!navigator.serviceWorker||!/Android/i.test(navigator.userAgent||"")||!installedDisplayMode()) return;
+  if(!navigator.serviceWorker||!installedDisplayMode()) return;
+  if(typeof ServiceWorkerRegistration!=="undefined"&&
+     !("showNotification" in ServiceWorkerRegistration.prototype)) return;
   try{
     var request=Notification.requestPermission();
     if(request&&request.catch) request.catch(function(){});
@@ -1529,12 +1574,15 @@ function showReturnNotification(){
 
 
 function playChime(){
-  if(!soundOn()||!chime) return;
-  try{ chime.currentTime=0; chime.playbackRate=1; var p=chime.play(); if(p&&p.catch) p.catch(function(){}); }catch(e){}
+  if(!soundOn()) return;
+  var ctx=resumeToneContext();
+  scheduleTone(ctx,660,0,0.32,0.16);
+  scheduleTone(ctx,990,0.22,0.42,0.14);
 }
 function playPreChime(){
-  if(!soundOn()||!chime) return;
-  try{ chime.currentTime=0; chime.playbackRate=0.78; var p=chime.play(); if(p&&p.catch) p.catch(function(){}); }catch(e){}
+  if(!soundOn()) return;
+  var ctx=resumeToneContext();
+  scheduleTone(ctx,520,0,0.28,0.08);
 }
 
 function nowPlaying(line,sub){

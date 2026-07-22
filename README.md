@@ -119,3 +119,10 @@ target is reached.
 Cloudflare's official beacon is now embedded directly in `index.html`.
 Foreground/resume activity is counted separately in D1 as `app_open_events`,
 including whether the app was running in standalone Home Screen mode.
+
+
+## v33 media-card fix
+
+The final chime is generated through Web Audio and the HTML media element is
+fully destroyed at target time. This prevents the system Now Playing card from
+being recreated after the countdown ends.

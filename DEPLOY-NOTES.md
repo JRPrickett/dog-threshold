@@ -1,39 +1,23 @@
-# Threshold v32 deployment
+# Threshold v33 deployment
 
-## iOS Web Analytics behaviour
+## Media-card teardown
 
-Cloudflare Web Analytics is now installed with its exact static `type="module"`
-snippet in `index.html`, rather than being created dynamically by app code.
+The final chime no longer uses an HTML `<audio>` element. It is generated with
+Web Audio oscillators, which prevents the chime from creating a fresh browser
+media notification after the countdown media session has been stopped.
 
-Installed iOS PWAs may resume an existing document without another page load.
-Because a Cloudflare page view is not guaranteed in that case, Threshold now
-records `app_open` foreground events in a separate D1 table.
+At target time Threshold now:
 
-## New D1 table
+1. Destroys the keeper audio element
+2. Clears Media Session metadata, position and action handlers
+3. Plays the chime through Web Audio
+4. Shows the normal Threshold notification when supported/permitted
+5. Repeats the media-session cleanup after 1.2 seconds
 
-Run `cloudflare-worker/migration-v32.sql` once to create:
+This removes the system media card rather than trying to control its main tap,
+which is not exposed to web applications.
 
-```text
-app_open_events
-```
+No analytics, D1 or Cloudflare Worker changes are required.
 
-Fields include:
-
-- App version
-- Dog name
-- Broad operating system
-- Device type
-- Browser family
-- `standalone` or `browser`
-- Event and receipt timestamps
-
-## Worker
-
-Replace the deployed Worker with the v32 Worker code so it accepts `app_open`
-and routes it to the new table.
-
-## Version
-
-- App version: `v32`
-- Service-worker cache: `threshold-v32`
-- Existing session-event table and data remain unchanged
+- App version: `v33`
+- Service-worker cache: `threshold-v33`
