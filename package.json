@@ -1,0 +1,9 @@
+{
+  "name": "threshold",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/progression.test.js && node tests/storage.test.js && node tests/migration.test.js",
+    "check": "node --check js/app.js && npm test"
+  }
+}

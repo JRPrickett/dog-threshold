@@ -2,14 +2,24 @@
    Two jobs: make the app work with no signal, and make it installable.
    Bump CACHE when you change any file, or browsers will serve the old one. */
 var PREFIX = "threshold-";
-var CACHE = PREFIX + "v21";
+var CACHE = PREFIX + "v22";
 var SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./apple-touch-icon.png"
+  "./css/app.css",
+  "./js/app.js",
+  "./js/storage.js",
+  "./js/progression.js",
+  "./js/timer.js",
+  "./js/ui.js",
+  "./js/state.js",
+  "./js/sessions.js",
+  "./js/charts.js",
+  "./js/settings.js",
+  "./assets/icons/icon-192.png",
+  "./assets/icons/icon-512.png",
+  "./assets/icons/apple-touch-icon.png"
 ];
 
 self.addEventListener("install", function(e){

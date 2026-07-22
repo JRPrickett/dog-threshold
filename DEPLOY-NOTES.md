@@ -1,35 +1,31 @@
-# Threshold v21 deployment
+# Threshold v22 deployment
 
-Replace `index.html` and `sw.js` together.
+This is a structural refactor rather than a feature release.
 
-## 1. Next-target explanation
+## Before deployment
 
-The home screen now shows a dedicated explanation directly beneath the target:
+Copy the existing app icons into `assets/icons/`:
 
-- Why that target was selected
-- The previous planned and actual duration
-- Whether the previous session was completed or ended early
-- The previous rating
+- `icon-192.png`
+- `icon-512.png`
+- `apple-touch-icon.png`
 
-When the app deliberately varies a target, it now distinguishes the displayed
-session target from the underlying working baseline.
+## Behaviour
 
-## 2. Review before saving
+The existing UI, progression rules, local-storage key and schema version are retained.
+Users should keep their existing data because the production origin and storage key do
+not change.
 
-Selecting Success, OK or Not good no longer saves immediately. A review screen shows:
+## Technical changes
 
-- Planned target
-- Actual absence
-- Completed or ended early
-- Selected rating
-- Exact next target
-- The rule used to calculate it
+- Inline CSS moved to `css/app.css`
+- Inline JavaScript moved to ES modules
+- Storage/migrations isolated in `js/storage.js`
+- Progression/warm-ups isolated in `js/progression.js`
+- Duration and UI helpers isolated
+- Node-based regression tests added
+- GitHub Actions test workflow added
+- Service-worker shell updated for all module files
+- Cache version bumped to `threshold-v22`
 
-The user can save or return to change the rating, context tags or notes.
-
-## 3. Longer undo window
-
-After saving, the confirmation includes the next target and offers Undo for 12 seconds.
-Milestone pop-ups are delayed until the undo window has passed so they do not obscure it.
-
-The service-worker cache is `threshold-v21`.
+Run `npm test` before deployment.
