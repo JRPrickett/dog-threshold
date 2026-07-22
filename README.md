@@ -133,3 +133,10 @@ being recreated after the countdown ends.
 Active sessions are checkpointed during the run and whenever the app is hidden.
 A reload or PWA restart reconstructs the run from its original start timestamp,
 so switching apps cannot silently reset or discard the timer.
+
+
+## v35 simpler scenarios and earlier notification
+
+Fresh installations start with a single **Separation training** scenario.
+Unused untouched legacy defaults are removed without deleting history or custom
+scenarios. The return notification now appears with the five-second warning.

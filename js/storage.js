@@ -1,4 +1,4 @@
-export const SCHEMA = 4;
+export const SCHEMA = 5;
 export const KEY = "threshold.v2";
 export const OLD_KEY = "threshold.v1";
 
@@ -63,14 +63,50 @@ export function freshState(){
   return {
     version:SCHEMA,
     name:"",
-    active:"morning",
+    active:"training",
     setupDone:false,
     scenarios:[
-      {id:"morning",label:"Morning",start:5,warmups:4,rest:60,sessions:[],override:null},
-      {id:"daytime",label:"Daytime",start:5,warmups:4,rest:60,sessions:[],override:null},
-      {id:"evening",label:"Evening",start:5,warmups:4,rest:60,sessions:[],override:null}
+      {
+        id:"training",
+        label:"Separation training",
+        start:5,
+        warmups:4,
+        rest:60,
+        sessions:[],
+        override:null,
+        mode:"absence",
+        doorLevel:0
+      }
     ]
   };
+}
+
+function tidyLegacyDefaultScenarios(scenarios,activeRun){
+  const legacyLabels={
+    morning:"Morning",
+    daytime:"Daytime",
+    evening:"Evening"
+  };
+  const activeRunId=activeRun&&typeof activeRun==="object"
+    ?textIn(activeRun.scenarioId,80):"";
+
+  function isUnusedLegacyDefault(scenario){
+    return legacyLabels[scenario.id]===scenario.label &&
+      scenario.sessions.length===0 &&
+      scenario.id!==activeRunId;
+  }
+
+  let cleaned=scenarios.filter(scenario=>!isUnusedLegacyDefault(scenario));
+
+  if(!cleaned.length&&scenarios.length){
+    cleaned=[scenarios[0]];
+  }
+
+  if(cleaned.length===1&&legacyLabels[cleaned[0].id]===cleaned[0].label){
+    cleaned[0].label="Separation training";
+  }
+
+  return cleaned;
 }
 
 export function normaliseState(input){
@@ -121,9 +157,11 @@ export function normaliseState(input){
     };
   });
 
+  normal.activeRun=input.activeRun&&typeof input.activeRun==="object"?input.activeRun:null;
+  normal.scenarios=tidyLegacyDefaultScenarios(normal.scenarios,normal.activeRun);
+
   normal.active=normal.scenarios.some(scenario=>scenario.id===input.active)
     ?input.active:normal.scenarios[0].id;
-  normal.activeRun=input.activeRun&&typeof input.activeRun==="object"?input.activeRun:null;
   normal.version=SCHEMA;
   return normal;
 }
@@ -158,7 +196,7 @@ export function createStorage(storage=globalThis.localStorage){
         migrated.name=old.name||"";
         migrated.scenarios[0].start=old.start||5;
         migrated.scenarios[0].sessions=old.sessions||[];
-        migrated.scenarios[0].label="Morning";
+        migrated.scenarios[0].label="Separation training";
         migrated.setupDone=true;
         return normaliseState(migrated);
       }catch{

@@ -3,7 +3,9 @@ import { freshState, normaliseState, createStorage, KEY } from "../js/storage.js
 
 {
   const state=freshState();
-  assert.equal(state.scenarios.length,3);
+  assert.equal(state.scenarios.length,1);
+  assert.equal(state.scenarios[0].id,"training");
+  assert.equal(state.scenarios[0].label,"Separation training");
   assert.equal(state.scenarios[0].warmups,4);
 }
 
@@ -19,7 +21,7 @@ import { freshState, normaliseState, createStorage, KEY } from "../js/storage.js
   assert.equal(normal.name,"Milo");
   assert.equal(normal.dailyCap,3);
   assert.equal(normal.scenarios[0].rest,45);
-  assert.equal(normal.version,4);
+  assert.equal(normal.version,5);
 }
 
 {

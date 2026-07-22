@@ -597,12 +597,12 @@ function drawActions(){
   if(mode(sc)==="door"){
     if(phase==="cue"){
       btn(a,"Step done",cueDone);
-      btn(a,"End session ",endDoor,false,true);
+      btn(a,"End session early",endDoorEarly,false,true);
       return;
     }
     if(phase==="rest"){
       btn(a,"Next step",startCue);
-      btn(a,"End session ",endDoor,false,true);
+      btn(a,"End session early",endDoorEarly,false,true);
       return;
     }
     if(phase==="doorVerdict"){
@@ -645,7 +645,7 @@ function drawActions(){
   if(phase==="rest"){
     var next=reps[repIdx];
     btn(a,(next.kind==="main"?"Start the main absence":"Start warm-up "+(repIdx+1)),startRep);
-    btn(a,"End session ",end,false,true);
+    btn(a,"End session early",endEarly,false,true);
     return;
   }
 
@@ -716,12 +716,12 @@ function runTicker(){
     if(left>=0){ c.className="clock live"; c.textContent=fmt(left); }
     else { c.className="clock over"; c.textContent="+"+fmt(-left); }
     el("delta").textContent=left>=0?"Time out of the room.":"Target reached — come back whenever you like.";
-    var early=target>=15?5:target>=8?3:0;
+    var early=target>5?5:0;
     if(early&&mediaLeft<=early&&mediaLeft>0&&!preChimed){
       preChimed=true;
       persistActiveRun(true);
       playPreChime();
-      showReturnNotification();
+      showReturnNotification(early);
     }
     if(mediaLeft!==lastMediaLeft){
       lastMediaLeft=mediaLeft;
@@ -1729,13 +1729,15 @@ function requestReturnNotificationPermission(){
   }catch(e){}
 }
 
-function showReturnNotification(){
+function showReturnNotification(secondsRemaining){
   if(typeof Notification==="undefined"||Notification.permission!=="granted"||!navigator.serviceWorker) return;
   var url=new URL("./",location.href).href;
   var icon=new URL("./assets/icons/icon-192.png",location.href).href;
+  var remaining=Number.isFinite(Number(secondsRemaining))
+    ?Math.max(1,Math.round(Number(secondsRemaining))):null;
   navigator.serviceWorker.ready.then(function(registration){
     return registration.showNotification("Time to head back",{
-      body:"5 seconds remaining . "+dogName()+" · "+scen().label,
+      body:(remaining?remaining+" seconds remaining · ":"")+dogName()+" · "+scen().label,
       icon:icon,
       badge:icon,
       tag:"threshold-return",
