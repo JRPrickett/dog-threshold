@@ -1751,18 +1751,24 @@ function showReturnNotification(secondsRemaining){
 
 function playChime(){
   if(!soundOn()) return;
+
   var ctx=resumeToneContext();
-  scheduleTone(ctx,660,0,0.32,0.16);
-  scheduleTone(ctx,990,0.22,0.42,0.14);
+
+  // A fuller two-strike completion chime, distinct from the warning melody.
+  scheduleTone(ctx,660,0.00,0.85,0.14);
+  scheduleTone(ctx,990,0.00,0.70,0.08);
+  scheduleTone(ctx,880,0.42,1.05,0.13);
+  scheduleTone(ctx,1320,0.42,0.90,0.07);
 }
 function playPreChime(){
   if(!soundOn()) return;
 
   var ctx=resumeToneContext();
 
-  scheduleTone(ctx,520,0,0.55,0.12);
-  scheduleTone(ctx,660,0.30,0.65,0.11);
-  scheduleTone(ctx,820,0.62,0.70,0.09);
+  // A gentle rising melody: five seconds remain.
+  scheduleTone(ctx,520,0.00,0.50,0.12);
+  scheduleTone(ctx,660,0.22,0.55,0.11);
+  scheduleTone(ctx,820,0.46,0.60,0.10);
 }
 
 function nowPlaying(line,sub){
