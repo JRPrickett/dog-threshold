@@ -1757,8 +1757,12 @@ function playChime(){
 }
 function playPreChime(){
   if(!soundOn()) return;
+
   var ctx=resumeToneContext();
-  scheduleTone(ctx,520,0,0.28,0.08);
+
+  scheduleTone(ctx,520,0,0.55,0.12);
+  scheduleTone(ctx,660,0.30,0.65,0.11);
+  scheduleTone(ctx,820,0.62,0.70,0.09);
 }
 
 function nowPlaying(line,sub){
