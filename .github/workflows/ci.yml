@@ -46,7 +46,7 @@ jobs:
         run: npm install --ignore-scripts
 
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Run mobile browser journeys
         run: npm run test:e2e
