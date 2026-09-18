@@ -1,19 +1,19 @@
 import { expect, test } from "@playwright/test";
 
 async function completeSetup(page: import("@playwright/test").Page, seconds = 1) {
-  await page.goto("/");
+  await page.goto("/app/");
   await page.getByLabel("Your dog's name").fill("Mabel");
   await page
     .getByLabel("A duration you already know feels comfortable")
     .fill(String(seconds));
   await page.getByRole("button", { name: "Set up today's training" }).click();
-  await expect(page.getByRole("button", { name: "Start session" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start today\'s session" })).toBeVisible();
 }
 
 test("first session can be completed and appears in history", async ({ page }) => {
   await completeSetup(page, 1);
 
-  await page.getByRole("button", { name: "Start session" }).click();
+  await page.getByRole("button", { name: "Start today\'s session" }).click();
   await expect(page.getByText("Today's main departure")).toBeVisible();
 
   await page.getByRole("button", { name: "I'm leaving now" }).click();
@@ -32,7 +32,7 @@ test("first session can be completed and appears in history", async ({ page }) =
 test("a running session survives a reload and keeps its original timer", async ({ page }) => {
   await completeSetup(page, 5);
 
-  await page.getByRole("button", { name: "Start session" }).click();
+  await page.getByRole("button", { name: "Start today\'s session" }).click();
   await page.getByRole("button", { name: "I'm leaving now" }).click();
   await page.waitForTimeout(600);
 
@@ -99,7 +99,7 @@ test("legacy users keep multiple training tracks after migration", async ({ page
     );
   });
 
-  await page.goto("/");
+  await page.goto("/app/");
   await expect(page.getByText("Mabel")).toBeVisible();
   await page.getByRole("button", { name: "More" }).click();
 
@@ -107,7 +107,7 @@ test("legacy users keep multiple training tracks after migration", async ({ page
   await expect(selector).toHaveValue("evening");
   await selector.selectOption("morning");
 
-  await expect(page.getByRole("button", { name: "Start session" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start today\'s session" })).toBeVisible();
   await expect(page.getByText("Morning routine")).toBeVisible();
 });
 
@@ -160,7 +160,7 @@ test("a validated backup can replace local data after confirmation", async ({ pa
 
 test("a running session remains usable after the browser goes offline", async ({ page, context }) => {
   await completeSetup(page, 2);
-  await page.getByRole("button", { name: "Start session" }).click();
+  await page.getByRole("button", { name: "Start today\'s session" }).click();
   await context.setOffline(true);
 
   await page.getByRole("button", { name: "I'm leaving now" }).click();
@@ -172,5 +172,15 @@ test("a running session remains usable after the browser goes offline", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: /Relaxed/ }).click();
   await page.getByRole("button", { name: "Save session" }).click();
-  await expect(page.getByRole("button", { name: "Start session" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start today\'s session" })).toBeVisible();
+});
+
+
+test("public SettledSolo site leads into the PWA", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Calm starts with small steps." })).toBeVisible();
+  await expect(page.getByText("SettledSolo").first()).toBeVisible();
+  await page.getByRole("link", { name: "Start training free" }).click();
+  await expect(page).toHaveURL(/\/app\/?$/);
+  await expect(page.getByLabel("Your dog's name")).toBeVisible();
 });
