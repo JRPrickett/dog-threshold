@@ -36,6 +36,8 @@ export interface AppRepository {
     nextLevel: number
   ): Promise<AppData>;
   setActiveScenario(id: string): Promise<AppData>;
+  createScenario(label: string, startSeconds: number): Promise<AppData>;
+  updateScenario(id: string, label: string, startSeconds: number): Promise<AppData>;
   loadActiveSession(): Promise<PersistedLiveSession | null>;
   saveActiveSession(session: PersistedLiveSession): Promise<void>;
   clearActiveSession(): Promise<void>;
@@ -273,6 +275,35 @@ function fallbackRepository(initial: AppData): AppRepository {
       }
       return data;
     },
+    async createScenario(label, startSeconds) {
+      const id = `scenario-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+      const scenario: Scenario = {
+        id,
+        label: label.trim() || "New training track",
+        startSeconds: Math.max(1, Math.round(startSeconds || 1)),
+        sessions: []
+      };
+      data = normaliseAppData({
+        ...data,
+        activeScenarioId: id,
+        scenarios: [...data.scenarios, scenario]
+      });
+      persistData();
+      return data;
+    },
+    async updateScenario(id, label, startSeconds) {
+      const existing = data.scenarios.find((scenario) => scenario.id === id);
+      if (!existing) return data;
+      data = normaliseAppData(
+        replaceScenario(data, {
+          ...existing,
+          label: label.trim() || existing.label,
+          startSeconds: Math.max(1, Math.round(startSeconds || existing.startSeconds))
+        })
+      );
+      persistData();
+      return data;
+    },
     async loadActiveSession() {
       return active;
     },
@@ -407,6 +438,39 @@ export function createAppRepository(): AppRepository {
       const data = await repository.loadAppData();
       if (!data.scenarios.some((scenario) => scenario.id === id)) return data;
       const next = { ...data, activeScenarioId: id };
+      await repository.saveAppData(next);
+      return next;
+    },
+
+    async createScenario(label, startSeconds) {
+      const data = await repository.loadAppData();
+      const id = `scenario-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+      const scenario: Scenario = {
+        id,
+        label: label.trim() || "New training track",
+        startSeconds: Math.max(1, Math.round(startSeconds || 1)),
+        sessions: []
+      };
+      const next = normaliseAppData({
+        ...data,
+        activeScenarioId: id,
+        scenarios: [...data.scenarios, scenario]
+      });
+      await repository.saveAppData(next);
+      return next;
+    },
+
+    async updateScenario(id, label, startSeconds) {
+      const data = await repository.loadAppData();
+      const existing = data.scenarios.find((scenario) => scenario.id === id);
+      if (!existing) return data;
+      const next = normaliseAppData(
+        replaceScenario(data, {
+          ...existing,
+          label: label.trim() || existing.label,
+          startSeconds: Math.max(1, Math.round(startSeconds || existing.startSeconds))
+        })
+      );
       await repository.saveAppData(next);
       return next;
     },
