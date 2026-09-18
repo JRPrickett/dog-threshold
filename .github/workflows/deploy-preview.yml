@@ -25,6 +25,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: preview
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -34,6 +38,18 @@ jobs:
         with:
           node-version: 22
 
+      - name: Detect Cloudflare credentials
+        id: cloudflare
+        shell: bash
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Cloudflare preview credentials are configured."
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::SettledSolo preview deployment skipped because CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID are not configured in the preview environment."
+          fi
+
       - name: Install dependencies
         run: npm install --ignore-scripts
 
@@ -41,7 +57,11 @@ jobs:
         run: npm run verify
 
       - name: Deploy preview Worker
+        if: steps.cloudflare.outputs.configured == 'true'
         run: npx wrangler deploy --config wrangler.preview.jsonc
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Preview deployment not configured
+        if: steps.cloudflare.outputs.configured != 'true'
+        run: |
+          echo "Build verification passed."
+          echo "Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to the GitHub preview environment, then rerun this workflow."
