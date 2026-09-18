@@ -1174,3 +1174,13 @@ textarea:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+
+.account-notice.storage-danger {
+  background: var(--rose-soft);
+  color: #754843;
+}
+
+.account-notice.storage-danger span {
+  color: #815b56;
+}
