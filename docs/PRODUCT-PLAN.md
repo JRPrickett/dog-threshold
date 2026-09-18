@@ -5,7 +5,7 @@
 Build a genuinely useful, free web app for people working through dog separation anxiety.
 The product should earn real repeat usage before paid features are considered.
 
-The production product name is **SettledSolo**. The repository retains its legacy `dog-threshold` name internally.
+The production product name and repository are now **SettledSolo**. Legacy storage/import identifiers remain stable where changing them would risk user-data migration.
 
 ## Core promise
 
@@ -49,6 +49,17 @@ trainer, veterinary behaviourist or vet.
 - Security headers and CSP appropriate for a PWA.
 - Real production domain/subdomain after the brand decision.
 - Error logging that does not capture training content.
+
+### Phase 1.5 — release candidate and modern-app cutover
+
+- Finish the remaining iOS matrix: offline relaunch, notification-denial path and update safety.
+- Complete the Android installed-PWA matrix.
+- Run desktop sanity checks.
+- Get qualified behaviour-professional review of training wording/heuristics.
+- Complete formal name/trademark checks and domain connection.
+- Finish public-site beta essentials: feedback route, real product screenshots, social image and final privacy/terms wording.
+- Merge the modern PWA only after those release gates are recorded.
+- Deploy the modern app as `settledsolo-web` without overwriting the separate analytics/events Worker.
 
 ### Phase 2 — free accounts and sync
 
