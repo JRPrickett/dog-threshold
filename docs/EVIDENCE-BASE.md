@@ -75,6 +75,35 @@ Source:
 Dale FC, Casey RA, Burn CC. Journal of Veterinary Behavior. 2026;83:52-68.
 DOI: 10.1016/j.jveb.2025.11.002
 
+## Pre-departure cue practice
+
+Clinical veterinary guidance also supports reducing the predictive meaning of departure cues:
+handling keys, shoes, bags or door-related cues while remaining at home and while the dog is
+relaxed can help those cues stop reliably predicting an absence. VCA guidance recommends only a
+few repetitions and waiting for the dog to be calm before presenting the cue again.
+
+Sources:
+
+- VCA Animal Hospitals, *Separation Anxiety in Dogs*: pre-departure cue desensitisation and
+  graduated/mock departures.
+  https://vcahospitals.com/sacramento-veterinary-referral-center/know-your-pet/separation-anxiety-in-dogs
+- Sargisson RJ. *Canine separation anxiety: strategies for treatment and management*. Veterinary
+  Medicine: Research and Reports. 2014;5:143-151. PMID 33062616 / PMCID PMC7521022.
+
+Threshold's production departure-cue mode therefore:
+
+- is a separate track from timed absences;
+- never asks the owner to leave during cue-only practice;
+- uses three repetitions per set to keep the exercise brief;
+- does not advance after a single calm set;
+- requires repeated calm practice before making the cue more departure-like;
+- holds after mild concern;
+- steps back and recommends stopping after clear/escalating concern.
+
+The exact rule "two calm three-repetition sets before advancing" is a **product heuristic**, not a
+published clinical dosage. It is intentionally conservative and remains subject to professional
+review.
+
 ## What the evidence does NOT establish
 
 Published research does not establish a universal rule such as:
