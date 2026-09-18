@@ -152,7 +152,14 @@ export default function App() {
             onSelectScenario={async (id) => {
               setData(await repository.setActiveScenario(id));
               setStorageMode(repository.storageMode());
-              setScreen("today");
+            }}
+            onCreateScenario={async (label, startSeconds) => {
+              setData(await repository.createScenario(label, startSeconds));
+              setStorageMode(repository.storageMode());
+            }}
+            onUpdateScenario={async (id, label, startSeconds) => {
+              setData(await repository.updateScenario(id, label, startSeconds));
+              setStorageMode(repository.storageMode());
             }}
             onRestoreBackup={async (restored) => {
               await repository.clearActiveSession();
