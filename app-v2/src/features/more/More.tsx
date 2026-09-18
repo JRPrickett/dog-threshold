@@ -19,16 +19,24 @@ import {
 export function More({
   data,
   onSelectScenario,
+  onCreateScenario,
+  onUpdateScenario,
   onRestoreBackup
 }: {
   data: AppData;
   onSelectScenario: (id: string) => Promise<void>;
+  onCreateScenario: (label: string, startSeconds: number) => Promise<void>;
+  onUpdateScenario: (id: string, label: string, startSeconds: number) => Promise<void>;
   onRestoreBackup: (data: AppData) => Promise<void>;
 }) {
   const scenario = activeScenario(data);
   const fileInput = useRef<HTMLInputElement>(null);
   const [pendingRestore, setPendingRestore] = useState<AppData | null>(null);
   const [restoreError, setRestoreError] = useState("");
+  const [trackLabel, setTrackLabel] = useState(scenario.label);
+  const [trackStart, setTrackStart] = useState(scenario.startSeconds);
+  const [newTrackLabel, setNewTrackLabel] = useState("");
+  const [newTrackStart, setNewTrackStart] = useState(scenario.startSeconds);
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermissionState>(
       () => alertCapabilities().notifications
@@ -78,7 +86,15 @@ export function More({
           <select
             aria-label="Training track"
             value={scenario.id}
-            onChange={(event) => void onSelectScenario(event.target.value)}
+            onChange={(event) => {
+              const nextId = event.target.value;
+              const next = data.scenarios.find((item) => item.id === nextId);
+              if (next) {
+                setTrackLabel(next.label);
+                setTrackStart(next.startSeconds);
+              }
+              void onSelectScenario(nextId);
+            }}
           >
             {data.scenarios.map((item) => (
               <option key={item.id} value={item.id}>
@@ -95,6 +111,100 @@ export function More({
           <span>{formatDuration(scenario.startSeconds)} known comfortable duration</span>
         </div>
       </section>
+
+
+      <section className="settings-card">
+        <div>
+          <p className="kicker">Current training track</p>
+          <h2>Keep routines separate when they genuinely differ.</h2>
+          <p>
+            Edit this track's name or known-comfortable starting point without
+            touching its history.
+          </p>
+        </div>
+        <div className="track-form">
+          <label>
+            Track name
+            <input
+              value={trackLabel}
+              maxLength={48}
+              onChange={(event) => setTrackLabel(event.target.value)}
+            />
+          </label>
+          <label>
+            Starting comfort
+            <div className="duration-input">
+              <input
+                aria-label="Track starting comfort"
+                type="number"
+                min={1}
+                max={7200}
+                value={trackStart}
+                onChange={(event) => setTrackStart(Number(event.target.value))}
+              />
+              <span>seconds</span>
+            </div>
+          </label>
+          <button
+            className="secondary-button"
+            onClick={() =>
+              void onUpdateScenario(scenario.id, trackLabel, trackStart)
+            }
+          >
+            Save track changes
+          </button>
+        </div>
+      </section>
+
+      <section className="settings-card">
+        <div>
+          <p className="kicker">Another routine</p>
+          <h2>Add a separate training track.</h2>
+          <p>
+            Useful when a context really behaves differently, such as a school-run
+            departure versus an evening departure. Do not split tracks just to chase
+            better numbers.
+          </p>
+        </div>
+        <div className="track-form">
+          <label>
+            New track name
+            <input
+              value={newTrackLabel}
+              maxLength={48}
+              placeholder="e.g. School run"
+              onChange={(event) => setNewTrackLabel(event.target.value)}
+            />
+          </label>
+          <label>
+            Known comfortable duration
+            <div className="duration-input">
+              <input
+                aria-label="New track starting comfort"
+                type="number"
+                min={1}
+                max={7200}
+                value={newTrackStart}
+                onChange={(event) => setNewTrackStart(Number(event.target.value))}
+              />
+              <span>seconds</span>
+            </div>
+          </label>
+          <button
+            className="secondary-button"
+            disabled={!newTrackLabel.trim() || newTrackStart < 1}
+            onClick={async () => {
+              await onCreateScenario(newTrackLabel, newTrackStart);
+              setTrackLabel(newTrackLabel.trim());
+              setTrackStart(newTrackStart);
+              setNewTrackLabel("");
+            }}
+          >
+            Add training track
+          </button>
+        </div>
+      </section>
+
 
       <section className="settings-card">
         <div>
