@@ -9,7 +9,11 @@ assert.match(
   "The session editor must import validOutcome before its submit handler uses it."
 );
 
-assert.match(app,/stopped:\s*!!saved\.stopped/);
-assert.match(app,/targetSeconds:\s*saved\.target/);
+// Product analytics must remain deliberately separate from private training data.
+assert.match(app,/analytics\.track\("session_started"\);/);
+assert.match(app,/analytics\.track\("session_saved"\);/);
+assert.doesNotMatch(app,/analytics\.track\("session_(?:started|saved)",\s*\{/);
+assert.doesNotMatch(app,/dogName:\s*dogName\(\)/);
+assert.doesNotMatch(app,/targetSeconds:/);
 
 console.log("app-wiring.test.js passed");
