@@ -1,8 +1,9 @@
 import type {
   AppData,
+  DepartureCuePractice,
+  DepartureCueSession,
   ObservedSignal,
   Outcome,
-  DepartureCueSession,
   Scenario,
   TrainingSession
 } from "../domain/types";
@@ -27,10 +28,10 @@ type LegacySession = {
 };
 
 type LegacyScenario = {
-  id: string;
-  label: string;
-  start: number;
-  sessions: LegacySession[];
+  id?: string;
+  label?: string;
+  start?: number;
+  sessions?: LegacySession[];
 };
 
 type LegacyState = {
@@ -59,23 +60,6 @@ function signalFromTag(tag: string): ObservedSignal | null {
   return (match?.[0] as ObservedSignal | undefined) ?? null;
 }
 
-function modernCueSession(session: LegacySession, index: number): DepartureCueSession | null {
-  if (session.kind !== "door") return null;
-
-  const concernReps = Math.max(0, Number(session.wobbles ?? 0));
-  const planned = Math.max(1, Number(session.planned ?? 3));
-  const relaxedReps = Math.max(0, planned - concernReps);
-
-  return {
-    id: session.id || `legacy-cue-${index}-${session.at ?? Date.now()}`,
-    at: Number(session.at ?? Date.now()),
-    cueIndex: Math.max(0, Math.min(7, Number(session.level ?? 0))),
-    relaxedReps,
-    concernReps,
-    outcome: outcomeFromLegacy(session.outcome)
-  };
-}
-
 function modernSession(session: LegacySession, index: number): TrainingSession | null {
   if (session.kind === "door") return null;
 
@@ -96,44 +80,92 @@ function modernSession(session: LegacySession, index: number): TrainingSession |
   };
 }
 
-function fallback(): AppData {
+function modernCueSession(
+  session: LegacySession,
+  index: number
+): DepartureCueSession | null {
+  if (session.kind !== "door") return null;
+
+  const concernReps = Math.max(0, Number(session.wobbles ?? 0));
+  const planned = Math.max(1, Number(session.planned ?? 3));
+  const relaxedReps = Math.max(0, planned - concernReps);
+
   return {
-    dogName: "",
-    scenario: {
-      id: "training",
-      label: "Separation training",
-      startSeconds: 5,
-      sessions: []
-    }
+    id: session.id || `legacy-cue-${index}-${session.at ?? Date.now()}`,
+    at: Number(session.at ?? Date.now()),
+    cueIndex: Math.max(0, Math.min(7, Number(session.level ?? 0))),
+    relaxedReps,
+    concernReps,
+    outcome: outcomeFromLegacy(session.outcome)
   };
 }
 
-export function readLegacyAppData(storage: Pick<Storage, "getItem"> = localStorage): AppData {
+function modernScenario(
+  scenario: LegacyScenario,
+  index: number
+): Scenario {
+  const sessions = Array.isArray(scenario.sessions) ? scenario.sessions : [];
+  const timed = sessions
+    .map(modernSession)
+    .filter((session): session is TrainingSession => session !== null);
+  const cueSessions = sessions
+    .map(modernCueSession)
+    .filter((session): session is DepartureCueSession => session !== null);
+
+  const cuePractice: DepartureCuePractice | undefined = cueSessions.length
+    ? {
+        level: cueSessions.at(-1)?.cueIndex ?? 0,
+        sessions: cueSessions
+      }
+    : undefined;
+
+  return {
+    id: String(scenario.id || `scenario-${index + 1}`),
+    label: String(scenario.label || `Scenario ${index + 1}`),
+    startSeconds: Math.max(1, Number(scenario.start || 5)),
+    sessions: timed,
+    cuePractice
+  };
+}
+
+function fallback(): AppData {
+  return {
+    dogName: "",
+    activeScenarioId: "training",
+    scenarios: [
+      {
+        id: "training",
+        label: "Separation training",
+        startSeconds: 5,
+        sessions: []
+      }
+    ]
+  };
+}
+
+export function readLegacyAppData(
+  storage: Pick<Storage, "getItem"> = localStorage
+): AppData {
   try {
     const raw = storage.getItem(LEGACY_KEY);
     if (!raw) return fallback();
 
     const parsed = JSON.parse(raw) as LegacyState;
-    if (!Array.isArray(parsed.scenarios) || !parsed.scenarios.length) return fallback();
+    if (!Array.isArray(parsed.scenarios) || !parsed.scenarios.length) {
+      return fallback();
+    }
 
-    const active =
-      parsed.scenarios.find((scenario) => scenario.id === parsed.active) ??
-      parsed.scenarios[0];
-
-    const scenario: Scenario = {
-      id: active.id || "training",
-      label: active.label || "Separation training",
-      startSeconds: Math.max(1, Number(active.start || 5)),
-      sessions: Array.isArray(active.sessions)
-        ? active.sessions
-            .map(modernSession)
-            .filter((session): session is TrainingSession => session !== null)
-        : []
-    };
+    const scenarios = parsed.scenarios.map(modernScenario);
+    const requestedActive = String(parsed.active || "");
 
     return {
       dogName: String(parsed.name || ""),
-      scenario
+      activeScenarioId: scenarios.some(
+        (scenario) => scenario.id === requestedActive
+      )
+        ? requestedActive
+        : scenarios[0].id,
+      scenarios
     };
   } catch {
     return fallback();
