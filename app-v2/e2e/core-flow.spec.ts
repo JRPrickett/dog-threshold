@@ -184,3 +184,23 @@ test("public SettledSolo site leads into the PWA", async ({ page }) => {
   await expect(page).toHaveURL(/\/app\/?$/);
   await expect(page.getByLabel("Your dog's name")).toBeVisible();
 });
+
+
+test("a user can create and rename a separate training track", async ({ page }) => {
+  await completeSetup(page, 5);
+  await page.getByRole("button", { name: "More" }).click();
+
+  await page.getByLabel("New track name").fill("School run");
+  await page.getByLabel("New track starting comfort").fill("9");
+  await page.getByRole("button", { name: "Add training track" }).click();
+
+  await expect(page.getByLabel("Training track")).toHaveValue(/scenario-/);
+  await expect(page.getByDisplayValue("School run")).toBeVisible();
+
+  await page.getByLabel("Track name").fill("Weekday school run");
+  await page.getByRole("button", { name: "Save track changes" }).click();
+
+  await page.getByRole("button", { name: "Today" }).click();
+  await expect(page.getByText("Weekday school run")).toBeVisible();
+  await expect(page.getByText("9s")).toBeVisible();
+});
