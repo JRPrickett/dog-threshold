@@ -1,0 +1,199 @@
+import { useEffect, useMemo, useState } from "react";
+import type { AppData } from "./domain/types";
+import { activeScenario } from "./data/appData";
+import {
+  createAppRepository,
+  type StorageMode
+} from "./data/repository";
+import {
+  isRestorableLiveSession,
+  type PersistedLiveSession
+} from "./session/sessionPersistence";
+import { PwaUpdateNotice } from "./pwa/PwaUpdateNotice";
+import { Setup } from "./features/setup/Setup";
+import { Today } from "./features/today/Today";
+import { Progress } from "./features/progress/Progress";
+import { History } from "./features/history/History";
+import { More } from "./features/more/More";
+import { DepartureCuePracticeView } from "./features/cues/DepartureCuePracticeView";
+import { LiveSession } from "./features/session/LiveSession";
+import { BrandMark, BrandWordmark } from "./brand/BrandMark";
+
+type Screen = "today" | "progress" | "history" | "more";
+
+export default function App() {
+  const repository = useMemo(() => createAppRepository(), []);
+  const [data, setData] = useState<AppData | null>(null);
+  const [storageMode, setStorageMode] = useState<StorageMode>("indexeddb");
+  const [screen, setScreen] = useState<Screen>("today");
+  const [liveTarget, setLiveTarget] = useState<number | null>(null);
+  const [cuePracticeOpen, setCuePracticeOpen] = useState(false);
+  const [restoredState, setRestoredState] =
+    useState<PersistedLiveSession["state"] | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void Promise.all([
+      repository.loadAppData(),
+      repository.loadActiveSession()
+    ]).then(([loadedData, active]) => {
+      if (cancelled) return;
+      setData(loadedData);
+      setStorageMode(repository.storageMode());
+
+      if (
+        isRestorableLiveSession(active) &&
+        loadedData.scenarios.some((scenario) => scenario.id === active.scenarioId)
+      ) {
+        setData({ ...loadedData, activeScenarioId: active.scenarioId });
+        setLiveTarget(active.targetSeconds);
+        setRestoredState(active.state);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [repository]);
+
+  if (!data) {
+    return (
+      <main className="setup-shell">
+        <section className="setup-card loading-card" aria-live="polite">
+          <BrandMark />
+          <p className="kicker">Opening SettledSolo</p>
+          <h1>Getting things ready.</h1>
+        </section>
+      </main>
+    );
+  }
+
+  if (!data.dogName) {
+    return (
+      <Setup
+        onSaved={async (dogName, startSeconds) => {
+          setData(await repository.saveSetup(dogName, startSeconds));
+          setStorageMode(repository.storageMode());
+        }}
+      />
+    );
+  }
+
+  if (cuePracticeOpen) {
+    return (
+      <DepartureCuePracticeView
+        data={data}
+        onClose={() => setCuePracticeOpen(false)}
+        onSaved={async (session, nextLevel) => {
+          setData(await repository.appendDepartureCueSession(session, nextLevel));
+          setStorageMode(repository.storageMode());
+          setCuePracticeOpen(false);
+          setScreen("today");
+        }}
+      />
+    );
+  }
+
+  if (liveTarget !== null) {
+    return (
+      <LiveSession
+        scenarioId={activeScenario(data).id}
+        scenarioLabel={activeScenario(data).label}
+        targetSeconds={liveTarget}
+        dogName={data.dogName}
+        initialState={restoredState}
+        onPersist={(snapshot) => repository.saveActiveSession(snapshot)}
+        onClose={async () => {
+          await repository.clearActiveSession();
+          setLiveTarget(null);
+          setRestoredState(undefined);
+        }}
+        onSaved={async (session) => {
+          setData(
+            await repository.appendSession(session, activeScenario(data).id)
+          );
+          setStorageMode(repository.storageMode());
+          await repository.clearActiveSession();
+          setLiveTarget(null);
+          setRestoredState(undefined);
+          setScreen("today");
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="app-shell">
+      <header className="app-header">
+        <a className="app-brand-link" href="/" aria-label="SettledSolo home">
+          <BrandWordmark compact />
+        </a>
+        <div className="dog-chip">{data.dogName}</div>
+      </header>
+
+      <main className="app-content">
+        {screen === "today" && (
+          <Today
+            data={data}
+            storageMode={storageMode}
+            onStart={(target) => {
+              setRestoredState(undefined);
+              setLiveTarget(target);
+            }}
+            onOpenCuePractice={() => setCuePracticeOpen(true)}
+          />
+        )}
+        {screen === "progress" && <Progress data={data} />}
+        {screen === "history" && <History data={data} />}
+        {screen === "more" && (
+          <More
+            data={data}
+            onSelectScenario={async (id) => {
+              setData(await repository.setActiveScenario(id));
+              setStorageMode(repository.storageMode());
+            }}
+            onCreateScenario={async (label, startSeconds) => {
+              setData(await repository.createScenario(label, startSeconds));
+              setStorageMode(repository.storageMode());
+            }}
+            onUpdateScenario={async (id, label, startSeconds) => {
+              setData(await repository.updateScenario(id, label, startSeconds));
+              setStorageMode(repository.storageMode());
+            }}
+            onRestoreBackup={async (restored) => {
+              await repository.clearActiveSession();
+              await repository.saveAppData(restored);
+              setData(restored);
+              setStorageMode(repository.storageMode());
+              setRestoredState(undefined);
+              setLiveTarget(null);
+              setScreen("today");
+            }}
+          />
+        )}
+      </main>
+
+      <PwaUpdateNotice />
+
+      <nav className="bottom-nav" aria-label="Main navigation">
+        {([
+          ["today", "Today"],
+          ["progress", "Progress"],
+          ["history", "History"],
+          ["more", "More"]
+        ] as const).map(([value, label]) => (
+          <button
+            key={value}
+            aria-current={screen === value ? "page" : undefined}
+            onClick={() => setScreen(value)}
+          >
+            <span className="nav-mark" aria-hidden="true" />
+            {label}
+          </button>
+        ))}
+      </nav>
+    </div>
+  );
+}
+

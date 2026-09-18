@@ -1,3 +1,23 @@
+# Brand brief — archived naming brief
+
+This document contains the criteria used while the product name was still provisional.
+
+The selected production identity is now **SettledSolo**.
+
+See `docs/BRAND-DECISION.md` for the current:
+
+- name rationale;
+- positioning;
+- voice;
+- visual system;
+- identity-mark direction;
+- public-site copy direction;
+- domain-clearance checklist.
+
+The original brief below is retained as decision history.
+
+---
+
 # Brand brief — working document
 
 ## Status

@@ -177,7 +177,7 @@ Domain tests should not import React or the browser.
 - Vitest for domain/unit tests
 - React Testing Library for UI interaction
 - Playwright for complete user journeys
-- migration fixtures from old Threshold localStorage versions
+- migration fixtures from old SettledSolo localStorage versions
 - offline/reload recovery tests
 - manual real-device matrix for installed iOS and Android PWAs
 
@@ -205,7 +205,7 @@ Critical journeys that must be covered:
 
 ## Brand/product stance
 
-The current Threshold name and icon are provisional.
+The current SettledSolo name and icon are provisional.
 
 The finished visual system should feel calm, confident and consumer-grade rather than
 clinical or cartoonish. The active session should be extremely legible at a glance while

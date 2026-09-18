@@ -5,7 +5,7 @@
 Build a genuinely useful, free web app for people working through dog separation anxiety.
 The product should earn real repeat usage before paid features are considered.
 
-Threshold is the working product name only.
+The production product name and repository are now **SettledSolo**. Legacy storage/import identifiers remain stable where changing them would risk user-data migration.
 
 ## Core promise
 
@@ -21,7 +21,7 @@ trainer, veterinary behaviourist or vet.
 2. **Local first.** Training continues to work when connectivity is poor or absent.
 3. **Accounts protect progress.** The account message is:
    "Your progress is currently saved on this device. Create a free account to back it up
-   and use Threshold on your other devices."
+   and use SettledSolo on your other devices."
 4. **Private by default.** Product analytics are aggregate and separate from account data.
 5. **No hostage data.** Users can export their own training history and delete their account.
 6. **Calm, not gamified pressure.** Milestones may encourage people, but streaks or targets
@@ -39,7 +39,7 @@ trainer, veterinary behaviourist or vet.
 - Bring privacy documentation and implementation back into sync.
 - Remove dog/training details from aggregate analytics.
 - Document account/sync architecture.
-- Treat the current name and visual identity as provisional.
+- Apply the SettledSolo brand system while keeping data/database identifiers brand-neutral.
 - Keep the proven training/progression engine stable while infrastructure changes.
 
 ### Phase 1 — production hosting
@@ -49,6 +49,17 @@ trainer, veterinary behaviourist or vet.
 - Security headers and CSP appropriate for a PWA.
 - Real production domain/subdomain after the brand decision.
 - Error logging that does not capture training content.
+
+### Phase 1.5 — release candidate and modern-app cutover
+
+- Finish the remaining iOS matrix: offline relaunch, notification-denial path and update safety.
+- Complete the Android installed-PWA matrix.
+- Run desktop sanity checks.
+- Get qualified behaviour-professional review of training wording/heuristics.
+- Complete formal name/trademark checks and domain connection.
+- Finish public-site beta essentials: feedback route, real product screenshots, social image and final privacy/terms wording.
+- Merge the modern PWA only after those release gates are recorded.
+- Deploy the modern app as `settledsolo-web` without overwriting the separate analytics/events Worker.
 
 ### Phase 2 — free accounts and sync
 

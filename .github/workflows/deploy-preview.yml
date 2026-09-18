@@ -1,0 +1,159 @@
+name: Deploy SettledSolo Preview
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - modern-app-shell-engine
+    paths:
+      - "app-v2/**"
+      - "worker/**"
+      - "wrangler.preview.jsonc"
+      - "wrangler.app.jsonc"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy-preview.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: settledsolo-preview
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: preview
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Detect Cloudflare credentials
+        id: cloudflare
+        shell: bash
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Cloudflare preview credentials are configured."
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::SettledSolo preview deployment skipped because CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID are not configured in the preview environment."
+          fi
+
+      - name: Validate Cloudflare token safely
+        if: steps.cloudflare.outputs.configured == 'true'
+        id: tokencheck
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          case "$CLOUDFLARE_API_TOKEN" in
+            cfat_*)
+              echo "kind=account" >> "$GITHUB_OUTPUT"
+              echo "Cloudflare credential format: account-owned API token."
+              VERIFY_URL="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/tokens/verify"
+              ;;
+            cfut_*)
+              echo "kind=user" >> "$GITHUB_OUTPUT"
+              echo "Cloudflare credential format: user-owned API token."
+              VERIFY_URL="https://api.cloudflare.com/client/v4/user/tokens/verify"
+              ;;
+            Bearer\ *)
+              echo "::error::CLOUDFLARE_API_TOKEN contains a Bearer prefix. Store only the token value."
+              exit 1
+              ;;
+            \"*|*\")
+              echo "::error::CLOUDFLARE_API_TOKEN appears to contain quotation marks. Store only the token value."
+              exit 1
+              ;;
+            *)
+              echo "Cloudflare credential format: legacy/unprefixed token; checking account and user token endpoints."
+              ACCOUNT_VERIFY_URL="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/tokens/verify"
+              USER_VERIFY_URL="https://api.cloudflare.com/client/v4/user/tokens/verify"
+
+              ACCOUNT_CODE="$(curl --silent --show-error --output /tmp/cloudflare-account-token-check.json --write-out '%{http_code}' \
+                --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                --header "Content-Type: application/json" \
+                "$ACCOUNT_VERIFY_URL")"
+
+              if [ "$ACCOUNT_CODE" = "200" ]; then
+                echo "kind=legacy-account" >> "$GITHUB_OUTPUT"
+                echo "Cloudflare credential verification: valid legacy account-owned API token."
+                VERIFY_URL="$ACCOUNT_VERIFY_URL"
+                cp /tmp/cloudflare-account-token-check.json /tmp/cloudflare-token-check.json
+              else
+                USER_CODE="$(curl --silent --show-error --output /tmp/cloudflare-user-token-check.json --write-out '%{http_code}' \
+                  --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                  --header "Content-Type: application/json" \
+                  "$USER_VERIFY_URL")"
+
+                if [ "$USER_CODE" = "200" ]; then
+                  echo "kind=legacy-user" >> "$GITHUB_OUTPUT"
+                  echo "Cloudflare credential verification: valid legacy user-owned API token."
+                  VERIFY_URL="$USER_VERIFY_URL"
+                  cp /tmp/cloudflare-user-token-check.json /tmp/cloudflare-token-check.json
+                else
+                  echo "::error::Cloudflare rejected the stored unprefixed token as both an account token (HTTP $ACCOUNT_CODE) and user token (HTTP $USER_CODE)."
+                  exit 1
+                fi
+              fi
+              ;;
+          esac
+
+          if [ ! -f /tmp/cloudflare-token-check.json ]; then
+            HTTP_CODE="$(curl --silent --show-error --output /tmp/cloudflare-token-check.json --write-out '%{http_code}' \
+              --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              --header "Content-Type: application/json" \
+              "$VERIFY_URL")"
+
+            if [ "$HTTP_CODE" != "200" ]; then
+              echo "::error::Cloudflare rejected the stored API token at its matching verification endpoint (HTTP $HTTP_CODE)."
+              python - <<'PY'
+          import json
+          from pathlib import Path
+          try:
+              data = json.loads(Path("/tmp/cloudflare-token-check.json").read_text())
+              for error in data.get("errors", []):
+                  code = error.get("code", "unknown")
+                  message = error.get("message", "Unknown Cloudflare error")
+                  print(f"Cloudflare error {code}: {message}")
+          except Exception:
+              print("Cloudflare returned a non-JSON verification error.")
+          PY
+              exit 1
+            fi
+          fi
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("/tmp/cloudflare-token-check.json").read_text())
+          result = data.get("result") or {}
+          print(f"Cloudflare token verification: {result.get('status', 'active')}.")
+          PY
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Verify product
+        run: npm run verify
+
+      - name: Deploy preview Worker
+        if: steps.cloudflare.outputs.configured == 'true'
+        run: npx wrangler deploy --config wrangler.preview.jsonc
+
+      - name: Preview deployment not configured
+        if: steps.cloudflare.outputs.configured != 'true'
+        run: |
+          echo "Build verification passed."
+          echo "Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to the GitHub preview environment, then rerun this workflow."
