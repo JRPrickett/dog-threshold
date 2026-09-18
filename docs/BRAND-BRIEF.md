@@ -2,7 +2,7 @@
 
 This document contains the criteria used while the product name was still provisional.
 
-The selected production identity is now **AloneReady**.
+The selected production identity is now **SettledSolo**.
 
 See `docs/BRAND-DECISION.md` for the current:
 
