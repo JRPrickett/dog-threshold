@@ -317,7 +317,13 @@ function History({ data }: { data: AppData }) {
   );
 }
 
-function More({ data }: { data: AppData }) {
+function More({
+  data,
+  onSelectScenario
+}: {
+  data: AppData;
+  onSelectScenario: (id: string) => Promise<void>;
+}) {
   const scenario = activeScenario(data);
   return (
     <div className="screen-stack">
@@ -333,6 +339,26 @@ function More({ data }: { data: AppData }) {
         </div>
         <span className="soon-pill">Coming next</span>
       </section>
+
+      {data.scenarios.length > 1 && (
+        <section className="menu-card scenario-switch-card">
+          <div>
+            <strong>Training track</strong>
+            <span>Keep different routines on separate progress histories.</span>
+          </div>
+          <select
+            aria-label="Training track"
+            value={scenario.id}
+            onChange={(event) => void onSelectScenario(event.target.value)}
+          >
+            {data.scenarios.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </section>
+      )}
 
       <section className="menu-card">
         <div>
@@ -807,7 +833,15 @@ export default function App() {
         )}
         {screen === "progress" && <Progress data={data} />}
         {screen === "history" && <History data={data} />}
-        {screen === "more" && <More data={data} />}
+        {screen === "more" && (
+          <More
+            data={data}
+            onSelectScenario={async (id) => {
+              setData(await repository.setActiveScenario(id));
+              setScreen("today");
+            }}
+          />
+        )}
       </main>
 
       <PwaUpdateNotice />
