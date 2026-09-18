@@ -154,6 +154,15 @@ export default function App() {
               setStorageMode(repository.storageMode());
               setScreen("today");
             }}
+            onRestoreBackup={async (restored) => {
+              await repository.clearActiveSession();
+              await repository.saveAppData(restored);
+              setData(restored);
+              setStorageMode(repository.storageMode());
+              setRestoredState(undefined);
+              setLiveTarget(null);
+              setScreen("today");
+            }}
           />
         )}
       </main>
