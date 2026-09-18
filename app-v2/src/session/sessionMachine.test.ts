@@ -33,3 +33,30 @@ describe("live session state machine", () => {
     expect(state.mainActualSeconds).toBe(17);
   });
 });
+
+
+describe("session alert state", () => {
+  it("records warning and target delivery across persistence snapshots", () => {
+    let state = initialLiveSession([{ kind: "main", targetSeconds: 30 }]);
+    state = liveSessionReducer(state, { type: "START_STEP", now: 1_000 });
+    state = liveSessionReducer(state, { type: "MARK_WARNING_ISSUED" });
+    state = liveSessionReducer(state, { type: "MARK_TARGET_ISSUED" });
+
+    expect(state.warningIssued).toBe(true);
+    expect(state.targetIssued).toBe(true);
+  });
+
+  it("resets alert flags when the next departure begins", () => {
+    let state = initialLiveSession([
+      { kind: "practice", targetSeconds: 5 },
+      { kind: "main", targetSeconds: 20 }
+    ]);
+    state = liveSessionReducer(state, { type: "START_STEP", now: 1_000 });
+    state = liveSessionReducer(state, { type: "MARK_TARGET_ISSUED" });
+    state = liveSessionReducer(state, { type: "RETURN", now: 6_000 });
+    state = liveSessionReducer(state, { type: "NEXT_STEP" });
+
+    expect(state.warningIssued).toBe(false);
+    expect(state.targetIssued).toBe(false);
+  });
+});
