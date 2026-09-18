@@ -10,8 +10,11 @@
     "html_handling": "auto-trailing-slash",
     "run_worker_first": true
   },
-  "observability": { "enabled": true },
+  "observability": {
+    "enabled": true
+  },
   "vars": {
-    "SITE_URL": "https://settledsolo.com"
+    "SITE_URL": "https://settledsolo.com",
+    "ENVIRONMENT": "preview"
   }
 }
