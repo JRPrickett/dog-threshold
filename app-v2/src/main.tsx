@@ -3,6 +3,12 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import { AppErrorBoundary } from "./app/AppErrorBoundary";
 import { PublicRouter } from "./public/PublicRouter";
+import "@fontsource/fraunces/500.css";
+import "@fontsource/fraunces/600.css";
+import "@fontsource/karla/400.css";
+import "@fontsource/karla/500.css";
+import "@fontsource/karla/600.css";
+import "@fontsource/karla/700.css";
 import "./styles.css";
 
 const isAppRoute = /^\/app(?:\/|$)/.test(window.location.pathname);
