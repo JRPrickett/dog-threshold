@@ -17,11 +17,6 @@ function cleanText(value,max){
   return text?text.slice(0,max):null;
 }
 
-function cleanTarget(value){
-  const target=Number(value);
-  return Number.isFinite(target)&&target>=1&&target<=14400?Math.round(target):null;
-}
-
 export function detectDevice(navigatorRef=globalThis.navigator){
   const userAgent=String(navigatorRef&&navigatorRef.userAgent||"");
   const ua=userAgent.toLowerCase();
@@ -72,7 +67,6 @@ export function detectDisplayMode(windowRef=globalThis.window,navigatorRef=globa
 export function sanitiseAnalyticsEvent(event,version){
   if(!event||!validAnalyticsEvent(event.name)) return null;
 
-  const sessionType=ALLOWED_SESSION_TYPES.has(event.sessionType)?event.sessionType:null;
   const deviceType=ALLOWED_DEVICE_TYPES.has(event.deviceType)?event.deviceType:"unknown";
   const displayMode=ALLOWED_DISPLAY_MODES.has(event.displayMode)?event.displayMode:"browser";
 
@@ -80,10 +74,6 @@ export function sanitiseAnalyticsEvent(event,version){
     name:event.name,
     version:String(version||event.version||"unknown").slice(0,20),
     occurredAt:Number.isFinite(event.occurredAt)?Math.round(event.occurredAt):Date.now(),
-    dogName:cleanText(event.dogName,40),
-    targetSeconds:cleanTarget(event.targetSeconds),
-    stopped:typeof event.stopped==="boolean"?event.stopped:null,
-    sessionType,
     deviceType,
     browser:cleanText(event.browser,30),
     operatingSystem:cleanText(event.operatingSystem,20),
@@ -104,7 +94,6 @@ export function createAnalytics(config={},dependencies={}){
   let flushing=false;
   let hiddenAt=null;
   let lastOpenTrackedAt=0;
-  let openDetailsProvider=()=>({});
 
   function readStored(key){
     try{
@@ -173,17 +162,13 @@ export function createAnalytics(config={},dependencies={}){
     }
   }
 
-  function track(name,details={}){
+  function track(name){
     if(!endpoint||!validAnalyticsEvent(name)) return false;
 
     const device=detectDevice(navigatorRef);
     const event=sanitiseAnalyticsEvent({
       name,
       occurredAt:Date.now(),
-      dogName:details.dogName,
-      targetSeconds:details.targetSeconds,
-      stopped:details.stopped,
-      sessionType:details.sessionType,
       deviceType:device.deviceType,
       browser:device.browser,
       operatingSystem:device.operatingSystem,
@@ -202,18 +187,10 @@ export function createAnalytics(config={},dependencies={}){
     if(!force&&now-lastOpenTrackedAt<OPEN_DEBOUNCE_MS) return false;
     lastOpenTrackedAt=now;
 
-    let details={};
-    try{
-      details=openDetailsProvider()||{};
-    }catch{}
-    return track("app_open",details);
+    return track("app_open");
   }
 
-  function init(options={}){
-    if(typeof options.openDetails==="function"){
-      openDetailsProvider=options.openDetails;
-    }
-
+  function init(){
     recordOpen(true);
 
     if(windowRef&&typeof windowRef.addEventListener==="function"){
