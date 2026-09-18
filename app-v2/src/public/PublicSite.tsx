@@ -201,7 +201,7 @@ export function PublicSite() {
             <a href="/evidence">Evidence</a>
           </span>
           <span>SettledSolo is a training and record-keeping aid, not a diagnosis.</span>
-          <span>Built by South West Websites.</span>
+          <a className="marketing-builder-link" href="https://southwestwebsites.co.uk">Built by South West Websites.</a>
         </div>
       </footer>
     </div>
