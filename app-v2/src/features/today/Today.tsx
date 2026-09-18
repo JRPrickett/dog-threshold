@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { AppData } from "../../domain/types";
 import type { StorageMode } from "../../data/repository";
 import { activeScenario } from "../../data/appData";
@@ -8,6 +8,11 @@ import {
   recommendNext
 } from "../../domain/trainingEngine";
 import { AccountNotice } from "../../components/AccountNotice";
+import {
+  alertCapabilities,
+  requestNotificationPermission,
+  type NotificationPermissionState
+} from "../../session/sessionAlerts";
 
 export function Today({
   data,
@@ -26,10 +31,49 @@ export function Today({
     [scenario]
   );
   const practice = buildPracticeDepartures(recommendation.targetSeconds);
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermissionState>(
+      () => alertCapabilities().notifications
+    );
 
   return (
     <div className="screen-stack">
       <AccountNotice storageMode={storageMode} />
+
+      <section className="alert-card">
+        <div>
+          <p className="kicker">Return alerts</p>
+          <h2>Chimes are built into live sessions.</h2>
+          <p>
+            System notifications are optional. They can add another return cue on
+            supported devices, but the timer never depends on notification delivery.
+          </p>
+        </div>
+        {notificationPermission === "default" && (
+          <button
+            className="secondary-button"
+            onClick={async () =>
+              setNotificationPermission(await requestNotificationPermission())
+            }
+          >
+            Enable system alerts
+          </button>
+        )}
+        {notificationPermission === "granted" && (
+          <span className="alert-status enabled">System alerts enabled</span>
+        )}
+        {notificationPermission === "denied" && (
+          <span className="alert-status">
+            System alerts are blocked in this browser
+          </span>
+        )}
+        {notificationPermission === "unsupported" && (
+          <span className="alert-status">
+            System alerts are unavailable here; session chimes still work where
+            background audio is supported
+          </span>
+        )}
+      </section>
 
       <section className="today-card">
         <p className="kicker">Today's plan</p>
