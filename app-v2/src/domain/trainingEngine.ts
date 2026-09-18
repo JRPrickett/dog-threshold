@@ -70,16 +70,25 @@ export function recommendNext(
 
   if (last.outcome === "distressed") {
     const previousRelaxed = latestRelaxedBefore(sessions, sessions.length - 1);
-    const target = previousRelaxed
+    const previousComfort = previousRelaxed
       ? comfortableDuration(previousRelaxed)
+      : null;
+    const observedUpperBound = last.stoppedEarly
+      ? Math.max(
+          start,
+          last.actualSeconds - stepSize(Math.max(1, last.actualSeconds))
+        )
       : start;
+    const target = previousComfort === null
+      ? observedUpperBound
+      : Math.max(start, Math.min(previousComfort, observedUpperBound));
 
     return {
       targetSeconds: target,
       direction: "reduce",
-      reason: previousRelaxed
-        ? "The last session showed clear distress, so the next plan returns to the most recent duration that was relaxed."
-        : "The last session showed clear distress and there is no later comfortable anchor yet, so the next plan returns to the starting duration.",
+      reason: last.stoppedEarly
+        ? "Clear distress appeared before the target, so the next plan stays below the point where difficulty was observed."
+        : "The last session showed clear distress, so the next plan returns to a known comfortable starting point.",
       supportFlag
     };
   }
@@ -89,17 +98,20 @@ export function recommendNext(
     const previousComfort = previousRelaxed
       ? comfortableDuration(previousRelaxed)
       : null;
-    const steppedDown = Math.max(start, last.targetSeconds - stepSize(last.targetSeconds));
-    const target =
-      previousComfort !== null && previousComfort < last.targetSeconds
-        ? previousComfort
-        : steppedDown;
+    const reference = last.stoppedEarly
+      ? Math.max(1, last.actualSeconds)
+      : last.targetSeconds;
+    const steppedDown = Math.max(start, reference - stepSize(reference));
+    const target = previousComfort === null
+      ? steppedDown
+      : Math.max(start, Math.min(previousComfort, steppedDown));
 
     return {
       targetSeconds: target,
       direction: "reduce",
-      reason:
-        "There was some concern last time, so the next plan is easier rather than asking for another increase.",
+      reason: last.stoppedEarly
+        ? "Concern appeared before the target, so the next plan stays below the point where it was observed."
+        : "There was some concern last time, so the next plan is easier rather than asking for another increase.",
       supportFlag
     };
   }
