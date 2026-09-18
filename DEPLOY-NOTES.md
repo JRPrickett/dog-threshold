@@ -26,7 +26,7 @@ The isolated preview Worker is configured in `wrangler.preview.jsonc`.
 npm run deploy:preview
 ```
 
-This deploys the SPA as the `settledsolo-preview` Worker.
+This deploys the SPA as the `settledsolo-web-preview` Worker.
 
 The GitHub workflow `.github/workflows/deploy-preview.yml` auto-runs on relevant pushes to
 `modern-app-shell-engine` and also supports manual dispatch. It expects repository/environment
@@ -38,6 +38,16 @@ secrets:
 Preview hosts are automatically returned with `X-Robots-Tag: noindex, nofollow`.
 
 Use the resulting workers.dev URL for the physical-device test matrix before any root-app cutover.
+
+## Worker naming
+
+Keep the product surfaces separate:
+
+- `settledsolo-web` — production website/PWA
+- `settledsolo-web-preview` — isolated preview website/PWA
+- `settledsolo-events` — analytics/events API (legacy config currently still says `threshold-events` until that migration is handled separately)
+
+Do not point the static site deployment at the analytics Worker.
 
 ## Cloudflare production
 
