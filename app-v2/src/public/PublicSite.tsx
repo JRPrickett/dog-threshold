@@ -152,6 +152,11 @@ export function PublicSite() {
       <footer className="marketing-footer">
         <BrandWordmark compact />
         <div>
+          <span className="marketing-footer-links">
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
+            <a href="/help">Help</a>
+          </span>
           <span>SettledSolo is a training and record-keeping aid, not a diagnosis.</span>
           <span>Built by South West Websites.</span>
         </div>
