@@ -4,6 +4,7 @@ import {
   useReducer,
   useState
 } from "react";
+import { progressInsights } from "./domain/progressInsights";
 import {
   buildPracticeDepartures,
   formatDuration,
@@ -259,13 +260,10 @@ function Today({
 function Progress({ data }: { data: AppData }) {
   const scenario = activeScenario(data);
   const sessions = scenario.sessions;
-  const relaxed = sessions.filter((session) => session.outcome === "relaxed");
-  const longest = relaxed.reduce(
-    (best, session) => Math.max(best, session.actualSeconds),
-    0
+  const insights = progressInsights(sessions);
+  const signalLabel = new Map(
+    signalOptions.map(({ value, label }) => [value, label])
   );
-  const recent = sessions.slice(-10);
-  const recentRelaxed = recent.filter((session) => session.outcome === "relaxed").length;
 
   return (
     <div className="screen-stack">
@@ -280,15 +278,44 @@ function Progress({ data }: { data: AppData }) {
       <section className="stats-grid">
         <div className="stat-card">
           <span>Longest relaxed</span>
-          <strong>{longest ? formatDuration(longest) : "—"}</strong>
+          <strong>
+            {insights.longestRelaxedSeconds
+              ? formatDuration(insights.longestRelaxedSeconds)
+              : "—"}
+          </strong>
           <small>Observed comfortable time</small>
         </div>
         <div className="stat-card">
           <span>Recent comfort</span>
-          <strong>{recent.length ? `${recentRelaxed}/${recent.length}` : "—"}</strong>
+          <strong>
+            {insights.recentTotal
+              ? `${insights.recentRelaxed}/${insights.recentTotal}`
+              : "—"}
+          </strong>
           <small>Relaxed sessions in the latest 10</small>
         </div>
       </section>
+
+      {insights.signals.length > 0 && (
+        <section className="pattern-card">
+          <div>
+            <p className="kicker">Recent observations</p>
+            <h2>What you have actually seen.</h2>
+            <p>
+              These are patterns in your last {insights.recentTotal} logged sessions,
+              not a diagnosis or proof that a particular context caused the behaviour.
+            </p>
+          </div>
+          <div className="signal-summary">
+            {insights.signals.map(({ signal, count }) => (
+              <span key={signal}>
+                <strong>{signalLabel.get(signal) ?? signal}</strong>
+                <small>{count} {count === 1 ? "session" : "sessions"}</small>
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="quiet-card vertical">
         <p className="kicker">What counts as progress</p>
