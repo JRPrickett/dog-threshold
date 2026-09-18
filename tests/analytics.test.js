@@ -30,6 +30,9 @@ assert.deepEqual(
     name:"app_open",
     occurredAt:123456,
     dogName:"  Rusty  ",
+    targetSeconds:120,
+    stopped:true,
+    sessionType:"absence",
     deviceType:"mobile",
     browser:"Safari",
     operatingSystem:"iOS",
@@ -39,10 +42,6 @@ assert.deepEqual(
     name:"app_open",
     version:"v32",
     occurredAt:123456,
-    dogName:"Rusty",
-    targetSeconds:null,
-    stopped:null,
-    sessionType:null,
     deviceType:"mobile",
     browser:"Safari",
     operatingSystem:"iOS",
@@ -94,7 +93,7 @@ const analytics=createAnalytics(
   }
 );
 
-analytics.init({openDetails:()=>({dogName:"Rusty"})});
+analytics.init();
 let queued=JSON.parse(values.get(QUEUE_KEY));
 assert.equal(queued.length,1);
 assert.equal(queued[0].name,"app_open");
