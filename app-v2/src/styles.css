@@ -1279,3 +1279,42 @@ textarea:focus-visible {
   color: var(--muted);
   font-size: 10px;
 }
+
+
+.alert-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 253, 249, .76);
+  border: 1px solid rgba(58, 70, 64, .08);
+}
+
+.alert-card h2 {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -.02em;
+}
+
+.alert-card p:not(.kicker) {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.alert-status {
+  display: inline-flex;
+  justify-self: start;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: #ece9e2;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 720;
+}
+
+.alert-status.enabled {
+  background: var(--sage);
+  color: var(--sea-dark);
+}
