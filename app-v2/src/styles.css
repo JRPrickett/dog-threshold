@@ -2088,20 +2088,24 @@ a:focus-visible {
   border-left: 1px solid rgba(247,238,223,.08);
 }
 
+/*
+ * The installed app icon (public/icon.svg) is a dark rounded-square badge
+ * with the arch inset inside it and a generous glow. Every other brand
+ * placement (header, footer, setup, quote, final CTA) already wraps the
+ * mark in that same ink badge — this is the one spot, the hero, that was
+ * showing the bare arch floating with a separate unrelated glow blob
+ * instead. Reproducing the actual icon's proportions here is what makes
+ * this look like the same product.
+ */
 .marketing-door-scene > .settled-mark {
-  width: 150px;
-  height: 175px;
+  width: 108px;
+  height: 126px;
   position: relative;
   z-index: 1;
-}
-
-.marketing-glow-line {
-  position: absolute;
-  width: 48%;
-  height: 120px;
-  bottom: 19%;
-  background: radial-gradient(ellipse, rgba(242,166,90,.42), transparent 68%);
-  filter: blur(7px);
+  padding: 30px 24px 20px;
+  background: var(--ink);
+  border-radius: 40px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, .38);
 }
 
 .marketing-scene-copy {

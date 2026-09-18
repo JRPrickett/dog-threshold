@@ -37,7 +37,6 @@ export function PublicSite() {
           <div className="marketing-hero-art" aria-hidden="true">
             <div className="marketing-door-scene">
               <BrandMark />
-              <span className="marketing-glow-line" />
               <div className="marketing-scene-copy">
                 <strong>SettledSolo</strong>
                 <span>Build comfortable alone time, gradually.</span>
