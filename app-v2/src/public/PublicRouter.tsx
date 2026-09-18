@@ -15,7 +15,7 @@ function InfoPage({
     <div className="marketing-shell">
       <header className="marketing-header">
         <a className="marketing-brand" href="/" aria-label="SettledSolo home">
-          <BrandWordmark compact light variant="photo" />
+          <BrandWordmark compact light />
         </a>
         <nav aria-label="Public site">
           <a href="/">Home</a>

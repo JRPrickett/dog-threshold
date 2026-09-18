@@ -23,21 +23,10 @@ export function BrandMark({
 }: {
   compact?: boolean;
   light?: boolean;
-  variant?: "mark" | "badge" | "photo";
+  variant?: "mark" | "badge";
 }) {
   const gradientId = useId();
   const clipId = useId();
-
-  if (variant === "photo") {
-    return (
-      <span
-        className={`settled-photo ${compact ? "settled-photo-compact" : ""}`}
-        aria-hidden="true"
-      >
-        <img src="/brand/doorway-dog.jpg" alt="" />
-      </span>
-    );
-  }
 
   if (variant === "badge") {
     return (
@@ -104,16 +93,14 @@ export function BrandMark({
 
 export function BrandWordmark({
   compact = false,
-  light = false,
-  variant = "mark"
+  light = false
 }: {
   compact?: boolean;
   light?: boolean;
-  variant?: "mark" | "badge" | "photo";
 }) {
   return (
     <span className={`brand-lockup ${compact ? "brand-lockup-compact" : ""}`}>
-      <BrandMark compact={compact} light={light} variant={variant} />
+      <BrandMark compact={compact} light={light} />
       <span className="brand-lockup-copy">
         <strong>SettledSolo</strong>
         {!compact && <small>Calm starts with small steps.</small>}
