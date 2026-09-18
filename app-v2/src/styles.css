@@ -1416,11 +1416,11 @@ textarea:focus-visible {
   --paper: #FBF7EF;
   --ink: #15242C;
   --panel: #1E3138;
-  --muted: #6F797C;
+  --muted: #596366;
   --line: #DDD2BF;
   --soft: #EEE6D8;
   --sage: #DDE7DC;
-  --sage-strong: #6F8D74;
+  --sage-strong: #4B6653;
   --sea: #15242C;
   --sea-dark: #102027;
   --glow: #F2A65A;
@@ -1985,7 +1985,7 @@ a:focus-visible {
 
 .marketing-eyebrow {
   margin: 0 0 13px;
-  color: #98B19D;
+  color: var(--sage-strong);
   text-transform: uppercase;
   letter-spacing: .15em;
   font-size: 11px;
@@ -2007,6 +2007,10 @@ a:focus-visible {
   font-size: clamp(54px, 7.6vw, 92px);
   line-height: .93;
   letter-spacing: -.045em;
+}
+
+.marketing-hero .marketing-eyebrow {
+  color: #A8C0AD;
 }
 
 .marketing-lead {
@@ -2048,7 +2052,7 @@ a:focus-visible {
 }
 
 .marketing-fineprint {
-  color: rgba(247,238,223,.48);
+  color: rgba(247,238,223,.55);
   font-size: 11px;
   margin: 13px 0 0;
 }
@@ -2163,7 +2167,7 @@ a:focus-visible {
 }
 
 .marketing-section-heading > p:not(.marketing-eyebrow),
-.marketing-preview-copy > p {
+.marketing-preview-copy > p:not(.marketing-eyebrow) {
   color: var(--muted);
   font-size: 15px;
   line-height: 1.65;
@@ -2186,7 +2190,7 @@ a:focus-visible {
 }
 
 .marketing-steps article > span {
-  color: var(--glow);
+  color: #8A5B20;
   font-weight: 700;
 }
 
