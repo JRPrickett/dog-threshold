@@ -1,19 +1,23 @@
-# Threshold anonymous event Worker
+# Threshold aggregate event Worker
 
-This Worker accepts only two event names:
+This Worker accepts three event names:
 
+- `app_open`
 - `session_started`
 - `session_saved`
 
-It stores:
+It stores aggregate product telemetry only:
 
-- Event name
+- Event name (for session events)
 - Threshold app version
 - Event timestamp
 - Server receipt timestamp
+- Basic device/browser/platform metadata
 
-It does **not** receive or store dog names, scenario names, notes, durations,
-ratings, training records, cookies or a device/user identifier.
+It does **not** receive dog names, scenario names, notes, ratings, durations, outcomes,
+training records, cookies or a Threshold user identifier.
+
+Future account sync must use a separate authenticated API and data model.
 
 ## Setup
 
@@ -32,16 +36,10 @@ ratings, training records, cookies or a device/user identifier.
 
 3. Copy the returned `database_id` into `wrangler.jsonc`.
 
-4. In `wrangler.jsonc`, replace `https://YOUR-USERNAME.github.io` with the
-   origin that hosts Threshold. Use the origin only, with no repository path.
+4. Set `ALLOWED_ORIGINS` in `wrangler.jsonc` to the real app origin plus local
+   development origins.
 
-   Example:
-
-   ```text
-   https://jasonexample.github.io
-   ```
-
-5. Create the table:
+5. Create the schema:
 
    ```bash
    npm run db:schema
@@ -53,40 +51,25 @@ ratings, training records, cookies or a device/user identifier.
    npm run deploy
    ```
 
-7. Copy the resulting Worker URL into the app's `js/analytics-config.js`:
+7. Put the resulting `/events` URL in `js/analytics-config.js`.
 
-   ```js
-   eventEndpoint:"https://threshold-events.YOUR-SUBDOMAIN.workers.dev/events"
-   ```
+## Existing databases
 
-## View counts
+The v38 Worker intentionally stopped writing dog/session-detail fields that existed in
+older schemas. Those nullable columns can remain in an existing D1 database; new
+databases should use the current `schema.sql`.
 
-Open **Cloudflare → D1 → threshold-analytics → Console**.
+## Useful counts
 
-Counts for the last seven days:
+Last seven days:
 
 ```sql
-SELECT
-  event_name,
-  COUNT(*) AS total
+SELECT event_name, COUNT(*) AS total
 FROM usage_events
 WHERE received_at >= datetime('now', '-7 days')
 GROUP BY event_name
 ORDER BY event_name;
 ```
 
-Daily counts for the last 30 days:
-
-```sql
-SELECT
-  date(received_at) AS day,
-  event_name,
-  COUNT(*) AS total
-FROM usage_events
-WHERE received_at >= datetime('now', '-30 days')
-GROUP BY date(received_at), event_name
-ORDER BY day DESC, event_name;
-```
-
-A session can be started without being saved, so the two counts are not expected
-to match exactly.
+A session can be started without being saved, so start/save counts are not expected to
+match exactly.
