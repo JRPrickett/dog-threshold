@@ -142,8 +142,6 @@ export async function showSessionNotification(
     await registration.showNotification(title, {
       body,
       tag: "dog-training-return",
-      renotify: true,
-      requireInteraction: true,
       icon: "/icon.svg",
       badge: "/icon.svg"
     });
