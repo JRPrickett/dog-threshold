@@ -99,6 +99,54 @@ function TermsPage() {
   );
 }
 
+
+function EvidencePage() {
+  return (
+    <InfoPage eyebrow="Evidence" title="Principles first. False precision never.">
+      <p>
+        SettledSolo is built around gradual systematic desensitisation: begin with an
+        absence mild enough not to evoke meaningful distress, observe the dog, and
+        adapt difficulty to the individual rather than forcing a fixed timetable.
+      </p>
+      <h2>Systematic desensitisation</h2>
+      <p>
+        Butler, Sargisson and Elliffe (2011) reported reductions in separation-related
+        behaviour during an owner-applied systematic-desensitisation programme. The
+        study was small, so SettledSolo treats the behavioural principle as useful
+        evidence without pretending it establishes a universal progression formula.
+      </p>
+      <p>
+        <a href="https://doi.org/10.1016/j.applanim.2010.11.001" target="_blank" rel="noreferrer">
+          Butler et al., Applied Animal Behaviour Science (2011)
+        </a>
+      </p>
+      <h2>Observe, do not just time</h2>
+      <p>
+        Video-observation research has documented behaviours such as vocalisation,
+        panting, environmental orientation and destructive behaviour during separation.
+        That is why SettledSolo encourages direct observation and records behavioural
+        signs alongside duration.
+      </p>
+      <p>
+        <a href="https://doi.org/10.1016/j.applanim.2010.01.014" target="_blank" rel="noreferrer">
+          Palestrini et al., Applied Animal Behaviour Science (2010)
+        </a>
+      </p>
+      <h2>What the app adds</h2>
+      <p>
+        The exact software increments, repetition rules and support flags are conservative
+        product heuristics. They are deliberately explainable and are not described as a
+        clinically validated dose of training.
+      </p>
+      <h2>Professional review</h2>
+      <p>
+        The training wording and heuristics are scheduled for review by an appropriately
+        qualified canine behaviour professional before general public launch.
+      </p>
+    </InfoPage>
+  );
+}
+
 function HelpPage() {
   return (
     <InfoPage eyebrow="Help" title="Keep the next step calm and manageable.">
@@ -142,6 +190,10 @@ export function PublicRouter() {
   if (path === "/help") {
     document.title = "Help — SettledSolo";
     return <HelpPage />;
+  }
+  if (path === "/evidence") {
+    document.title = "Evidence — SettledSolo";
+    return <EvidencePage />;
   }
 
   document.title = "SettledSolo — dog separation training";
