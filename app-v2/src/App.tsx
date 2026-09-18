@@ -127,7 +127,7 @@ export default function App() {
       <header className="app-header">
         <div>
           <span className="wordmark">AloneReady</span>
-          <small>working name</small>
+          <small>separation training</small>
         </div>
         <div className="dog-chip">{data.dogName}</div>
       </header>
