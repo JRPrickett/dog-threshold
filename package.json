@@ -9,11 +9,12 @@
     "test:v2": "vitest run --config app-v2/vite.config.ts",
     "test": "npm run test:legacy && npm run test:v2",
     "check": "node --check js/app.js && node --check js/analytics.js && node --check cloudflare-worker/src/index.js && tsc -p app-v2/tsconfig.json --noEmit && npm test",
-    "verify": "npm run check && npm run build:v2",
+    "verify": "npm run check && npm run build:v2 && npm run check:worker",
     "test:e2e": "playwright test --config app-v2/playwright.config.ts",
     "preview:cloudflare": "npm run build:v2 && wrangler dev --config wrangler.app.jsonc",
     "deploy:cloudflare": "npm run build:v2 && wrangler deploy --config wrangler.app.jsonc",
-    "deploy:preview": "npm run build:v2 && wrangler deploy --config wrangler.preview.jsonc"
+    "deploy:preview": "npm run build:v2 && wrangler deploy --config wrangler.preview.jsonc",
+    "check:worker": "wrangler deploy --dry-run --config wrangler.app.jsonc"
   },
   "dependencies": {
     "react": "19.3.0",
