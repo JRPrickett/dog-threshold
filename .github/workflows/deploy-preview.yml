@@ -77,20 +77,48 @@ jobs:
               exit 1
               ;;
             *)
-              echo "kind=legacy-or-unrecognised" >> "$GITHUB_OUTPUT"
-              echo "Cloudflare credential format: legacy/unrecognised token format."
-              VERIFY_URL="https://api.cloudflare.com/client/v4/user/tokens/verify"
+              echo "Cloudflare credential format: legacy/unprefixed token; checking account and user token endpoints."
+              ACCOUNT_VERIFY_URL="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/tokens/verify"
+              USER_VERIFY_URL="https://api.cloudflare.com/client/v4/user/tokens/verify"
+
+              ACCOUNT_CODE="$(curl --silent --show-error --output /tmp/cloudflare-account-token-check.json --write-out '%{http_code}' \
+                --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                --header "Content-Type: application/json" \
+                "$ACCOUNT_VERIFY_URL")"
+
+              if [ "$ACCOUNT_CODE" = "200" ]; then
+                echo "kind=legacy-account" >> "$GITHUB_OUTPUT"
+                echo "Cloudflare credential verification: valid legacy account-owned API token."
+                VERIFY_URL="$ACCOUNT_VERIFY_URL"
+                cp /tmp/cloudflare-account-token-check.json /tmp/cloudflare-token-check.json
+              else
+                USER_CODE="$(curl --silent --show-error --output /tmp/cloudflare-user-token-check.json --write-out '%{http_code}' \
+                  --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                  --header "Content-Type: application/json" \
+                  "$USER_VERIFY_URL")"
+
+                if [ "$USER_CODE" = "200" ]; then
+                  echo "kind=legacy-user" >> "$GITHUB_OUTPUT"
+                  echo "Cloudflare credential verification: valid legacy user-owned API token."
+                  VERIFY_URL="$USER_VERIFY_URL"
+                  cp /tmp/cloudflare-user-token-check.json /tmp/cloudflare-token-check.json
+                else
+                  echo "::error::Cloudflare rejected the stored unprefixed token as both an account token (HTTP $ACCOUNT_CODE) and user token (HTTP $USER_CODE)."
+                  exit 1
+                fi
+              fi
               ;;
           esac
 
-          HTTP_CODE="$(curl --silent --show-error --output /tmp/cloudflare-token-check.json --write-out '%{http_code}' \
-            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            --header "Content-Type: application/json" \
-            "$VERIFY_URL")"
+          if [ ! -f /tmp/cloudflare-token-check.json ]; then
+            HTTP_CODE="$(curl --silent --show-error --output /tmp/cloudflare-token-check.json --write-out '%{http_code}' \
+              --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              --header "Content-Type: application/json" \
+              "$VERIFY_URL")"
 
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "::error::Cloudflare rejected the stored API token at its matching verification endpoint (HTTP $HTTP_CODE)."
-            python - <<'PY'
+            if [ "$HTTP_CODE" != "200" ]; then
+              echo "::error::Cloudflare rejected the stored API token at its matching verification endpoint (HTTP $HTTP_CODE)."
+              python - <<'PY'
           import json
           from pathlib import Path
           try:
@@ -102,7 +130,8 @@ jobs:
           except Exception:
               print("Cloudflare returned a non-JSON verification error.")
           PY
-            exit 1
+              exit 1
+            fi
           fi
 
           python - <<'PY'
