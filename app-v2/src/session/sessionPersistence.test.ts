@@ -10,14 +10,14 @@ describe("active-session persistence", () => {
     let state = initialLiveSession([{ kind: "main", targetSeconds: 30 }]);
     state = liveSessionReducer(state, { type: "START_STEP", now: 1_000 });
 
-    const saved = makePersistedLiveSession(30, state, 5_000);
+    const saved = makePersistedLiveSession("training", 30, state, 5_000);
     expect(isRestorableLiveSession(saved, 10_000)).toBe(true);
     expect(saved.state.startedAt).toBe(1_000);
   });
 
   it("rejects stale active sessions", () => {
     const state = initialLiveSession([{ kind: "main", targetSeconds: 30 }]);
-    const saved = makePersistedLiveSession(30, state, 1_000);
+    const saved = makePersistedLiveSession("training", 30, state, 1_000);
     expect(isRestorableLiveSession(saved, 13 * 60 * 60 * 1000)).toBe(false);
   });
 });
