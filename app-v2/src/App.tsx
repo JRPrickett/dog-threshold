@@ -17,6 +17,7 @@ import { History } from "./features/history/History";
 import { More } from "./features/more/More";
 import { DepartureCuePracticeView } from "./features/cues/DepartureCuePracticeView";
 import { LiveSession } from "./features/session/LiveSession";
+import { BrandMark, BrandWordmark } from "./brand/BrandMark";
 
 type Screen = "today" | "progress" | "history" | "more";
 
@@ -60,8 +61,8 @@ export default function App() {
     return (
       <main className="setup-shell">
         <section className="setup-card loading-card" aria-live="polite">
-          <div className="brand-orbit" aria-hidden="true"><span /></div>
-          <p className="kicker">Opening your training log</p>
+          <BrandMark />
+          <p className="kicker">Opening SettledSolo</p>
           <h1>Getting things ready.</h1>
         </section>
       </main>
@@ -125,10 +126,9 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div>
-          <span className="wordmark">AloneReady</span>
-          <small>separation training</small>
-        </div>
+        <a className="app-brand-link" href="/" aria-label="SettledSolo home">
+          <BrandWordmark compact />
+        </a>
         <div className="dog-chip">{data.dogName}</div>
       </header>
 
