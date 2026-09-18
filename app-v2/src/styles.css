@@ -1473,8 +1473,8 @@ a:focus-visible {
 }
 
 .settled-mark {
-  width: 66px;
-  height: 76px;
+  width: 60px;
+  height: 60px;
   display: inline-flex;
   flex: 0 0 auto;
 }
@@ -1485,20 +1485,35 @@ a:focus-visible {
   overflow: visible;
 }
 
-.settled-mark-arch,
-.settled-mark-floor {
+.settled-mark-arch {
   stroke: #F1E7D6;
-  stroke-width: 5.5;
+  stroke-width: 6;
 }
 
 .settled-mark-compact {
-  width: 32px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
 }
 
-.settled-mark-light .settled-mark-arch,
-.settled-mark-light .settled-mark-floor {
+.settled-mark-light .settled-mark-arch {
   stroke: #15242C;
+}
+
+.settled-badge {
+  width: 60px;
+  height: 60px;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.settled-badge svg {
+  width: 100%;
+  height: 100%;
+}
+
+.settled-badge-compact {
+  width: 30px;
+  height: 30px;
 }
 
 .brand-lockup {
@@ -1732,11 +1747,8 @@ a:focus-visible {
 .setup-card > .settled-mark {
   display: flex;
   margin-bottom: 12px;
-  padding: 7px;
-  width: 74px;
-  height: 86px;
-  border-radius: 20px;
-  background: var(--ink);
+  width: 72px;
+  height: 72px;
 }
 
 .setup-brand {
@@ -2090,22 +2102,17 @@ a:focus-visible {
 
 /*
  * The installed app icon (public/icon.svg) is a dark rounded-square badge
- * with the arch inset inside it and a generous glow. Every other brand
- * placement (header, footer, setup, quote, final CTA) already wraps the
- * mark in that same ink badge — this is the one spot, the hero, that was
- * showing the bare arch floating with a separate unrelated glow blob
- * instead. Reproducing the actual icon's proportions here is what makes
- * this look like the same product.
+ * The brand deck's own "two ways" are the lockup (header/marketing site)
+ * and the badge (app icon only) — the hero is marketing site, so it gets
+ * the lockup, just sized up to carry the space. No dark chip behind it:
+ * that was this section improvising a badge treatment the deck never
+ * specified here.
  */
 .marketing-door-scene > .settled-mark {
-  width: 108px;
-  height: 126px;
+  width: 220px;
+  height: 220px;
   position: relative;
   z-index: 1;
-  padding: 30px 24px 20px;
-  background: var(--ink);
-  border-radius: 40px;
-  box-shadow: 0 30px 70px rgba(0, 0, 0, .38);
 }
 
 .marketing-scene-copy {
@@ -2330,9 +2337,8 @@ a:focus-visible {
 }
 
 .marketing-quote > .settled-mark {
-  padding: 7px;
-  border-radius: 14px;
-  background: var(--ink);
+  width: 52px;
+  height: 52px;
 }
 
 .marketing-quote blockquote {
@@ -2451,8 +2457,8 @@ a:focus-visible {
   }
 
   .marketing-door-scene > .settled-mark {
-    width: 110px;
-    height: 130px;
+    width: 150px;
+    height: 150px;
   }
 
   .marketing-trust-strip {
@@ -2511,13 +2517,6 @@ a:focus-visible {
   }
 }
 
-
-.app-brand-link .settled-mark,
-.marketing-brand .settled-mark {
-  padding: 4px;
-  border-radius: 10px;
-  background: var(--ink);
-}
 
 .app-brand-link .brand-lockup-copy strong,
 .marketing-brand .brand-lockup-copy strong {
@@ -2693,12 +2692,6 @@ a:focus-visible {
   cursor: default;
 }
 
-
-.marketing-footer > .brand-lockup .settled-mark {
-  padding: 4px;
-  border-radius: 10px;
-  background: var(--ink);
-}
 
 .marketing-builder-link {
   color: var(--muted);

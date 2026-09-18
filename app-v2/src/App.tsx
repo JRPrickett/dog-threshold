@@ -64,7 +64,7 @@ export default function App() {
     return (
       <main className="setup-shell">
         <section className="setup-card loading-card" aria-live="polite">
-          <BrandMark />
+          <BrandMark light />
           <p className="kicker">Opening SettledSolo</p>
           <h1>Getting things ready.</h1>
         </section>
@@ -142,7 +142,7 @@ export default function App() {
     <div className="app-shell">
       <header className="app-header">
         <a className="app-brand-link" href="/" aria-label="SettledSolo home">
-          <BrandWordmark compact />
+          <BrandWordmark compact light />
         </a>
         <div className="dog-chip">{data.dogName}</div>
       </header>
