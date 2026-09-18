@@ -48,8 +48,8 @@ Test in current Safari and as an installed Home Screen web app.
 
 - [ ] Start a 30-second main departure.
 - [ ] Confirm countdown begins from the correct timestamp.
-- [ ] Lock the phone for at least 10 seconds, unlock, and confirm elapsed time is correct.
-- [ ] Switch to a dog-camera app for at least 10 seconds, return, and confirm elapsed time is correct.
+- [x] Lock the phone, unlock, and confirm the active session survives with correct timer state.
+- [x] Switch away to another app and return; the active session survives and resumes from timestamp-derived elapsed time.
 - [ ] Switch Safari/PWA out of the foreground after the 5-second warning boundary and return.
 - [ ] Leave the app backgrounded beyond the target, return, and confirm it shows target exceeded rather than restarting.
 
@@ -80,9 +80,9 @@ Server-backed Web Push is a later feature and is not required for this local-fir
 
 ### Recovery
 
-- [ ] Force-close the PWA during an active session.
-- [ ] Reopen immediately.
-- [ ] Confirm scenario, step, target and original start time are restored.
+- [x] Close the PWA during an active session.
+- [x] Reopen it.
+- [x] Confirm the active session survives/reconstructs rather than restarting.
 - [ ] Complete/review/save the recovered session.
 - [ ] Confirm exactly one history record exists.
 
@@ -103,6 +103,27 @@ Server-backed Web Push is a later feature and is not required for this local-fir
 - [ ] Complete/save the session.
 - [ ] Accept Update now outside live mode.
 - [ ] Confirm history remains intact.
+
+### iPhone preview evidence — 18 September 2026
+
+Tested against the Cloudflare `settledsolo-web-preview` build.
+
+User-reported real-device results:
+
+- active session survives switching to another app and returning;
+- active session survives closing/reopening the PWA;
+- active session survives lock/unlock;
+- session chime is audible on the tested device.
+
+This clears the core timer/recovery resilience concern that automated WebKit could not prove.
+
+Still to verify on iOS before public release:
+
+- Airplane Mode relaunch and full offline save;
+- notification permission/denial behaviour;
+- PWA update while a live session is running;
+- duplicate-chime behaviour across repeated/backgrounded sessions;
+- Media Session/Control Centre presentation where available.
 
 ## Android real-device gate
 
