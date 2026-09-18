@@ -33,7 +33,7 @@ export default defineConfig({
       workbox: {
         cleanupOutdatedCaches: true,
         navigateFallback: "/index.html",
-        navigateFallbackAllowlist: [/^\/$/, /^\/app\/?$/]
+        navigateFallbackAllowlist: [/^\/$/, /^\/app\/?$/, /^\/privacy\/?$/, /^\/terms\/?$/, /^\/help\/?$/]
       }
     })
   ],
