@@ -1,4 +1,8 @@
-import type { AppData, TrainingSession } from "../domain/types";
+import type {
+  AppData,
+  DepartureCueSession,
+  TrainingSession
+} from "../domain/types";
 import type { PersistedLiveSession } from "../session/sessionPersistence";
 import { readLegacyAppData } from "./legacyImport";
 
@@ -21,6 +25,7 @@ export interface AppRepository {
   saveAppData(data: AppData): Promise<void>;
   saveSetup(dogName: string, startSeconds: number): Promise<AppData>;
   appendSession(session: TrainingSession): Promise<AppData>;
+  appendDepartureCueSession(session: DepartureCueSession, nextLevel: number): Promise<AppData>;
   loadActiveSession(): Promise<PersistedLiveSession | null>;
   saveActiveSession(session: PersistedLiveSession): Promise<void>;
   clearActiveSession(): Promise<void>;
@@ -105,7 +110,15 @@ function normaliseAppData(data: AppData): AppData {
       sessions: Array.isArray(data.scenario?.sessions)
         ? data.scenario.sessions.slice()
         : []
-    }
+    },
+    cuePractice: data.cuePractice
+      ? {
+          level: Math.max(0, Math.min(7, Math.round(data.cuePractice.level ?? 0))),
+          sessions: Array.isArray(data.cuePractice.sessions)
+            ? data.cuePractice.sessions.slice()
+            : []
+        }
+      : undefined
   };
 }
 
@@ -134,6 +147,16 @@ function memoryRepository(initial: AppData): AppRepository {
         scenario: {
           ...data.scenario,
           sessions: [...data.scenario.sessions, session]
+        }
+      });
+      return data;
+    },
+    async appendDepartureCueSession(session, nextLevel) {
+      data = normaliseAppData({
+        ...data,
+        cuePractice: {
+          level: nextLevel,
+          sessions: [...(data.cuePractice?.sessions ?? []), session]
         }
       });
       return data;
@@ -195,6 +218,23 @@ export function createAppRepository(): AppRepository {
             scenario: {
               ...data.scenario,
               sessions: [...data.scenario.sessions, session]
+            }
+          };
+      await this.saveAppData(next);
+      return next;
+    },
+
+    async appendDepartureCueSession(session, nextLevel) {
+      const data = await this.loadAppData();
+      const existing = data.cuePractice?.sessions ?? [];
+      const exists = existing.some((item) => item.id === session.id);
+      const next = exists
+        ? data
+        : {
+            ...data,
+            cuePractice: {
+              level: nextLevel,
+              sessions: [...existing, session]
             }
           };
       await this.saveAppData(next);
