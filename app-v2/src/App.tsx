@@ -1,0 +1,603 @@
+import {
+  useEffect,
+  useMemo,
+  useReducer,
+  useState
+} from "react";
+import {
+  buildPracticeDepartures,
+  formatDuration,
+  recommendNext
+} from "./domain/trainingEngine";
+import type {
+  AppData,
+  ObservedSignal,
+  Outcome,
+  TrainingSession
+} from "./domain/types";
+import {
+  appendSession,
+  loadAppData,
+  saveSetup
+} from "./data/legacyStorage";
+import {
+  elapsedSeconds,
+  initialLiveSession,
+  liveSessionReducer,
+  type SessionStep
+} from "./session/sessionMachine";
+
+type Screen = "today" | "progress" | "history" | "more";
+
+const signalOptions: Array<{ value: ObservedSignal; label: string }> = [
+  { value: "exit-watching", label: "Watching the exit" },
+  { value: "pacing", label: "Pacing" },
+  { value: "panting", label: "Panting" },
+  { value: "whining", label: "Whining" },
+  { value: "barking-howling", label: "Barking / howling" },
+  { value: "unable-to-settle", label: "Unable to settle" }
+];
+
+function Setup({
+  onSaved
+}: {
+  onSaved: (data: AppData) => void;
+}) {
+  const [name, setName] = useState("");
+  const [seconds, setSeconds] = useState(5);
+
+  return (
+    <main className="setup-shell">
+      <section className="setup-card">
+        <div className="brand-orbit" aria-hidden="true">
+          <span />
+        </div>
+        <p className="kicker">A calmer starting point</p>
+        <h1>Build comfortable alone time, one small step at a time.</h1>
+        <p className="lead">
+          Start below the first sign of worry. Use a camera whenever you can and come
+          back early if your dog needs you.
+        </p>
+
+        <label>
+          Your dog's name
+          <input
+            autoComplete="off"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="e.g. Mabel"
+            maxLength={40}
+          />
+        </label>
+
+        <label>
+          A duration you already know feels comfortable
+          <div className="duration-input">
+            <input
+              type="number"
+              min={1}
+              max={7200}
+              value={seconds}
+              onChange={(event) => setSeconds(Number(event.target.value))}
+            />
+            <span>seconds</span>
+          </div>
+        </label>
+
+        <p className="field-help">
+          This is not a test of the longest your dog can tolerate. Pick something
+          you have already seen them manage calmly.
+        </p>
+
+        <button
+          className="primary-button"
+          disabled={!name.trim() || !Number.isFinite(seconds) || seconds < 1}
+          onClick={() => onSaved(saveSetup(name, seconds))}
+        >
+          Set up today's training
+        </button>
+
+        <p className="disclaimer">
+          This app supports gradual training and record keeping. It does not diagnose
+          separation anxiety or replace veterinary or qualified behavioural care.
+        </p>
+      </section>
+    </main>
+  );
+}
+
+function AccountNotice() {
+  return (
+    <aside className="account-notice">
+      <div>
+        <strong>Your progress is saved on this device.</strong>
+        <span>Create a free account later to back it up and use it on other devices.</span>
+      </div>
+      <button type="button" disabled title="Account sync is the next production phase">
+        Soon
+      </button>
+    </aside>
+  );
+}
+
+function Today({
+  data,
+  onStart
+}: {
+  data: AppData;
+  onStart: (target: number) => void;
+}) {
+  const recommendation = useMemo(
+    () => recommendNext(data.scenario.sessions, data.scenario.startSeconds),
+    [data]
+  );
+  const practice = buildPracticeDepartures(recommendation.targetSeconds);
+
+  return (
+    <div className="screen-stack">
+      <AccountNotice />
+
+      <section className="today-card">
+        <p className="kicker">Today's plan</p>
+        <div className="target-row">
+          <div>
+            <h1>{formatDuration(recommendation.targetSeconds)}</h1>
+            <p>main departure</p>
+          </div>
+          <span className={`direction direction-${recommendation.direction}`}>
+            {recommendation.direction === "increase"
+              ? "Small step up"
+              : recommendation.direction === "reduce"
+                ? "Easier today"
+                : recommendation.direction === "start"
+                  ? "Starting point"
+                  : "Repeat"}
+          </span>
+        </div>
+
+        {practice.length > 0 && (
+          <div className="practice-preview">
+            <span>Before the main departure</span>
+            <strong>
+              {practice.map((seconds) => formatDuration(seconds)).join(" · ")}
+            </strong>
+            <small>Short practice departures with calm settle time between them.</small>
+          </div>
+        )}
+
+        <div className="why-card">
+          <span>Why this plan?</span>
+          <p>{recommendation.reason}</p>
+        </div>
+
+        {recommendation.supportFlag && (
+          <div className="support-card">
+            Several recent sessions showed concern. Make things easier and consider
+            checking in with a qualified behaviour professional before pushing duration.
+          </div>
+        )}
+
+        <button
+          className="primary-button start-button"
+          onClick={() => onStart(recommendation.targetSeconds)}
+        >
+          Start session
+        </button>
+        <p className="ceiling-note">
+          The target is a ceiling, not a quota. Returning early is always okay.
+        </p>
+      </section>
+
+      <section className="quiet-card">
+        <div>
+          <p className="kicker">Current track</p>
+          <h2>{data.scenario.label}</h2>
+        </div>
+        <div className="mini-stat">
+          <strong>{data.scenario.sessions.length}</strong>
+          <span>sessions logged</span>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function Progress({ data }: { data: AppData }) {
+  const sessions = data.scenario.sessions;
+  const relaxed = sessions.filter((session) => session.outcome === "relaxed");
+  const longest = relaxed.reduce(
+    (best, session) => Math.max(best, session.actualSeconds),
+    0
+  );
+  const recent = sessions.slice(-10);
+  const recentRelaxed = recent.filter((session) => session.outcome === "relaxed").length;
+
+  return (
+    <div className="screen-stack">
+      <section className="page-heading">
+        <p className="kicker">Progress</p>
+        <h1>Look for comfort, not just longer times.</h1>
+        <p>
+          A shorter relaxed departure can be better progress than a longer difficult one.
+        </p>
+      </section>
+
+      <section className="stats-grid">
+        <div className="stat-card">
+          <span>Longest relaxed</span>
+          <strong>{longest ? formatDuration(longest) : "—"}</strong>
+          <small>Observed comfortable time</small>
+        </div>
+        <div className="stat-card">
+          <span>Recent comfort</span>
+          <strong>{recent.length ? `${recentRelaxed}/${recent.length}` : "—"}</strong>
+          <small>Relaxed sessions in the latest 10</small>
+        </div>
+      </section>
+
+      <section className="quiet-card vertical">
+        <p className="kicker">What counts as progress</p>
+        <h2>Duration is only one signal.</h2>
+        <p>
+          Over time the production app will also surface changes in pacing,
+          vocalisation, exit-watching and ability to settle, without pretending those
+          correlations prove a cause.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function History({ data }: { data: AppData }) {
+  const sessions = [...data.scenario.sessions].reverse();
+
+  return (
+    <div className="screen-stack">
+      <section className="page-heading">
+        <p className="kicker">History</p>
+        <h1>Your training record.</h1>
+        <p>Private on this device for now. Account backup comes later.</p>
+      </section>
+
+      <section className="history-list">
+        {sessions.length === 0 ? (
+          <div className="empty-state">Your first completed session will appear here.</div>
+        ) : (
+          sessions.map((session) => (
+            <article className="history-row" key={session.id}>
+              <div className={`outcome-dot outcome-${session.outcome}`} />
+              <div className="history-main">
+                <strong>{formatDuration(session.actualSeconds)}</strong>
+                <span>
+                  {session.outcome === "relaxed"
+                    ? "Relaxed"
+                    : session.outcome === "concern"
+                      ? "Some concern"
+                      : "Distressed"}
+                </span>
+              </div>
+              <div className="history-meta">
+                <span>{new Date(session.at).toLocaleDateString()}</span>
+                <small>target {formatDuration(session.targetSeconds)}</small>
+              </div>
+            </article>
+          ))
+        )}
+      </section>
+    </div>
+  );
+}
+
+function More({ data }: { data: AppData }) {
+  return (
+    <div className="screen-stack">
+      <section className="page-heading">
+        <p className="kicker">More</p>
+        <h1>{data.dogName}'s training settings.</h1>
+      </section>
+
+      <section className="menu-card">
+        <div>
+          <strong>Account & backup</strong>
+          <span>Optional cloud backup and cross-device sync</span>
+        </div>
+        <span className="soon-pill">Coming next</span>
+      </section>
+
+      <section className="menu-card">
+        <div>
+          <strong>Starting comfort</strong>
+          <span>{formatDuration(data.scenario.startSeconds)} known comfortable duration</span>
+        </div>
+      </section>
+
+      <section className="quiet-card vertical">
+        <p className="kicker">Evidence-aware, not algorithm worship</p>
+        <h2>Every recommendation should be explainable.</h2>
+        <p>
+          The new engine is based on gradual systematic desensitisation and observed
+          behaviour. Its exact software step sizes are conservative product heuristics,
+          not a claim that science has discovered the perfect percentage increase.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function LiveSession({
+  targetSeconds,
+  dogName,
+  onClose,
+  onSaved
+}: {
+  targetSeconds: number;
+  dogName: string;
+  onClose: () => void;
+  onSaved: (session: TrainingSession, practice: number[]) => void;
+}) {
+  const practice = useMemo(
+    () => buildPracticeDepartures(targetSeconds),
+    [targetSeconds]
+  );
+  const steps = useMemo<SessionStep[]>(
+    () => [
+      ...practice.map((target) => ({ kind: "practice" as const, targetSeconds: target })),
+      { kind: "main" as const, targetSeconds }
+    ],
+    [practice, targetSeconds]
+  );
+  const [state, dispatch] = useReducer(
+    liveSessionReducer,
+    steps,
+    initialLiveSession
+  );
+  const [now, setNow] = useState(Date.now());
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [signals, setSignals] = useState<ObservedSignal[]>([]);
+  const [note, setNote] = useState("");
+
+  useEffect(() => {
+    if (state.phase !== "running") return;
+    const timer = window.setInterval(() => setNow(Date.now()), 250);
+    return () => window.clearInterval(timer);
+  }, [state.phase]);
+
+  const step = state.steps[state.stepIndex];
+  const elapsed = elapsedSeconds(state, now);
+  const remaining = Math.max(0, step.targetSeconds - elapsed);
+  const over = elapsed > step.targetSeconds;
+
+  function toggleSignal(signal: ObservedSignal) {
+    setSignals((current) =>
+      current.includes(signal)
+        ? current.filter((value) => value !== signal)
+        : [...current, signal]
+    );
+  }
+
+  function saveReview() {
+    if (!outcome || state.mainActualSeconds === null) return;
+    onSaved(
+      {
+        id: `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+        at: Date.now(),
+        targetSeconds,
+        actualSeconds: state.mainActualSeconds,
+        outcome,
+        stoppedEarly: state.mainActualSeconds < targetSeconds,
+        signals,
+        note: note.trim()
+      },
+      practice
+    );
+  }
+
+  if (state.phase === "review") {
+    return (
+      <div className="live-shell review-shell">
+        <header className="live-header">
+          <button className="text-button" onClick={onClose}>Close</button>
+          <span>Session review</span>
+          <span />
+        </header>
+        <main className="review-content">
+          <p className="kicker light">You came back at</p>
+          <div className="review-time">{formatDuration(state.mainActualSeconds ?? 0)}</div>
+          <h1>How was {dogName} while you were away?</h1>
+          <div className="outcome-grid">
+            {([
+              ["relaxed", "Relaxed", "No meaningful signs of concern"],
+              ["concern", "Some concern", "Mild or transient signs"],
+              ["distressed", "Distressed", "Clear or escalating difficulty"]
+            ] as const).map(([value, label, detail]) => (
+              <button
+                key={value}
+                className={`outcome-button ${outcome === value ? "selected" : ""}`}
+                onClick={() => setOutcome(value)}
+              >
+                <strong>{label}</strong>
+                <span>{detail}</span>
+              </button>
+            ))}
+          </div>
+
+          {outcome && outcome !== "relaxed" && (
+            <div className="signals-section">
+              <span>What did you notice? <small>Optional</small></span>
+              <div className="signal-grid">
+                {signalOptions.map(({ value, label }) => (
+                  <button
+                    className={signals.includes(value) ? "selected" : ""}
+                    key={value}
+                    onClick={() => toggleSignal(value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <label className="note-field">
+            Note <small>Optional</small>
+            <textarea
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              maxLength={280}
+              placeholder="Anything worth remembering about today?"
+            />
+          </label>
+
+          <button
+            className="primary-button live-save"
+            disabled={!outcome}
+            onClick={saveReview}
+          >
+            Save session
+          </button>
+        </main>
+      </div>
+    );
+  }
+
+  if (state.phase === "between") {
+    return (
+      <div className="live-shell">
+        <header className="live-header">
+          <button className="text-button" onClick={onClose}>End session</button>
+          <span>Settle break</span>
+          <span />
+        </header>
+        <main className="live-centre">
+          <p className="kicker light">Back together</p>
+          <h1 className="settle-title">Let things feel ordinary again.</h1>
+          <p className="live-copy">
+            There is no countdown here. Continue only when {dogName} is comfortably settled.
+          </p>
+          <button
+            className="live-primary"
+            onClick={() => dispatch({ type: "NEXT_STEP" })}
+          >
+            Ready for the next departure
+          </button>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="live-shell">
+      <header className="live-header">
+        <button className="text-button" onClick={onClose}>End session</button>
+        <span>
+          {step.kind === "practice"
+            ? `Practice ${state.stepIndex + 1} of ${practice.length}`
+            : "Main departure"}
+        </span>
+        <span />
+      </header>
+
+      <main className="live-centre">
+        {state.phase === "idle" ? (
+          <>
+            <p className="kicker light">
+              {step.kind === "practice" ? "Short practice departure" : "Today's main departure"}
+            </p>
+            <div className="live-target">{formatDuration(step.targetSeconds)}</div>
+            <p className="live-copy">
+              Watch {dogName} on your camera. Come back at the first meaningful sign
+              of concern — you never need to finish the clock.
+            </p>
+            <button
+              className="live-primary"
+              onClick={() => {
+                setNow(Date.now());
+                dispatch({ type: "START_STEP", now: Date.now() });
+              }}
+            >
+              I'm leaving now
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="kicker light">{over ? "Target reached" : "Time remaining"}</p>
+            <div className={`live-clock ${over ? "over" : ""}`}>
+              {over ? `+${formatDuration(elapsed - step.targetSeconds)}` : formatDuration(remaining)}
+            </div>
+            <p className="live-elapsed">
+              {formatDuration(elapsed)} away · target {formatDuration(step.targetSeconds)}
+            </p>
+            <button
+              className="return-button"
+              onClick={() => dispatch({ type: "RETURN", now: Date.now() })}
+            >
+              I'm back
+            </button>
+          </>
+        )}
+      </main>
+    </div>
+  );
+}
+
+export default function App() {
+  const [data, setData] = useState<AppData>(() => loadAppData());
+  const [screen, setScreen] = useState<Screen>("today");
+  const [liveTarget, setLiveTarget] = useState<number | null>(null);
+
+  if (!data.dogName) {
+    return <Setup onSaved={setData} />;
+  }
+
+  if (liveTarget !== null) {
+    return (
+      <LiveSession
+        targetSeconds={liveTarget}
+        dogName={data.dogName}
+        onClose={() => setLiveTarget(null)}
+        onSaved={(session, practice) => {
+          setData(appendSession(session, practice));
+          setLiveTarget(null);
+          setScreen("today");
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="app-shell">
+      <header className="app-header">
+        <div>
+          <span className="wordmark">Threshold</span>
+          <small>working name</small>
+        </div>
+        <div className="dog-chip">{data.dogName}</div>
+      </header>
+
+      <main className="app-content">
+        {screen === "today" && <Today data={data} onStart={setLiveTarget} />}
+        {screen === "progress" && <Progress data={data} />}
+        {screen === "history" && <History data={data} />}
+        {screen === "more" && <More data={data} />}
+      </main>
+
+      <nav className="bottom-nav" aria-label="Main navigation">
+        {([
+          ["today", "Today"],
+          ["progress", "Progress"],
+          ["history", "History"],
+          ["more", "More"]
+        ] as const).map(([value, label]) => (
+          <button
+            key={value}
+            aria-current={screen === value ? "page" : undefined}
+            onClick={() => setScreen(value)}
+          >
+            <span className="nav-mark" aria-hidden="true" />
+            {label}
+          </button>
+        ))}
+      </nav>
+    </div>
+  );
+}
