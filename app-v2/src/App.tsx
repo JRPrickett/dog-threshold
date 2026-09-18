@@ -28,6 +28,7 @@ import {
   makePersistedLiveSession,
   type PersistedLiveSession
 } from "./session/sessionPersistence";
+import { PwaUpdateNotice } from "./pwa/PwaUpdateNotice";
 import {
   elapsedSeconds,
   initialLiveSession,
@@ -802,6 +803,8 @@ export default function App() {
         {screen === "history" && <History data={data} />}
         {screen === "more" && <More data={data} />}
       </main>
+
+      <PwaUpdateNotice />
 
       <nav className="bottom-nav" aria-label="Main navigation">
         {([
