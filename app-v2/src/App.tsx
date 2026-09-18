@@ -24,6 +24,10 @@ import type {
 } from "./domain/types";
 import { activeScenario } from "./data/appData";
 import {
+  downloadBackup,
+  downloadSessionsCsv
+} from "./data/export";
+import {
   createAppRepository,
   type StorageMode
 } from "./data/repository";
@@ -387,6 +391,21 @@ function More({
         <div>
           <strong>Starting comfort</strong>
           <span>{formatDuration(scenario.startSeconds)} known comfortable duration</span>
+        </div>
+      </section>
+
+      <section className="data-tools-card">
+        <div>
+          <p className="kicker">Your data</p>
+          <h2>Keep a copy whenever you want.</h2>
+          <p>
+            Export a complete backup or a spreadsheet-friendly session history. These
+            exports stay free even if paid features are added later.
+          </p>
+        </div>
+        <div className="data-tools-actions">
+          <button onClick={() => downloadBackup(data)}>Download backup</button>
+          <button onClick={() => downloadSessionsCsv(data)}>Export CSV</button>
         </div>
       </section>
 
