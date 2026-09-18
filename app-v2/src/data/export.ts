@@ -62,7 +62,7 @@ function dateStamp() {
 
 export function downloadBackup(data: AppData) {
   downloadText(
-    `dog-training-backup-${dateStamp()}.json`,
+    `aloneready-backup-${dateStamp()}.json`,
     JSON.stringify(makeBackup(data), null, 2),
     "application/json"
   );
@@ -70,7 +70,7 @@ export function downloadBackup(data: AppData) {
 
 export function downloadSessionsCsv(data: AppData) {
   downloadText(
-    `dog-training-history-${dateStamp()}.csv`,
+    `aloneready-history-${dateStamp()}.csv`,
     makeSessionsCsv(data),
     "text/csv;charset=utf-8"
   );
