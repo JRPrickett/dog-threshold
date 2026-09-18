@@ -10,11 +10,11 @@ export default defineConfig({
       includeAssets: ["icon.svg"],
       manifest: {
         id: "/",
-        name: "AloneReady — dog separation training",
-        short_name: "AloneReady",
+        name: "SettledSolo — dog separation training",
+        short_name: "SettledSolo",
         description:
           "Plan gradual dog separation training, track what happens, and adapt the next step without pushing through distress.",
-        start_url: "/",
+        start_url: "/app/",
         scope: "/",
         display: "standalone",
         orientation: "portrait",
@@ -33,7 +33,7 @@ export default defineConfig({
       workbox: {
         cleanupOutdatedCaches: true,
         navigateFallback: "/index.html",
-        navigateFallbackAllowlist: [/^\/$/]
+        navigateFallbackAllowlist: [/^\/$/, /^\/app\/?$/]
       }
     })
   ],
