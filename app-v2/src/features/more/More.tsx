@@ -10,6 +10,11 @@ import {
   parseBackupText
 } from "../../data/backup";
 import { formatDuration } from "../../domain/trainingEngine";
+import {
+  alertCapabilities,
+  requestNotificationPermission,
+  type NotificationPermissionState
+} from "../../session/sessionAlerts";
 
 export function More({
   data,
@@ -24,6 +29,10 @@ export function More({
   const fileInput = useRef<HTMLInputElement>(null);
   const [pendingRestore, setPendingRestore] = useState<AppData | null>(null);
   const [restoreError, setRestoreError] = useState("");
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermissionState>(
+      () => alertCapabilities().notifications
+    );
 
   async function chooseBackup(file: File | undefined) {
     if (!file) return;
@@ -85,6 +94,39 @@ export function More({
           <strong>Starting comfort</strong>
           <span>{formatDuration(scenario.startSeconds)} known comfortable duration</span>
         </div>
+      </section>
+
+      <section className="settings-card">
+        <div>
+          <p className="kicker">Return alerts</p>
+          <h2>Chimes stay part of the live session.</h2>
+          <p>
+            System notifications are optional. The timer and saved session never
+            depend on notification delivery.
+          </p>
+        </div>
+        {notificationPermission === "default" && (
+          <button
+            className="secondary-button"
+            onClick={async () =>
+              setNotificationPermission(await requestNotificationPermission())
+            }
+          >
+            Enable system alerts
+          </button>
+        )}
+        {notificationPermission === "granted" && (
+          <span className="alert-status enabled">System alerts enabled</span>
+        )}
+        {notificationPermission === "denied" && (
+          <span className="alert-status">System alerts are blocked in this browser</span>
+        )}
+        {notificationPermission === "unsupported" && (
+          <span className="alert-status">
+            System alerts are unavailable here. Session chimes still work where
+            background audio is supported.
+          </span>
+        )}
       </section>
 
       <section className="data-tools-card">
