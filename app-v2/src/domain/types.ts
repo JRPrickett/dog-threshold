@@ -19,20 +19,6 @@ export interface TrainingSession {
   note: string;
 }
 
-export interface Scenario {
-  id: string;
-  label: string;
-  startSeconds: number;
-  sessions: TrainingSession[];
-}
-
-export interface Recommendation {
-  targetSeconds: number;
-  direction: "start" | "repeat" | "increase" | "reduce";
-  reason: string;
-  supportFlag: boolean;
-}
-
 export interface DepartureCueSession {
   id: string;
   at: number;
@@ -47,8 +33,23 @@ export interface DepartureCuePractice {
   sessions: DepartureCueSession[];
 }
 
+export interface Scenario {
+  id: string;
+  label: string;
+  startSeconds: number;
+  sessions: TrainingSession[];
+  cuePractice?: DepartureCuePractice;
+}
+
+export interface Recommendation {
+  targetSeconds: number;
+  direction: "start" | "repeat" | "increase" | "reduce";
+  reason: string;
+  supportFlag: boolean;
+}
+
 export interface AppData {
   dogName: string;
-  scenario: Scenario;
-  cuePractice?: DepartureCuePractice;
+  activeScenarioId: string;
+  scenarios: Scenario[];
 }
