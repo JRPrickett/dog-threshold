@@ -2,6 +2,17 @@ name: Deploy SettledSolo Preview
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - modern-app-shell-engine
+    paths:
+      - "app-v2/**"
+      - "worker/**"
+      - "wrangler.preview.jsonc"
+      - "wrangler.app.jsonc"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/deploy-preview.yml"
 
 permissions:
   contents: read
