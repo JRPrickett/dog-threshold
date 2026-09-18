@@ -15,7 +15,8 @@ assert.doesNotMatch(analytics,/function installWebAnalytics/);
 assert.match(analytics,/ALLOWED_EVENTS=new Set\(\["app_open","session_started","session_saved"\]\)/);
 assert.match(analytics,/visibilitychange/);
 assert.match(analytics,/navigatorRef\.standalone===true/);
-assert.match(app,/analytics\.init\(\);/);\nassert.doesNotMatch(app,/openDetails:function/);
+assert.match(app,/analytics\.init\(\);/);
+assert.doesNotMatch(app,/openDetails:function/);
 
 assert.match(worker,/event\.name==="app_open"/);
 assert.match(worker,/INSERT INTO app_open_events/);
