@@ -100,7 +100,7 @@ test("legacy users keep multiple training tracks after migration", async ({ page
   });
 
   await page.goto("/app/");
-  await expect(page.getByText("Mabel")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "You & Mabel" })).toBeVisible();
   await page.getByRole("button", { name: "More" }).click();
 
   const selector = page.getByLabel("Training track");
@@ -150,7 +150,7 @@ test("a validated backup can replace local data after confirmation", async ({ pa
   await expect(page.getByText(/1 timed session/)).toBeVisible();
   await page.getByRole("button", { name: "Restore this backup" }).click();
 
-  await expect(page.getByText("Ruby")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "You & Ruby" })).toBeVisible();
   await expect(page.getByText("Home alone")).toBeVisible();
 
   await page.getByRole("button", { name: "History" }).click();
@@ -195,7 +195,7 @@ test("a user can create and rename a separate training track", async ({ page }) 
   await page.getByRole("button", { name: "Add training track" }).click();
 
   await expect(page.getByLabel("Training track")).toHaveValue(/scenario-/);
-  await expect(page.getByDisplayValue("School run")).toBeVisible();
+  await expect(page.getByLabel("Track name")).toHaveValue("School run");
 
   await page.getByLabel("Track name").fill("Weekday school run");
   await page.getByRole("button", { name: "Save track changes" }).click();
