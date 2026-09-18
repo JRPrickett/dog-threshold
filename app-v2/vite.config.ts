@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"]
+    include: ["app-v2/src/**/*.test.ts"]
   },
   build: {
     outDir: "../dist-v2",
