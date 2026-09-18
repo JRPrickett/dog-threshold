@@ -140,4 +140,10 @@ describe("buildPracticeDepartures", () => {
     expect(practice.length).toBeGreaterThan(0);
     expect(practice.every((seconds) => seconds < 120)).toBe(true);
   });
+
+  it("alternates practice order so the sequence isn't always the same shape", () => {
+    const evenSeed = buildPracticeDepartures(120, 0);
+    const oddSeed = buildPracticeDepartures(120, 1);
+    expect(oddSeed).toEqual([...evenSeed].reverse());
+  });
 });

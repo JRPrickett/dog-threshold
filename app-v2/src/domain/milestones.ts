@@ -1,0 +1,205 @@
+import type { AppData, TrainingSession } from "./types";
+
+export interface MilestoneRung {
+  seconds: number;
+  label: string;
+}
+
+/**
+ * Same ladder the legacy app used (30s through 4 hours). Kept as its own
+ * ordered list rather than derived from data so the board can show locked
+ * rungs that haven't been reached yet.
+ */
+export const MILESTONE_LADDER: MilestoneRung[] = [
+  { seconds: 30, label: "30 sec" },
+  { seconds: 60, label: "1 min" },
+  { seconds: 120, label: "2 min" },
+  { seconds: 300, label: "5 min" },
+  { seconds: 600, label: "10 min" },
+  { seconds: 900, label: "15 min" },
+  { seconds: 1200, label: "20 min" },
+  { seconds: 1800, label: "30 min" },
+  { seconds: 2700, label: "45 min" },
+  { seconds: 3600, label: "1 hour" },
+  { seconds: 5400, label: "90 min" },
+  { seconds: 7200, label: "2 hours" },
+  { seconds: 10800, label: "3 hours" },
+  { seconds: 14400, label: "4 hours" }
+];
+
+export interface EarnedMilestone {
+  seconds: number;
+  label: string;
+  at: number;
+  scenarioLabel: string;
+  actualSeconds: number;
+}
+
+interface ScopedSession {
+  session: TrainingSession;
+  scenarioLabel: string;
+}
+
+/**
+ * Milestones are earned by the same dog across every training track, so
+ * credit is tracked once across all scenarios rather than per track.
+ */
+function allSessions(data: AppData): ScopedSession[] {
+  return data.scenarios.flatMap((scenario) =>
+    scenario.sessions.map((session) => ({ session, scenarioLabel: scenario.label }))
+  );
+}
+
+/**
+ * A milestone credits the actual comfortable duration observed. Returning
+ * early while still relaxed does not forfeit credit for the time that was
+ * genuinely comfortable — the target is a ceiling, not a quota, and that
+ * principle applies to milestones too.
+ */
+export function earnedMilestones(data: AppData): Map<number, EarnedMilestone> {
+  const earned = new Map<number, EarnedMilestone>();
+
+  for (const { session, scenarioLabel } of allSessions(data)) {
+    if (session.outcome !== "relaxed") continue;
+
+    for (const rung of MILESTONE_LADDER) {
+      if (session.actualSeconds < rung.seconds) continue;
+      const existing = earned.get(rung.seconds);
+      if (!existing || session.at < existing.at) {
+        earned.set(rung.seconds, {
+          seconds: rung.seconds,
+          label: rung.label,
+          at: session.at,
+          scenarioLabel,
+          actualSeconds: session.actualSeconds
+        });
+      }
+    }
+  }
+
+  return earned;
+}
+
+export function longestRelaxedSeconds(data: AppData): number {
+  return allSessions(data).reduce(
+    (best, { session }) =>
+      session.outcome === "relaxed" ? Math.max(best, session.actualSeconds) : best,
+    0
+  );
+}
+
+export interface MilestoneBoard {
+  ladder: MilestoneRung[];
+  earned: Map<number, EarnedMilestone>;
+  longestRelaxedSeconds: number;
+  next: MilestoneRung | null;
+  progressToNext: number;
+}
+
+export function milestoneBoard(data: AppData): MilestoneBoard {
+  const earned = earnedMilestones(data);
+  const longest = longestRelaxedSeconds(data);
+  const next = MILESTONE_LADDER.find((rung) => !earned.has(rung.seconds)) ?? null;
+
+  let progressToNext = 1;
+  if (next) {
+    const previousIndex = MILESTONE_LADDER.indexOf(next) - 1;
+    const from = previousIndex >= 0 ? MILESTONE_LADDER[previousIndex].seconds : 0;
+    progressToNext = Math.max(0, Math.min(1, (longest - from) / (next.seconds - from)));
+  }
+
+  return {
+    ladder: MILESTONE_LADDER,
+    earned,
+    longestRelaxedSeconds: longest,
+    next,
+    progressToNext
+  };
+}
+
+export function newlyEarnedMilestones(
+  before: AppData,
+  after: AppData
+): EarnedMilestone[] {
+  const beforeEarned = earnedMilestones(before);
+  const afterEarned = earnedMilestones(after);
+
+  return MILESTONE_LADDER.filter(
+    (rung) => !beforeEarned.has(rung.seconds) && afterEarned.has(rung.seconds)
+  ).map((rung) => afterEarned.get(rung.seconds)!);
+}
+
+export interface AchievementSnapshot {
+  relaxedCount: number;
+  currentRelaxedRun: number;
+  totalRelaxedSeconds: number;
+}
+
+export function achievementSnapshot(data: AppData): AchievementSnapshot {
+  const sessions = allSessions(data).sort((a, b) => a.session.at - b.session.at);
+  const relaxed = sessions.filter(({ session }) => session.outcome === "relaxed");
+
+  let currentRelaxedRun = 0;
+  for (let index = sessions.length - 1; index >= 0; index -= 1) {
+    if (sessions[index].session.outcome === "relaxed") currentRelaxedRun += 1;
+    else break;
+  }
+
+  return {
+    relaxedCount: relaxed.length,
+    currentRelaxedRun,
+    totalRelaxedSeconds: relaxed.reduce((sum, { session }) => sum + session.actualSeconds, 0)
+  };
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  detail: string;
+}
+
+interface AchievementDefinition {
+  id: string;
+  met: (snapshot: AchievementSnapshot) => boolean;
+  title: string;
+  detail: string;
+}
+
+const ACHIEVEMENTS: AchievementDefinition[] = [
+  {
+    id: "first-relaxed-session",
+    met: (snapshot) => snapshot.relaxedCount >= 1,
+    title: "First relaxed absence",
+    detail: "The first timed absence was completed and came back relaxed."
+  },
+  {
+    id: "five-relaxed-sessions",
+    met: (snapshot) => snapshot.relaxedCount >= 5,
+    title: "Five relaxed absences",
+    detail: "Five timed absences have now been relaxed."
+  },
+  {
+    id: "five-relaxed-in-a-row",
+    met: (snapshot) => snapshot.currentRelaxedRun >= 5,
+    title: "A settled stretch",
+    detail: "The five most recent timed absences were all relaxed."
+  },
+  {
+    id: "one-hour-relaxed-total",
+    met: (snapshot) => snapshot.totalRelaxedSeconds >= 3600,
+    title: "An hour of relaxed time alone",
+    detail: "Relaxed absences now add up to at least an hour of comfortable time alone."
+  }
+];
+
+export function newlyEarnedAchievements(
+  before: AppData,
+  after: AppData
+): Achievement[] {
+  const beforeSnapshot = achievementSnapshot(before);
+  const afterSnapshot = achievementSnapshot(after);
+
+  return ACHIEVEMENTS.filter(
+    (achievement) => !achievement.met(beforeSnapshot) && achievement.met(afterSnapshot)
+  ).map(({ id, title, detail }) => ({ id, title, detail }));
+}

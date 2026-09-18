@@ -146,15 +146,31 @@ export function recommendNext(
   };
 }
 
-export function buildPracticeDepartures(targetSeconds: number): number[] {
+/**
+ * `variabilitySeed` (typically how many main departures have already been
+ * logged) alternates the practice order between short-then-long and
+ * long-then-short. A dog that always experiences the same shape of warm-up
+ * before the main departure can learn to anticipate what's coming next;
+ * varying the order keeps the sequence less predictable.
+ */
+export function buildPracticeDepartures(
+  targetSeconds: number,
+  variabilitySeed = 0
+): number[] {
   const target = Math.max(1, Math.round(targetSeconds));
   if (target < 8) return [];
 
   const first = Math.max(2, Math.min(30, Math.round(target * 0.25)));
   const second = Math.max(first + 1, Math.min(60, Math.round(target * 0.5)));
 
-  return [first, Math.min(target - 1, second)]
+  const values = [first, Math.min(target - 1, second)]
     .filter((value, index, values) => value > 0 && value < target && values.indexOf(value) === index);
+
+  if (values.length === 2 && Math.abs(Math.round(variabilitySeed)) % 2 === 1) {
+    values.reverse();
+  }
+
+  return values;
 }
 
 export function formatDuration(totalSeconds: number): string {

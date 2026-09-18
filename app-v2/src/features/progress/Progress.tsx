@@ -3,11 +3,14 @@ import { activeScenario } from "../../data/appData";
 import { progressInsights } from "../../domain/progressInsights";
 import { formatDuration } from "../../domain/trainingEngine";
 import { observedSignalOptions } from "../../domain/observedSignals";
+import { milestoneBoard } from "../../domain/milestones";
 
 export function Progress({ data }: { data: AppData }) {
   const scenario = activeScenario(data);
   const sessions = scenario.sessions;
   const insights = progressInsights(sessions);
+  const board = milestoneBoard(data);
+  const earnedCount = board.earned.size;
   const signalLabel = new Map(
     observedSignalOptions.map(({ value, label }) => [value, label])
   );
@@ -40,6 +43,70 @@ export function Progress({ data }: { data: AppData }) {
               : "—"}
           </strong>
           <small>Relaxed sessions in the latest 10</small>
+        </div>
+      </section>
+
+      <section className="milestone-card">
+        <div>
+          <p className="kicker">Milestones</p>
+          <h2>{earnedCount} of {board.ladder.length} earned</h2>
+          <p>
+            Earned the first time a relaxed absence of that length happened, counted
+            across every training track — it's the same dog doing all of them.
+          </p>
+        </div>
+
+        {board.next ? (
+          <div className="milestone-next">
+            <div className="milestone-next-row">
+              <span>Next: {board.next.label} alone</span>
+              <span className="milestone-next-amount">
+                {board.longestRelaxedSeconds >= board.next.seconds
+                  ? "there"
+                  : `${formatDuration(board.next.seconds - board.longestRelaxedSeconds)} to go`}
+              </span>
+            </div>
+            <div className="milestone-progress-track">
+              <div
+                className="milestone-progress-fill"
+                style={{ width: `${(board.progressToNext * 100).toFixed(1)}%` }}
+              />
+            </div>
+            <p className="milestone-longest">
+              Longest relaxed absence so far: {board.longestRelaxedSeconds
+                ? formatDuration(board.longestRelaxedSeconds)
+                : "none yet"}.
+            </p>
+          </div>
+        ) : (
+          <p className="milestone-longest">
+            Every milestone earned. That's a dog who can be left alone.
+          </p>
+        )}
+
+        <div className="milestone-ladder">
+          {board.ladder.map((rung) => {
+            const earned = board.earned.get(rung.seconds);
+            const isNext = board.next?.seconds === rung.seconds;
+            return (
+              <div
+                key={rung.seconds}
+                className={`milestone-rung ${earned ? "earned" : isNext ? "next" : ""}`}
+              >
+                <span className="milestone-rung-label">{rung.label}</span>
+                <span className="milestone-rung-sub">
+                  {earned
+                    ? new Date(earned.at).toLocaleDateString(undefined, {
+                        day: "numeric",
+                        month: "short"
+                      })
+                    : isNext
+                      ? "next up"
+                      : ""}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </section>
 

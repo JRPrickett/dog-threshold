@@ -7,16 +7,23 @@ import {
   formatDuration,
   recommendNext
 } from "../../domain/trainingEngine";
+import { isDailyCapReached, sessionsToday } from "../../domain/dailyCap";
 import { AccountNotice } from "../../components/AccountNotice";
+import { MilestoneBanner } from "../progress/MilestoneBanner";
+import type { Achievement, EarnedMilestone } from "../../domain/milestones";
 
 export function Today({
   data,
   storageMode,
+  celebration,
+  onDismissCelebration,
   onStart,
   onOpenCuePractice
 }: {
   data: AppData;
   storageMode: StorageMode;
+  celebration: { milestones: EarnedMilestone[]; achievements: Achievement[] } | null;
+  onDismissCelebration: () => void;
   onStart: (target: number) => void;
   onOpenCuePractice: () => void;
 }) {
@@ -25,7 +32,11 @@ export function Today({
     () => recommendNext(scenario.sessions, scenario.startSeconds),
     [scenario]
   );
-  const practice = buildPracticeDepartures(recommendation.targetSeconds);
+  const practice = buildPracticeDepartures(
+    recommendation.targetSeconds,
+    scenario.sessions.length
+  );
+  const capReached = isDailyCapReached(data);
 
   return (
     <div className="screen-stack">
@@ -34,6 +45,10 @@ export function Today({
         <h1>You &amp; {data.dogName}</h1>
         <span>Calm starts with small steps.</span>
       </section>
+
+      {celebration && (celebration.milestones.length > 0 || celebration.achievements.length > 0) && (
+        <MilestoneBanner celebration={celebration} onDismiss={onDismissCelebration} />
+      )}
 
       <section className="today-card">
         <p className="kicker">Today's plan</p>
@@ -53,7 +68,7 @@ export function Today({
           </span>
         </div>
 
-        {practice.length > 0 && (
+        {practice.length > 0 && !capReached && (
           <div className="practice-preview">
             <span>Before the main departure</span>
             <strong>
@@ -75,15 +90,26 @@ export function Today({
           </div>
         )}
 
-        <button
-          className="primary-button start-button"
-          onClick={() => onStart(recommendation.targetSeconds)}
-        >
-          Start today's session
-        </button>
-        <p className="ceiling-note">
-          The target is a ceiling, not a quota. Returning early is always okay.
-        </p>
+        {capReached ? (
+          <div className="support-card daily-cap-card">
+            {sessionsToday(data)} main departure{sessionsToday(data) === 1 ? "" : "s"} logged
+            today — that's today's ceiling. Separation training consolidates in the gaps
+            between sessions, and cramming in another attempt tends to set a dog back
+            rather than speed things up. Departure-cue practice below is still available.
+          </div>
+        ) : (
+          <>
+            <button
+              className="primary-button start-button"
+              onClick={() => onStart(recommendation.targetSeconds)}
+            >
+              Start today's session
+            </button>
+            <p className="ceiling-note">
+              The target is a ceiling, not a quota. Returning early is always okay.
+            </p>
+          </>
+        )}
       </section>
 
       <section className="quiet-card session-summary-card">

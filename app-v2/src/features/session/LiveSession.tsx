@@ -35,6 +35,7 @@ export function LiveSession({
   targetSeconds,
   dogName,
   initialState,
+  variabilitySeed = 0,
   onClose,
   onSaved,
   onPersist
@@ -44,13 +45,14 @@ export function LiveSession({
   targetSeconds: number;
   dogName: string;
   initialState?: PersistedLiveSession["state"];
+  variabilitySeed?: number;
   onClose: () => Promise<void>;
   onSaved: (session: TrainingSession) => Promise<void>;
   onPersist: (snapshot: PersistedLiveSession) => Promise<void>;
 }) {
   const practice = useMemo(
-    () => buildPracticeDepartures(targetSeconds),
-    [targetSeconds]
+    () => buildPracticeDepartures(targetSeconds, variabilitySeed),
+    [targetSeconds, variabilitySeed]
   );
   const steps = useMemo<SessionStep[]>(
     () => [

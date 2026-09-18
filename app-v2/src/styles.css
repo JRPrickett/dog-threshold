@@ -2704,3 +2704,147 @@ a:focus-visible {
 .marketing-builder-link:hover {
   color: var(--ink);
 }
+
+.celebration-banner {
+  display: grid;
+  gap: 10px;
+  padding: 15px 17px;
+  border-radius: 18px;
+  background: var(--sage);
+  border: 1px solid rgba(85, 119, 101, .18);
+}
+
+.celebration-lines {
+  display: grid;
+  gap: 6px;
+}
+
+.celebration-lines p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--sea-dark);
+}
+
+.celebration-dismiss {
+  justify-self: end;
+  color: var(--sea-dark) !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-size: 10px;
+}
+
+.daily-cap-card {
+  background: var(--amber-soft);
+  color: #6b4d24;
+}
+
+.milestone-card {
+  display: grid;
+  gap: 15px;
+  padding: 18px;
+  border-radius: 20px;
+  background: var(--paper);
+  border: 1px solid rgba(58, 70, 64, .08);
+  box-shadow: var(--shadow);
+}
+
+.milestone-card h2 {
+  margin: 4px 0 0;
+  font-size: 19px;
+  letter-spacing: -.025em;
+}
+
+.milestone-card p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.milestone-next {
+  display: grid;
+  gap: 8px;
+}
+
+.milestone-next-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.milestone-next-amount {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.milestone-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--soft);
+  overflow: hidden;
+}
+
+.milestone-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--sea);
+}
+
+.milestone-longest {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.milestone-ladder {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+}
+
+.milestone-rung {
+  display: grid;
+  gap: 3px;
+  padding: 10px 8px;
+  border-radius: 13px;
+  text-align: center;
+  background: #f5f4ef;
+  border: 1px solid transparent;
+}
+
+.milestone-rung-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.milestone-rung-sub {
+  font-size: 9px;
+  color: var(--muted);
+  min-height: 11px;
+}
+
+.milestone-rung.earned {
+  background: var(--sage);
+  border-color: rgba(85, 119, 101, .22);
+}
+
+.milestone-rung.earned .milestone-rung-label {
+  color: var(--sea-dark);
+}
+
+.milestone-rung.next {
+  border-color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.milestone-rung.next .milestone-rung-label {
+  color: #78552c;
+}

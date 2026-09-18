@@ -18,6 +18,8 @@ import { More } from "./features/more/More";
 import { DepartureCuePracticeView } from "./features/cues/DepartureCuePracticeView";
 import { LiveSession } from "./features/session/LiveSession";
 import { BrandMark, BrandWordmark } from "./brand/BrandMark";
+import type { Celebration } from "./features/progress/MilestoneBanner";
+import { newlyEarnedAchievements, newlyEarnedMilestones } from "./domain/milestones";
 
 type Screen = "today" | "progress" | "history" | "more";
 
@@ -30,6 +32,7 @@ export default function App() {
   const [cuePracticeOpen, setCuePracticeOpen] = useState(false);
   const [restoredState, setRestoredState] =
     useState<PersistedLiveSession["state"] | undefined>(undefined);
+  const [celebration, setCelebration] = useState<Celebration | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,6 +106,7 @@ export default function App() {
         targetSeconds={liveTarget}
         dogName={data.dogName}
         initialState={restoredState}
+        variabilitySeed={activeScenario(data).sessions.length}
         onPersist={(snapshot) => repository.saveActiveSession(snapshot)}
         onClose={async () => {
           await repository.clearActiveSession();
@@ -110,14 +114,25 @@ export default function App() {
           setRestoredState(undefined);
         }}
         onSaved={async (session) => {
-          setData(
-            await repository.appendSession(session, activeScenario(data).id)
+          const before = data;
+          const after = await repository.appendSession(
+            session,
+            activeScenario(data).id
           );
+          setData(after);
           setStorageMode(repository.storageMode());
           await repository.clearActiveSession();
           setLiveTarget(null);
           setRestoredState(undefined);
           setScreen("today");
+
+          const milestones = newlyEarnedMilestones(before, after);
+          const achievements = newlyEarnedAchievements(before, after);
+          setCelebration(
+            milestones.length || achievements.length
+              ? { milestones, achievements }
+              : null
+          );
         }}
       />
     );
@@ -137,7 +152,10 @@ export default function App() {
           <Today
             data={data}
             storageMode={storageMode}
+            celebration={celebration}
+            onDismissCelebration={() => setCelebration(null)}
             onStart={(target) => {
+              setCelebration(null);
               setRestoredState(undefined);
               setLiveTarget(target);
             }}
@@ -168,6 +186,7 @@ export default function App() {
               setStorageMode(repository.storageMode());
               setRestoredState(undefined);
               setLiveTarget(null);
+              setCelebration(null);
               setScreen("today");
             }}
           />
