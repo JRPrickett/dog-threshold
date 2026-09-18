@@ -28,9 +28,7 @@ import { ANALYTICS_CONFIG } from "./analytics-config.js";
 var storage=createStorage();
 var state=storage.boot();
 var analytics=createAnalytics(ANALYTICS_CONFIG);
-analytics.init({
-  openDetails:function(){ return {dogName:dogName()}; }
-});
+analytics.init();
 
 function save(){
   storage.save(state);
@@ -489,11 +487,7 @@ function stopReasonPanel(parent){
 function startCue(){
   if(phase==="idle"){
     startedAt=Date.now();
-    analytics.track("session_started",{
-      dogName:dogName(),
-      sessionType:"door",
-      targetSeconds:null
-    });
+    analytics.track("session_started");
   }
   phase="cue"; clearInterval(tick); persistActiveRun();
   render();
@@ -534,12 +528,7 @@ function recordDoor(outcome){
   phase="idle"; pending=null; repIdx=0; repLog=[]; tags=[]; note=""; shuffle=0; clearActiveRun();
   clearInterval(tick);
   save();
-  analytics.track("session_saved",{
-    dogName:dogName(),
-    sessionType:"door",
-    targetSeconds:null,
-    stopped:!!saved.stopped
-  });
+  analytics.track("session_saved");
   render();
   showToast("Door session saved.","Undo",function(){ removeSessionById(s.id,saved.id); });
 }
@@ -688,11 +677,7 @@ function ask(parent,question,opts,fn){
 function startRep(){
   var beginsSession=phase==="idle"&&repIdx===0;
   phase="running"; startedAt=Date.now(); chimed=false; preChimed=false;
-  if(beginsSession) analytics.track("session_started",{
-    dogName:dogName(),
-    sessionType:"absence",
-    targetSeconds:reps.length?reps[reps.length-1].target:null
-  });
+  if(beginsSession) analytics.track("session_started");
   persistActiveRun(); requestReturnNotificationPermission(); audioStart();
   drawActions(); drawTabs(); drawHeadline(); drawReps();
   el("coach").hidden=true; runTicker();
@@ -838,12 +823,7 @@ function commitReviewedSession(){
   closeModal("sessionReviewModal");
   pending=null; phase="idle"; repLog=[]; repIdx=0; retries=0; shuffle=0; tags=[]; note="";
   clearActiveRun(); clearInterval(tick); save();
-  analytics.track("session_saved",{
-    dogName:dogName(),
-    sessionType:"absence",
-    targetSeconds:saved.target,
-    stopped:!!saved.stopped
-  });
+  analytics.track("session_saved");
   render();
 
   clearTimeout(milestoneTimer);

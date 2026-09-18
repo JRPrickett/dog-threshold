@@ -1,4 +1,68 @@
-# Threshold v22 — phase-one refactor
+# Threshold — production development
+
+Threshold is an installable, offline-first separation-anxiety training web app. The
+current name is a **working name** while the product is being developed as a South West
+Websites project.
+
+The app remains immediately usable without signup. Production development is adding
+optional free accounts so people can back up progress and use the same training history
+across devices without losing the local-first/offline behaviour.
+
+> **Your progress is currently saved on this device.**  
+> Create a free account to back it up and use Threshold on your other devices.
+
+See:
+
+- `docs/PRODUCT-PLAN.md` — product principles and phased roadmap
+- `docs/BRAND-BRIEF.md` — naming and visual-brand direction
+- `docs/ACCOUNT-SYNC.md` — proposed account, data and offline-sync architecture
+- `ANALYTICS-SETUP.md` — privacy-limited product analytics
+
+## Current architecture
+
+- Static installable PWA
+- ES modules with no application runtime framework
+- Local-first training state and migrations
+- Service worker/offline support
+- Adaptive progression and warm-up planning
+- Interruption-proof active sessions
+- Notifications/audio return cues
+- Dashboards, milestones, history and exports
+- Cloudflare Worker + D1 for aggregate product event counts
+- Automated Node tests and GitHub Actions CI
+
+## Privacy boundary
+
+The training log is local in the current production-development build. Aggregate analytics
+count app opens and session start/save events plus basic platform information; dog names,
+scenario names, notes, ratings, durations and training history are not sent to analytics.
+
+Future account sync will use a separate authenticated API/database and will remain
+optional.
+
+## Development
+
+Serve the app over HTTP:
+
+```bash
+python3 -m http.server 8000
+```
+
+Run the production checks:
+
+```bash
+npm run check
+```
+
+## Production roadmap
+
+The next major implementation slice is free accounts and cross-device sync. The existing
+local data model will remain the immediate working copy so a training session is never
+blocked by a weak connection.
+
+## Development history
+
+### v22 — phase-one refactor
 
 This version keeps the existing GitHub Pages/PWA architecture and user-facing
 behaviour, while separating the source into maintainable files.
@@ -50,26 +114,26 @@ The service-worker cache is `threshold-v22`.
 5. DOM rendering components
 
 
-## Phase two
+### Phase two
 
 Session review calculations, active-run persistence, numeric settings controllers and
 pure chart-data preparation are now separated from `app.js`. Visual chart templates
 remain in `app.js` until the screen-rendering extraction.
 
 
-## v24 dashboard and engagement layer
+### v24 dashboard and engagement layer
 
 `js/dashboard.js` now owns pure calculations for dashboard cards, recent-progress
 timeline data and meaningful achievement detection. These features do not alter the
 progression algorithm.
 
 
-## v25 target explanations
+### v25 target explanations
 
 `js/target-reason.js` converts progression outcomes into concise user-facing wording, with technical details available through an optional disclosure.
 
 
-## v26 anonymous analytics
+### v26 anonymous analytics
 
 `js/analytics.js` provides privacy-limited page analytics setup and an offline
 queue for `session_started` and `session_saved`. The event receiver is included
@@ -77,7 +141,7 @@ under `cloudflare-worker/` and stores the aggregate events in Cloudflare D1.
 See `ANALYTICS-SETUP.md`.
 
 
-## v27 plain-language update
+### v27 plain-language update
 
 Internal planning terminology is no longer shown in the interface. The dashboard
 uses **Longest calm absence**, and optional target details contain only directly
@@ -85,7 +149,7 @@ recognisable session information. Cloudflare Web Analytics is enabled using the
 configured token.
 
 
-## v28 save fix and usage metadata
+### v28 save fix and usage metadata
 
 The session editor save failure is fixed. Saved-session analytics now record
 stopped status plus limited session and device metadata. Because dog name is now
@@ -93,20 +157,20 @@ included, these events should be described as limited usage analytics rather
 than strictly anonymous analytics.
 
 
-## v29 startup fix
+### v29 startup fix
 
 The initial render no longer stops on an undefined storage-status variable.
 First-run setup opens normally, and the reset/setup-skip paths have also been
 corrected.
 
 
-## v30 saved-event ordering
+### v30 saved-event ordering
 
 `session_saved` is now queued immediately after the local save and before the
 interface redraw, so a rendering problem cannot suppress the usage event.
 
 
-## v31 notification routing
+### v31 notification routing
 
 At the planned return time, Threshold replaces the browser-owned Media Session
 card with a service-worker notification whose click handler explicitly focuses
@@ -114,36 +178,43 @@ or opens Threshold. The countdown media controls remain available before the
 target is reached.
 
 
-## v32 iOS app-open analytics
+### v32 iOS app-open analytics
 
 Cloudflare's official beacon is now embedded directly in `index.html`.
 Foreground/resume activity is counted separately in D1 as `app_open_events`,
 including whether the app was running in standalone Home Screen mode.
 
 
-## v33 media-card fix
+### v33 media-card fix
 
 The final chime is generated through Web Audio and the HTML media element is
 fully destroyed at target time. This prevents the system Now Playing card from
 being recreated after the countdown ends.
 
 
-## v34 interruption-proof sessions
+### v34 interruption-proof sessions
 
 Active sessions are checkpointed during the run and whenever the app is hidden.
 A reload or PWA restart reconstructs the run from its original start timestamp,
 so switching apps cannot silently reset or discard the timer.
 
 
-## v35 simpler scenarios and earlier notification
+### v35 simpler scenarios and earlier notification
 
 Fresh installations start with a single **Separation training** scenario.
 Unused untouched legacy defaults are removed without deleting history or custom
 scenarios. The return notification now appears with the five-second warning.
 
 
-## v36 time-of-day context
+### v36 time-of-day context
 
 Morning, Afternoon and Evening are available as optional session tags. Guidance
 near the scenario controls explains that tags add context to one session, while
 separate scenarios maintain independent target progression.
+
+### v38 — production foundation
+
+- Product, brand and account/sync plans added.
+- Pull-request CI added.
+- Aggregate analytics no longer send or store dog names or training-session details.
+- Public wording no longer implies affiliation with a named training programme.
