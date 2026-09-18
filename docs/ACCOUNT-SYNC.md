@@ -32,7 +32,7 @@ Do not show a login wall on first open.
 After the user has meaningful progress, surface:
 
 > **Your progress is currently saved on this device.**
-> Create a free account to back it up and use Threshold on your other devices.
+> Create a free account to back it up and use AloneReady on your other devices.
 
 When an existing guest creates an account, ask before uploading the current local log and
 show the number of scenarios/sessions that will be attached to the account.
