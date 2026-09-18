@@ -35,12 +35,9 @@ export function PublicSite() {
           </div>
 
           <div className="marketing-hero-art" aria-hidden="true">
-            <div className="marketing-door-scene">
-              <BrandMark />
-              <div className="marketing-scene-copy">
-                <strong>SettledSolo</strong>
-                <span>Build comfortable alone time, gradually.</span>
-              </div>
+            <div className="marketing-scene-copy">
+              <strong>SettledSolo</strong>
+              <span>Build comfortable alone time, gradually.</span>
             </div>
           </div>
         </section>

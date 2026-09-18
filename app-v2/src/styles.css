@@ -2069,56 +2069,25 @@ a:focus-visible {
   margin: 13px 0 0;
 }
 
+/*
+ * A real photo carries the warmth here rather than the mark — the mark
+ * stays the clean arch+glow lockup everywhere else (header, footer, the
+ * app icon); it never needs to hold a dog itself. Placeholder stock photo
+ * pending the owner's own photography.
+ */
 .marketing-hero-art {
   min-height: 620px;
-  background:
-    linear-gradient(180deg, rgba(21,36,44,.10), rgba(21,36,44,.78)),
-    radial-gradient(circle at 72% 26%, rgba(242,166,90,.42), transparent 18rem),
-    #26363A;
-  display: grid;
-  align-items: stretch;
-}
-
-.marketing-door-scene {
-  min-height: 100%;
   position: relative;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
-
-.marketing-door-scene::before {
-  content: "";
-  position: absolute;
-  right: 12%;
-  top: 0;
-  width: 38%;
-  height: 100%;
   background:
-    linear-gradient(90deg, rgba(242,166,90,0), rgba(242,166,90,.13)),
-    #18272B;
-  border-left: 1px solid rgba(247,238,223,.08);
-}
-
-/*
- * The installed app icon (public/icon.svg) is a dark rounded-square badge
- * The brand deck's own "two ways" are the lockup (header/marketing site)
- * and the badge (app icon only) — the hero is marketing site, so it gets
- * the lockup, just sized up to carry the space. No dark chip behind it:
- * that was this section improvising a badge treatment the deck never
- * specified here.
- */
-.marketing-door-scene > .settled-mark {
-  width: 220px;
-  height: 220px;
-  position: relative;
-  z-index: 1;
+    linear-gradient(0deg, rgba(21,36,44,.82), rgba(21,36,44,.08) 55%),
+    url("/photos/hero-window-watch.jpg") center / cover no-repeat;
+  display: grid;
+  align-items: end;
 }
 
 .marketing-scene-copy {
-  position: absolute;
-  left: 11%;
-  bottom: 9%;
+  position: relative;
+  padding: 0 11% 9%;
   display: grid;
   gap: 4px;
   color: #F7EEDF;
@@ -2454,11 +2423,6 @@ a:focus-visible {
 
   .marketing-hero-art {
     min-height: 330px;
-  }
-
-  .marketing-door-scene > .settled-mark {
-    width: 150px;
-    height: 150px;
   }
 
   .marketing-trust-strip {
