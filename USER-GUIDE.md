@@ -1,69 +1,152 @@
-# Threshold: Quick User Guide
+# SettledSolo — quick user guide
 
-Threshold is a separation-anxiety training log. It plans a short session, times each absence and adjusts later sessions according to how your dog coped.
+**Calm starts with small steps.**
+
+SettledSolo helps you plan gradual dog separation training, run a reliable timed session,
+record what you actually observed and understand why the next session is being suggested.
+
+It is a training and record-keeping aid, not a diagnosis or substitute for veterinary or
+appropriately qualified behavioural care.
 
 ## First setup
 
-Enter your dog's name and choose a starting absence that your dog can already manage comfortably. It should be below the first sign of worry, not the longest absence you hope they can manage.
+Enter your dog's name and choose a duration you have **already seen them manage comfortably**.
 
-Choose **Door is a Bore** instead when leaving cues cause concern before you have properly gone. Nothing is timed in that mode.
+Do not deliberately leave until they become distressed to discover a maximum threshold.
 
-Use a camera during every timed session. Return before concern develops into distress.
+A good starting point is deliberately easy.
 
-## Scenarios
+Use a camera whenever practical so you can observe your dog directly.
 
-Threshold starts with one Separation training scenario. Add another scenario when a genuinely different situation should have its own target progression, such as a school run or evening departure. For lighter context, use session tags such as Morning, Afternoon or Evening instead.
+## Today's plan
 
-## Door is a Bore
+The Today screen shows:
 
-Door is a Bore uses untimed leaving cues rather than measuring an absence. Complete each displayed cue, tap **Step done**, allow the settle break, and continue.
+- the suggested main departure;
+- any short practice departures first;
+- whether the plan is starting, repeating, increasing or becoming easier;
+- a plain-English explanation of why that target was chosen.
 
-You do not rate every individual cue. At the end, rate the session overall and add any useful context or note.
-
-Following you, watching from the door or gate, or choosing to lie nearby is not automatically a sign of stress. Choose **Relaxed** when your dog remained calm overall and could settle, even if they followed. Use **Some unease** for persistent alertness or slower settling, and **Not settled** for clear inability to relax, escalating vocalising, pacing, panting or distress.
-
-When your dog is ready to begin very short absences, use **Switch to timed departures** directly beneath the Door is a Bore session button. The same option appears in **Settings and data** under **Ready for timed departures?** Door is a Bore history is retained and a scenario with no previous timed sessions begins cautiously at three seconds.
+The target is a **ceiling, not a quota**. Returning early is always okay.
 
 ## Running a session
 
-1. Check today's target and reduce it when your dog has had an unsettled day.
-2. Complete each short warm-up while watching the camera.
-3. Allow the settle break. Nothing starts automatically.
-4. Complete the main absence only when the warm-ups were comfortable.
-5. Return early whenever needed; do not stay out merely to complete the clock.
+1. Start only when your dog is settled enough for the planned exercise.
+2. Tap **I'm leaving now** at the point you actually leave.
+3. Watch your dog on a camera when possible.
+4. Return at the first meaningful sign that concern is building.
+5. Tap **I'm back** when you return.
+6. Rate what you observed.
 
-During a settle break, choose **End session early** when you do not want to continue. You can record why you stopped and still rate how your dog coped up to that point. A stopped session rated relaxed is saved but will not increase the next target.
+The timer uses the original start timestamp, so switching apps or a delayed browser update should
+not silently reset elapsed time.
 
-Keep **Sound while you're away** switched on for the target chime and background-timer features. On supported phones, the Lock Screen or Control Centre may also show a moving progress bar and countdown while you use the camera app.
+Return chimes, notifications, wake lock and lock-screen media information are supplementary
+features. The saved timer/session state does not depend on them working.
 
-## Rating the result
+## Rating the session
 
-- **Success:** settled quickly and remained relaxed.
-- **OK:** coped but showed unease, such as pacing, panting, watching the door or a whine.
-- **Not good:** vocalising, panic, inability to settle or obvious distress.
+Choose:
 
-Rate honestly. A difficult result tells the app to hold or reduce the next target.
+- **Relaxed** — no meaningful signs of concern; able to settle or behave normally.
+- **Some concern** — mild or transient signs such as pacing, panting, sustained exit-watching or
+  isolated vocalisation.
+- **Distressed** — clear or escalating inability to cope.
 
-## Correcting and adding sessions
+When useful, add observed signals such as:
 
-Use **Edit** beside any session to correct its date, target, actual time, result, tags or note. Use **Add past absence** for training completed without the app. Undo is offered briefly after saves and deletions.
+- watching the exit;
+- pacing;
+- panting;
+- whining;
+- barking/howling;
+- inability to settle.
 
-## Progress and sharing
+These observations help describe patterns. They are not a diagnosis.
 
-Milestones are earned only by successful completed main absences. Deliberately shorter sessions are normal.
+## What happens next
 
-Tap any earned milestone to open a personalised ivory milestone certificate. Choose **Share milestone** to open the phone's share sheet, or **Save certificate** to keep the image and share it later. A newly earned milestone opens automatically after the session is saved.
+SettledSolo does not use the old fixed percentage progression formula.
 
-Use **Export CSV** for a readable spreadsheet or trainer report. Stopped sessions include their reason in the export.
+Instead it generally:
 
-## Backups
+- repeats a comfortable duration before increasing;
+- uses small, transparent increases;
+- does not increase after concern;
+- moves below an early observed concern/distress point;
+- treats an early relaxed return as useful comfortable evidence;
+- surfaces support guidance after repeated difficult sessions.
 
-Everything saves automatically on this device. Open **Settings and data** and choose **Download a backup** regularly. Restore that JSON file when moving phones or recovering cleared browser data.
+Use **Why this plan?** to see the reasoning.
 
-## Important
+## Departure cue practice
 
-The daily limit is a ceiling, not a target. Rest and gaps between sessions are part of training. Threshold is a planning aid and does not replace a qualified separation-anxiety trainer or veterinary behaviour professional.
+If the process of getting ready to leave is already worrying, use **Departure cue practice**.
 
-## Version 13 — shorter warm-ups
+This presents low-intensity departure cues without actually leaving, such as approaching the exit
+or handling the door.
 
-Warm-up absences are now capped at 90 seconds. For main targets longer than three minutes, the warm-up plan is drawn from a fixed short-duration range rather than remaining a percentage of the full target. This prevents long targets from producing multi-minute warm-ups.
+Sets are short. The app does not advance the cue after one calm set, and concern causes the plan to
+hold or become easier.
+
+## Progress
+
+Progress is not just a longer timer.
+
+The Progress screen focuses on:
+
+- longest observed relaxed absence;
+- recent relaxed sessions;
+- behavioural signs you have actually logged.
+
+A shorter relaxed session can be better progress than a longer difficult one.
+
+## Training tracks
+
+Use a separate training track when a context genuinely behaves differently, for example:
+
+- a school-run departure;
+- an evening departure;
+- a different household routine.
+
+Each track keeps its own session history and recommendation progression.
+
+You can add, rename and edit tracks from **More**.
+
+## Backups and exports
+
+SettledSolo is local-first.
+
+From **More** you can:
+
+- download a complete JSON backup;
+- restore a SettledSolo backup;
+- restore an older Threshold JSON backup;
+- export session history as CSV.
+
+Restore shows a preview of what will be imported before replacing local data.
+
+## Accounts
+
+An account is not required for core training.
+
+Optional free cloud backup and cross-device sync are planned after the local product completes its
+production release gates.
+
+## Offline and installed use
+
+SettledSolo is an installable PWA and core training is designed to work offline after the app has
+been loaded/cached.
+
+Installing is optional. The browser version remains usable.
+
+## When to seek professional support
+
+Make the plan easier and consider veterinary or appropriately qualified behavioural support when:
+
+- distress is severe or escalating;
+- repeated sessions remain difficult despite reducing intensity;
+- there is destructive escape behaviour or self-injury risk;
+- you are unsure how to proceed safely.
+
+Never continue an absence purely to complete the timer.
