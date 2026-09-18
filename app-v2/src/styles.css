@@ -2650,3 +2650,37 @@ a:focus-visible {
   text-decoration-color: var(--glow);
   text-decoration-thickness: 2px;
 }
+
+
+.track-form {
+  display: grid;
+  gap: 12px;
+}
+
+.track-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.track-form input {
+  width: 100%;
+  border: 1px solid rgba(21,36,44,.11);
+  border-radius: 13px;
+  background: #F6F0E5;
+  color: var(--ink);
+  padding: 11px 12px;
+}
+
+.track-form .duration-input input {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.track-form .secondary-button:disabled {
+  opacity: .45;
+  cursor: default;
+}
