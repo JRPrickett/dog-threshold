@@ -8,7 +8,9 @@ export const SESSION_TAG_OPTIONS: Array<{ value: SessionTag; label: string }> = 
   { value: "after-a-walk", label: "After a walk" },
   { value: "before-food", label: "Before food" },
   { value: "after-food", label: "After food" },
-  { value: "radio-or-tv-on", label: "Radio or TV on" }
+  { value: "radio-or-tv-on", label: "Radio or TV on" },
+  { value: "crated-confined", label: "Crated / confined" },
+  { value: "free-roam", label: "Free-roam" }
 ];
 
 export const SESSION_TAG_VALUES: SessionTag[] = SESSION_TAG_OPTIONS.map(

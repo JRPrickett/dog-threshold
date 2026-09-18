@@ -106,11 +106,14 @@ export function SessionForm({
           value={outcome}
           onChange={(event) => setOutcome(event.target.value as Outcome)}
         >
-          <option value="relaxed">Relaxed</option>
-          <option value="concern">Some concern</option>
-          <option value="distressed">Distressed</option>
+          <option value="relaxed">Relaxed — settled quickly, no meaningful signs</option>
+          <option value="concern">Some concern — signs appeared but eased or were mild</option>
+          <option value="distressed">Distressed — sustained signs, or why you returned early</option>
         </select>
       </label>
+      <p className="outcome-help">
+        Rate what you actually saw, not whether the timer target was reached.
+      </p>
 
       {stoppedEarly && (
         <label>
@@ -143,6 +146,10 @@ export function SessionForm({
 
       <div className="signals-section">
         <span>Context <small>Optional</small></span>
+        <p className="context-help">
+          If signs only show up while crated or confined, that can point to confinement
+          anxiety rather than separation anxiety — worth trying a free-roam session to compare.
+        </p>
         <div className="signal-grid">
           {SESSION_TAG_OPTIONS.map(({ value, label }) => (
             <button

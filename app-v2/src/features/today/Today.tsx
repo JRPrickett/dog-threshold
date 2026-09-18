@@ -91,7 +91,8 @@ export function Today({
         {recommendation.supportFlag && !showRestDayCard && (
           <div className="support-card">
             Several recent sessions showed concern. Make things easier and consider
-            checking in with a qualified behaviour professional before pushing duration.
+            checking in with an accredited separation anxiety specialist (such as a
+            Certified Separation Anxiety Trainer) before pushing duration.
           </div>
         )}
 
@@ -144,6 +145,27 @@ export function Today({
       </section>
 
       <AccountNotice storageMode={storageMode} />
+
+      <section className="cue-entry-card coverage-card">
+        <div>
+          <p className="kicker">While you're actively training</p>
+          <h2>Cover real absences, not just training sessions.</h2>
+          <p>
+            Training works best when {data.dogName} isn't practising anxiety outside of a
+            session too. Try not to leave them alone longer than today's plan for anything
+            else this week — errands included.
+          </p>
+        </div>
+        <details className="coverage-options">
+          <summary>Ways to cover a real absence</summary>
+          <ul>
+            <li>Daycare or an in-home pet sitter</li>
+            <li>A dog walker for a midday break</li>
+            <li>Trading off with a partner, housemate or neighbour</li>
+            <li>Bringing them to work, or working from home that day</li>
+          </ul>
+        </details>
+      </section>
 
       <section className="cue-entry-card">
         <div>

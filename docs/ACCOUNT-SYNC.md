@@ -195,3 +195,92 @@ account-deletion tests cannot contaminate real user data.
 7. Multi-device reconciliation tests.
 8. Export/delete/recovery controls.
 9. Privacy/subprocessor documentation and abuse/rate-limit review.
+
+## Scaling to ~500 accounts
+
+The design above was already right-sized for this. Numbers below are current published
+Cloudflare limits (checked September 2026), not estimates, so the plan can be judged
+against them rather than against a general "will D1 scale" worry.
+
+### The actual load at 500 users
+
+Assume a generous active cohort: 30% of 500 users (150) opens the app most days, and a
+smaller slice trains daily.
+
+- **Writes.** A logged session is a handful of row writes (the session row, an
+  updated_at touch on its scenario, a sync-ack). Even 150 sessions/day is ~750 row
+  writes/day. Auth (OTP requests, session rows) adds a few hundred more. Total: **low
+  thousands of row writes/day**, against a free-tier allowance of **100,000/day** and a
+  paid-tier allowance of **50 million/month**. This is roughly 1-2 orders of magnitude
+  of headroom before it's worth a second thought.
+- **Reads.** The risk here isn't the row count, it's the *pattern*. A naive "re-fetch
+  everything on every open" sync would push real row counts (a season of history for
+  active users), and at enough opens/day that adds up. The design already avoids this —
+  sync is specified as incremental, keyed on `updated_at`/revision and last-synced
+  cursor, not a full resync. With that in place, a normal open reads only what changed
+  since last sync (usually zero to a handful of rows). Free tier is **5 million rows
+  read/day**; this stays a rounding error of that even generously modelled.
+- **Storage.** 500 users x a genuinely heavy year of history (hundreds of sessions
+  each, notes and tags included) is tens of megabytes, not gigabytes. Free tier is
+  **5 GB**. No storage-driven upgrade is plausible at this scale.
+- **Worker requests.** `worker/index.ts` runs every request through the Worker
+  (`run_worker_first: true`) for the security headers, and HTML responses are
+  explicitly `no-cache`, so every navigation and every auth/sync call counts against
+  the Workers request budget — cached JS/CSS/font assets mostly don't, once a device
+  has them. Modelled generously (three app opens/day per active user, each worth a
+  handful of Worker-hitting requests), 500 users lands around **1,500-2,500 Worker
+  requests/day**, against a free-tier cap of **100,000/day**. Reaching that free cap
+  would take roughly a 20-40x bigger active user base than this plan is for.
+
+### The one limit worth planning around
+
+Not row counts — the free plan's **10ms CPU time per invocation**. That's CPU time, not
+wall-clock, but OTP verification, WebAuthn/passkey signature checks and JSON-serializing
+a sync payload are exactly the kind of work that can bump into a 10ms ceiling under real
+load even though it looks fine in local testing. **Budget for Workers Paid ($5/month
+minimum) once account writes go live** — not because 500 users will exceed the free
+plan's volume (they won't, by a wide margin), but because Paid removes the daily request
+cap and raises CPU time to 30s default / 5 minutes max, which removes an entire class of
+"worked in testing, intermittently times out in production" bug reports for a cost that
+rounds to noise. At 500 accounts, realistic total Cloudflare spend on this design is
+**~$5/month** (D1 usage stays inside what Workers Paid already includes).
+
+### What this plan should explicitly *not* add at this scale
+
+Sharding, read replicas, a message queue, Durable Objects for real-time sync, or a
+separate caching layer in front of the API. None of it is warranted for 500 accounts,
+all of it is extra surface to operate and secure, and the existing single-Worker/
+single-D1-database design already has 1-2 orders of magnitude of headroom on every
+number above. Revisit only if usage data says otherwise, not preemptively.
+
+### Filling in the remaining mechanics
+
+Two things the plan above names but doesn't yet pin down precisely enough to build
+against:
+
+**The sync wire protocol.** A single endpoint following the pull-since-cursor /
+push-outbox pattern the rules section already implies:
+
+```
+POST /api/sync
+  { lastSyncedAt, outbox: [{ op: "create"|"update"|"delete", entity, id, payload, clientRevision }, ...] }
+  ->
+  { serverChanges: [...], newSyncedAt }
+```
+
+This maps directly onto the repository methods already built for the local-first store
+(`appendSession`/`updateSession`/`deleteSession`/`updateScenario`, etc.) — each already
+has clear create/update/delete semantics and stable IDs, which is most of the hard part
+of an outbox already done on the client side.
+
+**Rate limiting.** Use Cloudflare's dashboard-configured Rate Limiting rules on
+`/api/auth/*` (specifically the OTP-request endpoint — email-bombing is the realistic
+abuse vector at this scale) rather than hand-rolling a D1- or KV-backed limiter. Zero
+extra application code, and it's enough for 500 accounts; an in-app limiter is only
+worth building if abuse patterns show the edge rule isn't sufficient.
+
+**Migrations and backups**, for completeness: use `wrangler d1 migrations` (wire a
+`migrate:preview` / `migrate:production` script into CI rather than applying schema
+changes by hand), and rely on D1's built-in point-in-time recovery rather than building
+a custom backup/export cron — both are already-solved problems at this scale, not
+something this project needs to build.
