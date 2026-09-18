@@ -14,6 +14,15 @@ import {
   type PersistedLiveSession
 } from "../../session/sessionPersistence";
 import {
+  configureMediaSession,
+  installWakeLockRecovery,
+  playHeadBackSoonChime,
+  playTargetReachedChime,
+  prepareSessionAudio,
+  showSessionNotification,
+  stopSessionAlerts
+} from "../../session/sessionAlerts";
+import {
   elapsedSeconds,
   initialLiveSession,
   liveSessionReducer,
@@ -22,6 +31,7 @@ import {
 
 export function LiveSession({
   scenarioId,
+  scenarioLabel,
   targetSeconds,
   dogName,
   initialState,
@@ -30,6 +40,7 @@ export function LiveSession({
   onPersist
 }: {
   scenarioId: string;
+  scenarioLabel: string;
   targetSeconds: number;
   dogName: string;
   initialState?: PersistedLiveSession["state"];
@@ -66,15 +77,73 @@ export function LiveSession({
   }, [onPersist, scenarioId, state, targetSeconds]);
 
   useEffect(() => {
-    if (state.phase !== "running") return;
+    if (state.phase !== "running") {
+      stopSessionAlerts();
+      return;
+    }
+
+    const removeWakeRecovery = installWakeLockRecovery();
     const timer = window.setInterval(() => setNow(Date.now()), 250);
-    return () => window.clearInterval(timer);
+
+    return () => {
+      window.clearInterval(timer);
+      removeWakeRecovery();
+      stopSessionAlerts();
+    };
   }, [state.phase]);
 
   const step = state.steps[state.stepIndex];
   const elapsed = elapsedSeconds(state, now);
   const remaining = Math.max(0, step.targetSeconds - elapsed);
   const over = elapsed > step.targetSeconds;
+
+  useEffect(() => {
+    if (state.phase !== "running") return;
+
+    configureMediaSession(
+      dogName,
+      scenarioLabel,
+      step.targetSeconds,
+      elapsed
+    );
+
+    const shouldWarn =
+      step.kind === "main" &&
+      step.targetSeconds >= 10 &&
+      remaining > 0 &&
+      remaining <= 5 &&
+      !state.warningIssued;
+
+    if (shouldWarn) {
+      playHeadBackSoonChime();
+      void showSessionNotification(
+        "Head back soon",
+        `${dogName} · about ${remaining}s remaining`
+      );
+      dispatch({ type: "MARK_WARNING_ISSUED" });
+    }
+
+    if (elapsed >= step.targetSeconds && !state.targetIssued) {
+      playTargetReachedChime();
+      if (step.kind === "main") {
+        void showSessionNotification(
+          "Training target reached",
+          `${dogName} · head back when appropriate`
+        );
+      }
+      dispatch({ type: "MARK_TARGET_ISSUED" });
+    }
+  }, [
+    dogName,
+    elapsed,
+    remaining,
+    scenarioLabel,
+    state.phase,
+    state.targetIssued,
+    state.warningIssued,
+    step.kind,
+    step.targetSeconds
+  ]);
 
   function toggleSignal(signal: ObservedSignal) {
     setSignals((current) =>
@@ -217,8 +286,10 @@ export function LiveSession({
             <button
               className="live-primary"
               onClick={() => {
-                setNow(Date.now());
-                dispatch({ type: "START_STEP", now: Date.now() });
+                const started = Date.now();
+                prepareSessionAudio();
+                setNow(started);
+                dispatch({ type: "START_STEP", now: started });
               }}
             >
               I'm leaving now
