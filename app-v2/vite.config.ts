@@ -13,7 +13,7 @@ export default defineConfig({
         name: "AloneReady — dog separation training",
         short_name: "AloneReady",
         description:
-          "A calm, structured companion for gradual dog separation training.",
+          "Plan gradual dog separation training, track what happens, and adapt the next step without pushing through distress.",
         start_url: "/",
         scope: "/",
         display: "standalone",
