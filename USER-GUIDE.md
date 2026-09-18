@@ -12,7 +12,7 @@ Use a camera during every timed session. Return before concern develops into dis
 
 ## Scenarios
 
-Morning, Daytime and Evening progress separately because a dog may cope differently at different times or with different departure routines. Rename them or add scenarios such as School run, Bins or Night.
+Threshold starts with one Separation training scenario. Add another scenario when a genuinely different situation should have its own target progression, such as a school run or evening departure. For lighter context, use session tags such as Morning, Afternoon or Evening instead.
 
 ## Door is a Bore
 
