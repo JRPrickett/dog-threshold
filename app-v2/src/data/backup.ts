@@ -197,7 +197,7 @@ export function parseBackupText(text: string): AppData {
     return sanitiseImportedAppData(legacy);
   }
 
-  throw new Error("This file is not a recognised Threshold backup.");
+  throw new Error("This file is not a recognised AloneReady backup.");
 }
 
 export interface BackupSummary {
