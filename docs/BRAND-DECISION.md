@@ -1,53 +1,70 @@
-# AloneReady — brand decision
+# SettledSolo — brand decision
 
-Status: selected production product name, pending live registrar and formal trademark clearance.
+Status: selected production identity.
 
 Date: 18 September 2026
 
 ## Name
 
-**AloneReady**
+**SettledSolo**
 
-Primary descriptor:
+Descriptor:
 
 **Separation training for dogs**
 
-Primary positioning line:
+Brand line:
+
+**Calm starts with small steps.**
+
+Supporting proposition:
 
 **Build comfortable alone time, gradually.**
 
-Alternative explanatory line for longer surfaces:
+## Why SettledSolo
 
-**A calm, structured way to plan, track and adapt gradual separation training.**
+The name describes the behaviour the product is trying to help owners build.
 
-## Why this name
+- **Settled** centres calm, observable behaviour rather than simply increasing duration.
+- **Solo** communicates comfortable time apart without clinical language.
+- The name works for existing separation-related difficulty and preventative alone-time training.
+- It supports future household and trainer collaboration without becoming too narrow.
 
-AloneReady describes the desired state rather than the problem.
+The repository keeps its historical `dog-threshold` name internally so user data and engineering
+history are not coupled to marketing identity.
 
-It works for:
+## Domains
 
-- owners dealing with existing separation-related distress;
-- puppies/new dogs learning comfortable alone time;
-- trainer-supported programmes;
-- future household or professional collaboration features.
+The owner reports the following domains available at the time of the brand decision:
 
-It is easier to understand than an abstract wellness name and avoids making a medical or cure
-claim.
+- `settledsolo.com`
+- `settledsolo.app`
+- `settledsolo.co.uk`
 
-Current public web and app-store searches did not surface a directly competing product using the
-exact name AloneReady. One pet retailer uses the generic phrase "Home-Alone Ready" for a product
-collection, which is adjacent language rather than the same product name.
+Recommended public setup:
 
-This is not a legal trademark clearance. Before domain purchase/public launch:
+1. `settledsolo.com` as canonical product and marketing domain.
+2. `settledsolo.app` redirecting to the canonical site.
+3. `settledsolo.co.uk` redirecting to the canonical site.
 
-1. run a live registrar availability check for preferred domains;
-2. run formal UKIPO exact and similar-mark checks in relevant classes;
-3. check key social/app handles;
-4. record the final domain and trademark decision here.
+Formal UK trademark clearance remains a launch task even after domain purchase.
 
-## Brand promise
+## Brand concept — doorway glow
 
-AloneReady should feel:
+The core visual idea is **the doorway glow**.
+
+A simple doorway shape with a low warm glow represents:
+
+- a departure without dramatizing anxiety;
+- home and safety;
+- separation becoming ordinary;
+- the owner coming back;
+- one warm point of reassurance inside a calm, restrained visual world.
+
+The symbol should work without a literal dog, paw print, heart or house icon.
+
+## Voice
+
+SettledSolo should feel:
 
 - calm;
 - practical;
@@ -55,188 +72,140 @@ AloneReady should feel:
 - evidence-aware;
 - transparent;
 - dependable;
-- modern without being trendy.
-
-It should never feel:
-
-- childish;
-- cartoon-heavy;
-- alarmist;
-- medicalised;
-- guilt-driven;
-- gamified around streak pressure;
-- like a generic AI wellness product.
-
-## Product voice
-
-Use short, calm sentences.
+- warm without becoming sentimental.
 
 Prefer:
 
 - "Today's plan"
 - "Why this plan?"
+- "Calm starts with small steps."
+- "Build comfortable alone time, gradually."
+- "The target is a ceiling, not a quota."
 - "Some concern"
-- "Make the next session easier"
-- "The target is a ceiling, not a quota"
-- "Progress is more than a longer time"
+- "Make the next session easier."
+- "Progress is more than a longer time."
 
 Avoid:
 
-- "Crush your goals"
 - "Beat separation anxiety"
-- "Level up"
-- "Don't break your streak"
 - "Cure"
 - "Guaranteed"
-- "AI-powered training plan" unless a future feature genuinely requires that wording
+- streak pressure
+- "Level up"
+- competitive language
+- guilt
+- language implying that the app itself keeps the dog calm while the owner is away.
 
-## Visual system
-
-### Core palette
+## Colour system — dusk, not daylight
 
 | Role | Value | Use |
 | --- | --- | --- |
-| Warm canvas | `#F4F1EB` | App background |
-| Paper | `#FFFDF9` | Cards/surfaces |
-| Deep ink | `#24312D` | Primary text |
-| AloneReady green | `#2F655B` | Primary action/brand |
-| Deep green | `#1E443D` | High-emphasis text/actions |
-| Soft sage | `#DFE9E2` | Positive/supportive states |
-| Warm amber | `#B47A37` | Concern |
-| Amber wash | `#F2E4D2` | Concern surface |
-| Soft clay | `#9E5C55` | Distress |
-| Clay wash | `#F3DFDC` | Distress surface |
+| Ink | `#15242C` | Live mode, primary text, strong actions |
+| Panel | `#1E3138` | Dark surfaces |
+| Glow | `#F2A65A` | One warm point of emphasis |
+| Parchment | `#F1E7D6` | Everyday app and marketing canvas |
+| Paper | `#FBF7EF` | Cards |
+| Sage | `#8AAE90` | Calm / relaxed / supportive state |
+| Clay | `#C97B6B` | Distress / caution state |
 
-The three outcome colours are semantic aids, not scores.
+Glow should stay scarce. It is most effective when it signals an important action, threshold or
+moment rather than being used as a generic decoration colour.
 
-### Typography
+## Typography
 
-Use a restrained, highly legible sans-serif.
+Brand/headline direction:
 
-For the web/PWA, prefer the native/system stack initially for:
+**Fraunces**
 
-- excellent mobile rendering;
-- zero font download dependency;
-- fast first paint/offline use;
-- less visual fragility.
+Functional UI/body direction:
 
-The wordmark can use tighter tracking and a slightly heavier weight without requiring a separate
-display font.
+**Karla**
 
-### Shape language
+Rules:
 
-- generous rounded corners, not bubble UI;
-- quiet card borders;
-- large numeric time displays;
-- broad touch targets;
-- restrained elevation;
-- minimal decorative illustration.
+- Fraunces for the wordmark, marketing headings and short emotional statements.
+- Karla for timers, buttons, body copy, instructions and fast-reading session UI.
+- Large timer numerals remain functional rather than decorative.
+- Offline/system fallbacks must remain usable if web fonts fail.
 
-## Identity mark direction
+## App visual model
 
-The final symbol should communicate **distance becoming comfortable**, not "dog app".
+SettledSolo deliberately has two visual modes.
 
-Preferred visual idea:
+### Everyday product mode
 
-- a simple doorway/open-space form;
-- two calm positions separated by space;
-- a subtle progression/path relationship;
-- works at 16-32 px as a PWA/favicon mark.
+- parchment/cream canvas;
+- dark ink typography;
+- quiet cards;
+- sage used supportively;
+- glow used sparingly;
+- clear Today / Progress / History / More navigation.
 
-Avoid:
+### Live training mode
 
-- paw prints;
-- dog heads;
-- hearts;
-- houses with a paw inside;
-- cartoon bones;
-- alarm clocks;
-- lock/shield imagery;
-- literal anxious-dog illustration.
+- dark dusk background;
+- large timer;
+- minimal chrome;
+- warm return/target cues;
+- no distracting dashboard information;
+- clear early-return action.
 
-The current circular development icon is temporary and must not be treated as the final logo.
+The shift into dusk should make starting a session feel intentional without becoming alarming.
 
-## Wordmark
+## App icon / mark
 
-Write as:
+The production direction is:
 
-**AloneReady**
+- dark Ink rounded-square background;
+- simple parchment doorway outline;
+- controlled Glow at the base;
+- no dog silhouette required;
+- remains legible at favicon and app-icon size.
 
-Not:
+## Public site
 
-- Alone Ready
-- ALONEREADY
-- alone.ready
+Hero hierarchy:
 
-The joined name reinforces that it is a product rather than a generic phrase.
+**SettledSolo**  
+**Separation training for dogs**
 
-## App-store / search presentation
+# Calm starts with small steps.
 
-Recommended product title:
+Supporting copy:
 
-**AloneReady — Dog Separation Training**
-
-Short description:
-
-**Plan gradual alone-time sessions, record what you observe, and adapt the next step without
-pushing through distress.**
-
-Longer SEO phrase set should naturally include:
-
-- dog separation anxiety training;
-- dog home alone training;
-- separation training for dogs;
-- gradual alone time training;
-- dog separation anxiety tracker;
-- puppy alone time training.
-
-Do not keyword-stuff the in-app product experience.
-
-## Public-site direction
-
-The marketing site should lead with the problem/outcome, not features.
-
-Suggested hero:
-
-**Build comfortable alone time, gradually.**
-
-**AloneReady helps you plan separation-training sessions, track what actually happened and choose
-a sensible next step. Start free, no account required.**
+**Build comfortable alone time gradually, with an explainable plan, a reliable session timer and
+a private record of what your dog actually experienced.**
 
 Primary CTA:
 
-**Start training**
+**Start training free**
 
 Secondary CTA:
 
-**How it works**
+**See how it works**
 
 Trust points:
 
-- works in the browser and as an installable app;
-- useful before creating an account;
-- local-first training data;
+- useful without an account;
+- local-first data;
+- offline-capable PWA;
 - explainable recommendations;
-- exportable history;
 - no streak pressure;
-- evidence-informed principles with product heuristics clearly distinguished.
+- portable data;
+- evidence-aware principles without fake scientific precision.
 
 ## South West Websites relationship
 
-AloneReady is a standalone consumer product.
+SettledSolo is a standalone consumer product.
 
-South West Websites may identify itself discreetly as the builder/case-study owner, but AloneReady
-should not look like a sub-brand or client microsite.
+South West Websites can identify itself discreetly in the public-site footer and portfolio, but
+the product should not look like a South West Websites sub-brand.
 
-## Domain status
+## Remaining brand launch tasks
 
-Do not claim a domain is available until a live registrar check confirms it.
-
-Preferred order if available:
-
-1. `aloneready.com`
-2. `aloneready.app`
-3. `aloneready.co.uk`
-
-For a globally usable consumer app, `.com` or `.app` should be the canonical public domain.
-A UK domain can redirect to the canonical domain if acquired.
+- purchase preferred domains;
+- run formal UK trademark checks for exact/similar marks;
+- check important social/app-store handles;
+- export final vector/icon variants from the doorway-glow mark;
+- test icon on iOS and Android installed-PWA surfaces;
+- create Open Graph/social preview artwork.
