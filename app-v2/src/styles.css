@@ -2502,3 +2502,22 @@ a:focus-visible {
     text-align: left;
   }
 }
+
+
+.app-brand-link .settled-mark,
+.marketing-brand .settled-mark {
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--ink);
+}
+
+.app-brand-link .brand-lockup-copy strong,
+.marketing-brand .brand-lockup-copy strong {
+  font-family: var(--display);
+}
+
+@media (max-width: 380px) {
+  .app-brand-link .brand-lockup-copy strong {
+    font-size: 18px;
+  }
+}
