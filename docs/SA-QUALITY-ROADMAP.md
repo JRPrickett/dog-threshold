@@ -13,9 +13,14 @@ list. Each item names the source finding it answers.
 Architecture readiness for scale is already covered separately in `docs/ACCOUNT-SYNC.md` and
 isn't repeated here.
 
+## Status
+
+Items 1-4 are shipped on `claude/sa-quality-improvements`. Item 5's three sub-items are not
+started.
+
 ## Priority order and why
 
-### 1. Teachable "threshold reached" definition in the session-rating UI
+### 1. Teachable "threshold reached" definition in the session-rating UI — done
 
 **Source:** Reddit — recurring, unresolved confusion across r/dogtraining, r/puppy101, and
 r/Separation_Anxiety about whether the end-session trigger is the first sign of anxiety
@@ -26,7 +31,7 @@ Highest-leverage item: it's a real, repeated point of confusion driving people t
 strangers on Reddit, and it's a UI/copy change to logic the app already has (session outcome
 rating), not new domain logic.
 
-### 2. Real-absence coverage guidance during active training
+### 2. Real-absence coverage guidance during active training — done
 
 **Source:** CSAT practice — suspending all real absences (not just training reps) during an
 active training block is treated as a core tenet; the app currently has no content, UI, or
@@ -34,13 +39,17 @@ guidance addressing it at all.
 
 A coverage-plan checklist/reminder surfaced during an active scenario, not a new subsystem.
 
-### 3. Confinement/crate differential in setup
+### 3. Confinement/crate differential in setup — done
 
 **Source:** CSAT/practitioner practice — a crated dog that panics can look like a failing SA
 case when the crate itself is the trigger; the setup flow and signal list have no crate/pen/
 free-roam field today.
 
-### 4. Transparent, no-dark-patterns billing stance stated explicitly
+Shipped as two new session context tags ("Crated / confined" / "Free-roam") plus a one-line
+note suggesting a free-roam comparison session, rather than a Setup-time field — confinement
+can change session to session, so it's per-session context, not a one-time setup choice.
+
+### 4. Transparent, no-dark-patterns billing stance stated explicitly — done
 
 **Source:** Competitor teardown — deceptive/opaque billing is the #1 recurring complaint
 across PawChamp, Zigzag, EveryDoggy, and Calm My Dog (silent trial-to-paid conversion, no
