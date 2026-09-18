@@ -23,7 +23,10 @@ import type {
   TrainingSession
 } from "./domain/types";
 import { activeScenario } from "./data/appData";
-import { createAppRepository } from "./data/repository";
+import {
+  createAppRepository,
+  type StorageMode
+} from "./data/repository";
 import {
   isRestorableLiveSession,
   makePersistedLiveSession,
@@ -116,12 +119,30 @@ function Setup({
   );
 }
 
-function AccountNotice() {
+function AccountNotice({ storageMode }: { storageMode: StorageMode }) {
+  if (storageMode === "memory") {
+    return (
+      <aside className="account-notice storage-danger" role="status">
+        <div>
+          <strong>This browser cannot save progress reliably.</strong>
+          <span>
+            Keep this page open for this session and try a normal browser window before
+            relying on the training history.
+          </span>
+        </div>
+      </aside>
+    );
+  }
+
   return (
     <aside className="account-notice">
       <div>
         <strong>Your progress is saved on this device.</strong>
-        <span>Create a free account later to back it up and use it on other devices.</span>
+        <span>
+          {storageMode === "localstorage"
+            ? "Using compatibility storage. Create a free account later for safer backup across devices."
+            : "Create a free account later to back it up and use it on other devices."}
+        </span>
       </div>
       <button type="button" disabled title="Account sync is the next production phase">
         Soon
@@ -132,10 +153,12 @@ function AccountNotice() {
 
 function Today({
   data,
+  storageMode,
   onStart,
   onOpenCuePractice
 }: {
   data: AppData;
+  storageMode: StorageMode;
   onStart: (target: number) => void;
   onOpenCuePractice: () => void;
 }) {
@@ -148,7 +171,7 @@ function Today({
 
   return (
     <div className="screen-stack">
-      <AccountNotice />
+      <AccountNotice storageMode={storageMode} />
 
       <section className="today-card">
         <p className="kicker">Today's plan</p>
@@ -726,6 +749,7 @@ function LiveSession({
 export default function App() {
   const repository = useMemo(() => createAppRepository(), []);
   const [data, setData] = useState<AppData | null>(null);
+  const [storageMode, setStorageMode] = useState<StorageMode>("indexeddb");
   const [screen, setScreen] = useState<Screen>("today");
   const [liveTarget, setLiveTarget] = useState<number | null>(null);
   const [cuePracticeOpen, setCuePracticeOpen] = useState(false);
@@ -741,6 +765,7 @@ export default function App() {
     ]).then(([loadedData, active]) => {
       if (cancelled) return;
       setData(loadedData);
+      setStorageMode(repository.storageMode());
 
       if (
         isRestorableLiveSession(active) &&
@@ -774,6 +799,7 @@ export default function App() {
       <Setup
         onSaved={async (dogName, startSeconds) => {
           setData(await repository.saveSetup(dogName, startSeconds));
+          setStorageMode(repository.storageMode());
         }}
       />
     );
@@ -786,6 +812,7 @@ export default function App() {
         onClose={() => setCuePracticeOpen(false)}
         onSaved={async (session, nextLevel) => {
           setData(await repository.appendDepartureCueSession(session, nextLevel));
+          setStorageMode(repository.storageMode());
           setCuePracticeOpen(false);
           setScreen("today");
         }}
@@ -810,6 +837,7 @@ export default function App() {
           setData(
             await repository.appendSession(session, activeScenario(data).id)
           );
+          setStorageMode(repository.storageMode());
           await repository.clearActiveSession();
           setLiveTarget(null);
           setRestoredState(undefined);
@@ -833,6 +861,7 @@ export default function App() {
         {screen === "today" && (
           <Today
             data={data}
+            storageMode={storageMode}
             onStart={(target) => {
               setRestoredState(undefined);
               setLiveTarget(target);
@@ -847,6 +876,7 @@ export default function App() {
             data={data}
             onSelectScenario={async (id) => {
               setData(await repository.setActiveScenario(id));
+              setStorageMode(repository.storageMode());
               setScreen("today");
             }}
           />
