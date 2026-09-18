@@ -26,7 +26,7 @@ export interface AppRepository {
   loadAppData(): Promise<AppData>;
   saveAppData(data: AppData): Promise<void>;
   saveSetup(dogName: string, startSeconds: number): Promise<AppData>;
-  appendSession(session: TrainingSession): Promise<AppData>;
+  appendSession(session: TrainingSession, scenarioId?: string): Promise<AppData>;
   appendDepartureCueSession(
     session: DepartureCueSession,
     nextLevel: number
@@ -177,8 +177,10 @@ function memoryRepository(initial: AppData): AppRepository {
       );
       return data;
     },
-    async appendSession(session) {
-      const scenario = activeScenario(data);
+    async appendSession(session, scenarioId) {
+      const scenario =
+        data.scenarios.find((item) => item.id === scenarioId) ??
+        activeScenario(data);
       if (!scenario.sessions.some((item) => item.id === session.id)) {
         data = normaliseAppData(
           replaceScenario(data, {
@@ -302,9 +304,11 @@ export function createAppRepository(): AppRepository {
       return next;
     },
 
-    async appendSession(session) {
+    async appendSession(session, scenarioId) {
       const data = await repository.loadAppData();
-      const scenario = activeScenario(data);
+      const scenario =
+        data.scenarios.find((item) => item.id === scenarioId) ??
+        activeScenario(data);
       const exists = scenario.sessions.some((item) => item.id === session.id);
       const next = exists
         ? data
