@@ -60,8 +60,10 @@ export function Setup({
         </button>
 
         <p className="disclaimer">
-          This app supports gradual training and record keeping. It does not diagnose
-          separation anxiety or replace veterinary or qualified behavioural care.
+          This app is a training aid for gradual desensitization and record keeping. It is
+          not a substitute for an accredited separation anxiety specialist (such as a
+          Certified Separation Anxiety Trainer) or a veterinary behaviourist, and it does not
+          diagnose separation anxiety.
         </p>
       </section>
     </main>

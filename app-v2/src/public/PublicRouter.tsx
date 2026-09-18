@@ -77,7 +77,9 @@ function TermsPage() {
       <h2>What it does not do</h2>
       <p>
         It does not diagnose separation anxiety, provide veterinary care or guarantee
-        a behavioural outcome. Generated targets are planning suggestions and can be
+        a behavioural outcome, and it is not a substitute for an accredited separation
+        anxiety specialist (such as a Certified Separation Anxiety Trainer) or a
+        veterinary behaviourist. Generated targets are planning suggestions and can be
         made easier at any time.
       </p>
       <h2>Use observation first</h2>
@@ -87,9 +89,11 @@ function TermsPage() {
       </p>
       <h2>Professional support</h2>
       <p>
-        Seek veterinary or appropriately qualified behavioural support for severe,
+        Seek support from an accredited separation anxiety specialist (such as a
+        Certified Separation Anxiety Trainer) or a veterinary behaviourist for severe,
         escalating or persistent distress, self-injury risk, destructive escape
-        behaviour or whenever you are unsure how to proceed safely.
+        behaviour or whenever you are unsure how to proceed safely. A veterinarian or
+        veterinary behaviourist is the right contact if medication may help.
       </p>
       <p className="info-note">
         Full launch terms will be finalised before public beta accounts or paid

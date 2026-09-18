@@ -91,7 +91,8 @@ export function Today({
         {recommendation.supportFlag && !showRestDayCard && (
           <div className="support-card">
             Several recent sessions showed concern. Make things easier and consider
-            checking in with a qualified behaviour professional before pushing duration.
+            checking in with an accredited separation anxiety specialist (such as a
+            Certified Separation Anxiety Trainer) before pushing duration.
           </div>
         )}
 
