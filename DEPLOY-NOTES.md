@@ -1,6 +1,6 @@
 # SettledSolo production deployment
 
-The original Threshold root PWA remains in the repository during migration.
+The original Threshold root PWA remains in this renamed `settledsolo` repository during migration.
 
 The production replacement is built from `app-v2/`.
 
@@ -28,7 +28,8 @@ npm run deploy:preview
 
 This deploys the SPA as the `settledsolo-preview` Worker.
 
-The manual GitHub workflow `.github/workflows/deploy-preview.yml` expects repository/environment
+The GitHub workflow `.github/workflows/deploy-preview.yml` auto-runs on relevant pushes to
+`modern-app-shell-engine` and also supports manual dispatch. It expects repository/environment
 secrets:
 
 - `CLOUDFLARE_API_TOKEN`
@@ -67,7 +68,8 @@ passed the real-device release gate.
 
 ## Security
 
-`app-v2/public/_headers` adds baseline browser security headers and a restrictive CSP.
+`worker/index.ts` applies the production security headers, restrictive CSP, preview noindex policy
+and static asset caching before requests reach the Vite app.
 
 Review the CSP before introducing any future third-party analytics, authentication or API hosts.
 
