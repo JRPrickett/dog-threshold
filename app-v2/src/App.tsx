@@ -10,6 +10,7 @@ import {
   type PersistedLiveSession
 } from "./session/sessionPersistence";
 import { PwaUpdateNotice } from "./pwa/PwaUpdateNotice";
+import { InstallNotice } from "./pwa/InstallNotice";
 import { Setup } from "./features/setup/Setup";
 import { Today } from "./features/today/Today";
 import { Progress } from "./features/progress/Progress";
@@ -107,6 +108,8 @@ export default function App() {
         dogName={data.dogName}
         initialState={restoredState}
         variabilitySeed={activeScenario(data).sessions.length}
+        warmupCount={activeScenario(data).warmupCount}
+        restSeconds={activeScenario(data).restSeconds ?? 60}
         onPersist={(snapshot) => repository.saveActiveSession(snapshot)}
         onClose={async () => {
           await repository.clearActiveSession();
@@ -148,6 +151,7 @@ export default function App() {
       </header>
 
       <main className="app-content">
+        <InstallNotice />
         {screen === "today" && (
           <Today
             data={data}
@@ -163,7 +167,23 @@ export default function App() {
           />
         )}
         {screen === "progress" && <Progress data={data} />}
-        {screen === "history" && <History data={data} />}
+        {screen === "history" && (
+          <History
+            data={data}
+            onAddSession={async (scenarioId, session) => {
+              setData(await repository.appendSession(session, scenarioId));
+              setStorageMode(repository.storageMode());
+            }}
+            onUpdateSession={async (scenarioId, session) => {
+              setData(await repository.updateSession(scenarioId, session));
+              setStorageMode(repository.storageMode());
+            }}
+            onDeleteSession={async (scenarioId, sessionId) => {
+              setData(await repository.deleteSession(scenarioId, sessionId));
+              setStorageMode(repository.storageMode());
+            }}
+          />
+        )}
         {screen === "more" && (
           <More
             data={data}
@@ -175,8 +195,20 @@ export default function App() {
               setData(await repository.createScenario(label, startSeconds));
               setStorageMode(repository.storageMode());
             }}
-            onUpdateScenario={async (id, label, startSeconds) => {
-              setData(await repository.updateScenario(id, label, startSeconds));
+            onUpdateScenario={async (id, label, startSeconds, warmupCount, restSeconds) => {
+              setData(
+                await repository.updateScenario(
+                  id,
+                  label,
+                  startSeconds,
+                  warmupCount,
+                  restSeconds
+                )
+              );
+              setStorageMode(repository.storageMode());
+            }}
+            onUpdateDailyCap={async (cap) => {
+              setData(await repository.updateDailyCap(cap));
               setStorageMode(repository.storageMode());
             }}
             onRestoreBackup={async (restored) => {

@@ -4,6 +4,7 @@ import { progressInsights } from "../../domain/progressInsights";
 import { formatDuration } from "../../domain/trainingEngine";
 import { observedSignalOptions } from "../../domain/observedSignals";
 import { milestoneBoard } from "../../domain/milestones";
+import { SessionTrendChart } from "./SessionTrendChart";
 
 export function Progress({ data }: { data: AppData }) {
   const scenario = activeScenario(data);
@@ -45,6 +46,8 @@ export function Progress({ data }: { data: AppData }) {
           <small>Relaxed sessions in the latest 10</small>
         </div>
       </section>
+
+      <SessionTrendChart sessions={sessions} />
 
       <section className="milestone-card">
         <div>

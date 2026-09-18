@@ -454,6 +454,102 @@ textarea:focus-visible {
   font-size: 13px;
 }
 
+.history-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.history-chip {
+  font-size: 10px;
+  font-weight: 650;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f2f1ea;
+  color: var(--muted);
+}
+
+.history-chip-stop {
+  background: var(--rose-soft);
+  color: #7a493f;
+}
+
+.history-note {
+  width: 100%;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.history-edit {
+  margin-top: 4px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--sea-dark);
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  justify-self: end;
+}
+
+.history-row-editing {
+  display: block;
+  padding: 16px;
+}
+
+.session-form {
+  display: grid;
+  gap: 12px;
+}
+
+.session-form label {
+  display: grid;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.session-form input,
+.session-form select,
+.session-form textarea {
+  font-size: 14px;
+  color: var(--ink);
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(21,36,44,.11);
+  background: #F6F0E5;
+}
+
+.session-form textarea {
+  min-height: 64px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.session-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.session-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.session-delete {
+  color: #7a493f !important;
+  padding: 0;
+  font-weight: 700;
+}
+
 .menu-card {
   background: var(--paper);
   border-radius: 19px;
@@ -1079,6 +1175,56 @@ textarea:focus-visible {
   }
 }
 
+.install-notice {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--amber-soft);
+  margin-bottom: 14px;
+}
+
+.install-notice strong {
+  display: block;
+  font-size: 13px;
+}
+
+.install-notice > div > span {
+  display: block;
+  color: #6b4d24;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 3px;
+}
+
+.install-steps {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b4d24;
+}
+
+.install-steps summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.install-steps ol {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  line-height: 1.6;
+}
+
+.install-notice-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.install-dismiss {
+  color: #6b4d24 !important;
+  padding: 0;
+}
+
 
 .pwa-notice {
   position: fixed;
@@ -1254,6 +1400,49 @@ textarea:focus-visible {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.55;
+}
+
+.trend-chart {
+  width: 100%;
+  height: 120px;
+  display: block;
+}
+
+.trend-chart rect {
+  cursor: pointer;
+  transition: opacity .12s ease;
+}
+
+.trend-caption {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.trend-caption strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.trend-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.trend-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  display: inline-block;
 }
 
 .signal-summary {
@@ -2699,6 +2888,21 @@ a:focus-visible {
 .daily-cap-card {
   background: var(--amber-soft);
   color: #6b4d24;
+}
+
+.rest-day-card {
+  background: var(--rose-soft);
+  color: #7a493f;
+  display: grid;
+  gap: 8px;
+}
+
+.rest-day-override {
+  justify-self: start;
+  color: #7a493f !important;
+  font-weight: 700;
+  text-decoration: underline;
+  padding: 0;
 }
 
 .milestone-card {

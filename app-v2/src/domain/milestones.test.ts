@@ -19,6 +19,8 @@ function session(overrides: Partial<TrainingSession> = {}): TrainingSession {
     outcome: "relaxed",
     stoppedEarly: false,
     signals: [],
+    tags: [],
+    stopReason: "",
     note: "",
     ...overrides
   };

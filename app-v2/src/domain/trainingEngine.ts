@@ -61,12 +61,20 @@ export function recommendNext(
       direction: "start",
       reason:
         "Start with a duration you have already seen your dog manage comfortably. This is a starting point, not a test of their limit.",
-      supportFlag: false
+      supportFlag: false,
+      restDayRecommended: false
     };
   }
 
   const last = sessions[sessions.length - 1];
   const supportFlag = needsSupport(sessions);
+  /**
+   * A single distressed session already softens the next target. When that
+   * distress lands on top of a broader recent pattern of difficulty, the
+   * better call is to skip training entirely today rather than just make it
+   * easier — the pattern most separation-anxiety protocols call a setback.
+   */
+  const restDayRecommended = supportFlag && last.outcome === "distressed";
 
   if (last.outcome === "distressed") {
     const previousRelaxed = latestRelaxedBefore(sessions, sessions.length - 1);
@@ -89,7 +97,8 @@ export function recommendNext(
       reason: last.stoppedEarly
         ? "Clear distress appeared before the target, so the next plan stays below the point where difficulty was observed."
         : "The last session showed clear distress, so the next plan returns to a known comfortable starting point.",
-      supportFlag
+      supportFlag,
+      restDayRecommended
     };
   }
 
@@ -112,7 +121,8 @@ export function recommendNext(
       reason: last.stoppedEarly
         ? "Concern appeared before the target, so the next plan stays below the point where it was observed."
         : "There was some concern last time, so the next plan is easier rather than asking for another increase.",
-      supportFlag
+      supportFlag,
+      restDayRecommended
     };
   }
 
@@ -122,7 +132,8 @@ export function recommendNext(
       direction: "repeat",
       reason:
         "You returned early while things were still relaxed. That actual comfortable duration becomes the next anchor instead of being treated as a failure.",
-      supportFlag
+      supportFlag,
+      restDayRecommended
     };
   }
 
@@ -133,7 +144,8 @@ export function recommendNext(
       direction: "repeat",
       reason:
         "One relaxed session is useful evidence. Repeat this duration once before making it harder.",
-      supportFlag
+      supportFlag,
+      restDayRecommended
     };
   }
 
@@ -142,35 +154,64 @@ export function recommendNext(
     targetSeconds: last.targetSeconds + increment,
     direction: "increase",
     reason: `Recent sessions were relaxed, so the next plan adds a small ${increment}-second step.`,
-    supportFlag
+    supportFlag,
+    restDayRecommended
   };
 }
 
+export const DEFAULT_WARMUP_COUNT = 2;
+
 /**
  * `variabilitySeed` (typically how many main departures have already been
- * logged) alternates the practice order between short-then-long and
- * long-then-short. A dog that always experiences the same shape of warm-up
- * before the main departure can learn to anticipate what's coming next;
- * varying the order keeps the sequence less predictable.
+ * logged) varies the practice order so a dog can't learn the shape of the
+ * warm-up and anticipate what's coming next. `warmupCount` defaults to 2 —
+ * the original two-value formula is kept exactly as it was for that default
+ * so existing behaviour and tests are unaffected; other counts use a general
+ * evenly-spaced formula with a seeded rotation for the same anti-pattern
+ * reason.
  */
 export function buildPracticeDepartures(
   targetSeconds: number,
-  variabilitySeed = 0
+  variabilitySeed = 0,
+  warmupCount: number = DEFAULT_WARMUP_COUNT
 ): number[] {
   const target = Math.max(1, Math.round(targetSeconds));
-  if (target < 8) return [];
+  const count = Math.max(0, Math.min(4, Math.round(warmupCount)));
+  if (target < 8 || count === 0) return [];
 
-  const first = Math.max(2, Math.min(30, Math.round(target * 0.25)));
-  const second = Math.max(first + 1, Math.min(60, Math.round(target * 0.5)));
+  if (count === 2) {
+    const first = Math.max(2, Math.min(30, Math.round(target * 0.25)));
+    const second = Math.max(first + 1, Math.min(60, Math.round(target * 0.5)));
 
-  const values = [first, Math.min(target - 1, second)]
-    .filter((value, index, values) => value > 0 && value < target && values.indexOf(value) === index);
+    const values = [first, Math.min(target - 1, second)]
+      .filter((value, index, values) => value > 0 && value < target && values.indexOf(value) === index);
 
-  if (values.length === 2 && Math.abs(Math.round(variabilitySeed)) % 2 === 1) {
-    values.reverse();
+    if (values.length === 2 && Math.abs(Math.round(variabilitySeed)) % 2 === 1) {
+      values.reverse();
+    }
+
+    return values;
   }
 
-  return values;
+  const low = 0.15;
+  const high = 0.6;
+  const values: number[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const fraction = count === 1 ? (low + high) / 2 : low + (high - low) * (index / (count - 1));
+    let seconds = Math.max(2, Math.min(target - 1, Math.round(target * fraction)));
+    if (index > 0 && seconds <= values[index - 1]) {
+      seconds = Math.min(target - 1, values[index - 1] + 1);
+    }
+    values.push(seconds);
+  }
+
+  const deduped = values.filter(
+    (value, index, all) => value > 0 && value < target && all.indexOf(value) === index
+  );
+  if (deduped.length <= 1) return deduped;
+
+  const rotation = Math.abs(Math.round(variabilitySeed)) % deduped.length;
+  return [...deduped.slice(rotation), ...deduped.slice(0, rotation)];
 }
 
 export function formatDuration(totalSeconds: number): string {

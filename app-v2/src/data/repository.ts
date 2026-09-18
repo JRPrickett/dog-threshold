@@ -31,13 +31,22 @@ export interface AppRepository {
   saveAppData(data: AppData): Promise<void>;
   saveSetup(dogName: string, startSeconds: number): Promise<AppData>;
   appendSession(session: TrainingSession, scenarioId?: string): Promise<AppData>;
+  updateSession(scenarioId: string, session: TrainingSession): Promise<AppData>;
+  deleteSession(scenarioId: string, sessionId: string): Promise<AppData>;
   appendDepartureCueSession(
     session: DepartureCueSession,
     nextLevel: number
   ): Promise<AppData>;
   setActiveScenario(id: string): Promise<AppData>;
   createScenario(label: string, startSeconds: number): Promise<AppData>;
-  updateScenario(id: string, label: string, startSeconds: number): Promise<AppData>;
+  updateScenario(
+    id: string,
+    label: string,
+    startSeconds: number,
+    warmupCount?: number,
+    restSeconds?: number
+  ): Promise<AppData>;
+  updateDailyCap(cap: number): Promise<AppData>;
   loadActiveSession(): Promise<PersistedLiveSession | null>;
   saveActiveSession(session: PersistedLiveSession): Promise<void>;
   clearActiveSession(): Promise<void>;
@@ -121,7 +130,7 @@ function normaliseScenario(scenario: Scenario, index: number): Scenario {
     label: String(scenario?.label || `Scenario ${index + 1}`).slice(0, 48),
     startSeconds: Math.max(1, Math.round(Number(scenario?.startSeconds || 5))),
     sessions: Array.isArray(scenario?.sessions)
-      ? scenario.sessions.slice()
+      ? scenario.sessions.slice().sort((a, b) => a.at - b.at)
       : [],
     cuePractice: scenario.cuePractice
       ? {
@@ -133,7 +142,15 @@ function normaliseScenario(scenario: Scenario, index: number): Scenario {
             ? scenario.cuePractice.sessions.slice()
             : []
         }
-      : undefined
+      : undefined,
+    warmupCount:
+      scenario?.warmupCount == null
+        ? undefined
+        : Math.max(0, Math.min(4, Math.round(scenario.warmupCount))),
+    restSeconds:
+      scenario?.restSeconds == null
+        ? undefined
+        : Math.max(0, Math.min(3600, Math.round(scenario.restSeconds)))
   };
 }
 
@@ -159,7 +176,11 @@ function normaliseAppData(data: AppData): AppData {
     )
       ? requestedActive
       : scenarios[0].id,
-    scenarios
+    scenarios,
+    dailyCap:
+      data.dailyCap == null
+        ? undefined
+        : Math.max(1, Math.min(10, Math.round(data.dailyCap)))
   };
 }
 
@@ -251,6 +272,32 @@ function fallbackRepository(initial: AppData): AppRepository {
       }
       return data;
     },
+    async updateSession(scenarioId, session) {
+      const scenario = data.scenarios.find((item) => item.id === scenarioId);
+      if (!scenario) return data;
+      data = normaliseAppData(
+        replaceScenario(data, {
+          ...scenario,
+          sessions: scenario.sessions.map((item) =>
+            item.id === session.id ? session : item
+          )
+        })
+      );
+      persistData();
+      return data;
+    },
+    async deleteSession(scenarioId, sessionId) {
+      const scenario = data.scenarios.find((item) => item.id === scenarioId);
+      if (!scenario) return data;
+      data = normaliseAppData(
+        replaceScenario(data, {
+          ...scenario,
+          sessions: scenario.sessions.filter((item) => item.id !== sessionId)
+        })
+      );
+      persistData();
+      return data;
+    },
     async appendDepartureCueSession(session, nextLevel) {
       const scenario = activeScenario(data);
       const existing = scenario.cuePractice?.sessions ?? [];
@@ -291,16 +338,23 @@ function fallbackRepository(initial: AppData): AppRepository {
       persistData();
       return data;
     },
-    async updateScenario(id, label, startSeconds) {
+    async updateScenario(id, label, startSeconds, warmupCount, restSeconds) {
       const existing = data.scenarios.find((scenario) => scenario.id === id);
       if (!existing) return data;
       data = normaliseAppData(
         replaceScenario(data, {
           ...existing,
           label: label.trim() || existing.label,
-          startSeconds: Math.max(1, Math.round(startSeconds || existing.startSeconds))
+          startSeconds: Math.max(1, Math.round(startSeconds || existing.startSeconds)),
+          warmupCount: warmupCount ?? existing.warmupCount,
+          restSeconds: restSeconds ?? existing.restSeconds
         })
       );
+      persistData();
+      return data;
+    },
+    async updateDailyCap(cap) {
+      data = normaliseAppData({ ...data, dailyCap: cap });
       persistData();
       return data;
     },
@@ -416,6 +470,32 @@ export function createAppRepository(): AppRepository {
       return next;
     },
 
+    async updateSession(scenarioId, session) {
+      const data = await repository.loadAppData();
+      const scenario = data.scenarios.find((item) => item.id === scenarioId);
+      if (!scenario) return data;
+      const next = replaceScenario(data, {
+        ...scenario,
+        sessions: scenario.sessions.map((item) =>
+          item.id === session.id ? session : item
+        )
+      });
+      await repository.saveAppData(next);
+      return next;
+    },
+
+    async deleteSession(scenarioId, sessionId) {
+      const data = await repository.loadAppData();
+      const scenario = data.scenarios.find((item) => item.id === scenarioId);
+      if (!scenario) return data;
+      const next = replaceScenario(data, {
+        ...scenario,
+        sessions: scenario.sessions.filter((item) => item.id !== sessionId)
+      });
+      await repository.saveAppData(next);
+      return next;
+    },
+
     async appendDepartureCueSession(session, nextLevel) {
       const data = await repository.loadAppData();
       const scenario = activeScenario(data);
@@ -460,7 +540,7 @@ export function createAppRepository(): AppRepository {
       return next;
     },
 
-    async updateScenario(id, label, startSeconds) {
+    async updateScenario(id, label, startSeconds, warmupCount, restSeconds) {
       const data = await repository.loadAppData();
       const existing = data.scenarios.find((scenario) => scenario.id === id);
       if (!existing) return data;
@@ -468,9 +548,18 @@ export function createAppRepository(): AppRepository {
         replaceScenario(data, {
           ...existing,
           label: label.trim() || existing.label,
-          startSeconds: Math.max(1, Math.round(startSeconds || existing.startSeconds))
+          startSeconds: Math.max(1, Math.round(startSeconds || existing.startSeconds)),
+          warmupCount: warmupCount ?? existing.warmupCount,
+          restSeconds: restSeconds ?? existing.restSeconds
         })
       );
+      await repository.saveAppData(next);
+      return next;
+    },
+
+    async updateDailyCap(cap) {
+      const data = await repository.loadAppData();
+      const next = normaliseAppData({ ...data, dailyCap: cap });
       await repository.saveAppData(next);
       return next;
     },

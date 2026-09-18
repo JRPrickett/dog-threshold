@@ -11,6 +11,8 @@ function session(overrides: Partial<TrainingSession> = {}): TrainingSession {
     outcome: "relaxed",
     stoppedEarly: false,
     signals: [],
+    tags: [],
+    stopReason: "",
     note: "",
     ...overrides
   };
@@ -112,6 +114,29 @@ describe("recommendNext", () => {
       5
     );
     expect(result.supportFlag).toBe(true);
+    expect(result.restDayRecommended).toBe(false);
+  });
+
+  it("recommends a rest day when distress lands on top of a difficult pattern", () => {
+    const result = recommendNext(
+      [
+        session({ outcome: "concern" }),
+        session({ outcome: "distressed" }),
+        session({ outcome: "distressed" })
+      ],
+      5
+    );
+    expect(result.supportFlag).toBe(true);
+    expect(result.restDayRecommended).toBe(true);
+  });
+
+  it("does not recommend a rest day for an isolated distressed session", () => {
+    const result = recommendNext(
+      [session(), session(), session({ outcome: "distressed" })],
+      5
+    );
+    expect(result.supportFlag).toBe(false);
+    expect(result.restDayRecommended).toBe(false);
   });
 });
 
@@ -145,5 +170,24 @@ describe("buildPracticeDepartures", () => {
     const evenSeed = buildPracticeDepartures(120, 0);
     const oddSeed = buildPracticeDepartures(120, 1);
     expect(oddSeed).toEqual([...evenSeed].reverse());
+  });
+
+  it("respects a configured warm-up count", () => {
+    expect(buildPracticeDepartures(120, 0, 0)).toEqual([]);
+    expect(buildPracticeDepartures(120, 0, 1)).toHaveLength(1);
+    expect(buildPracticeDepartures(120, 0, 3)).toHaveLength(3);
+  });
+
+  it("keeps every practice departure shorter than the target at any count", () => {
+    const practice = buildPracticeDepartures(300, 2, 3);
+    expect(practice).toHaveLength(3);
+    expect(practice.every((seconds) => seconds > 0 && seconds < 300)).toBe(true);
+    expect(new Set(practice).size).toBe(practice.length);
+  });
+
+  it("rotates practice order for counts above two", () => {
+    const seedZero = buildPracticeDepartures(300, 0, 3);
+    const seedOne = buildPracticeDepartures(300, 1, 3);
+    expect(seedOne).toEqual([...seedZero.slice(1), seedZero[0]]);
   });
 });

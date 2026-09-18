@@ -2,11 +2,12 @@ import type {
   AppData,
   DepartureCuePractice,
   DepartureCueSession,
-  ObservedSignal,
   Outcome,
   Scenario,
+  SessionTag,
   TrainingSession
 } from "../domain/types";
+import { SESSION_TAG_OPTIONS } from "../domain/sessionTags";
 
 export const LEGACY_KEY = "threshold.v2";
 
@@ -19,6 +20,7 @@ type LegacySession = {
   base?: number;
   outcome?: "success" | "ok" | "bad";
   stopped?: boolean;
+  stopReason?: string;
   tags?: string[];
   note?: string;
   level?: number;
@@ -40,24 +42,25 @@ type LegacyState = {
   scenarios?: LegacyScenario[];
 };
 
-const signalLabels: Record<ObservedSignal, string> = {
-  "exit-watching": "Observed: watching the exit",
-  pacing: "Observed: pacing",
-  panting: "Observed: panting",
-  whining: "Observed: whining",
-  "barking-howling": "Observed: barking/howling",
-  "unable-to-settle": "Observed: unable to settle"
-};
-
 function outcomeFromLegacy(value: LegacySession["outcome"]): Outcome {
   if (value === "success") return "relaxed";
   if (value === "ok") return "concern";
   return "distressed";
 }
 
-function signalFromTag(tag: string): ObservedSignal | null {
-  const match = Object.entries(signalLabels).find(([, label]) => label === tag);
-  return (match?.[0] as ObservedSignal | undefined) ?? null;
+/**
+ * The legacy app had no structured observed-signal data, only a freeform
+ * tags field suggested from a fixed chip list (Morning, After a walk, and
+ * so on) that the modern app now models as SessionTag. Anything a legacy
+ * user typed beyond those suggestions doesn't map onto a known tag and is
+ * dropped rather than guessed at.
+ */
+function tagFromLegacyLabel(label: string): SessionTag | null {
+  const normalised = label.trim().toLowerCase();
+  const match = SESSION_TAG_OPTIONS.find(
+    (option) => option.label.toLowerCase() === normalised
+  );
+  return match?.value ?? null;
 }
 
 function modernSession(session: LegacySession, index: number): TrainingSession | null {
@@ -65,6 +68,7 @@ function modernSession(session: LegacySession, index: number): TrainingSession |
 
   const target = Math.max(1, Number(session.target ?? session.base ?? 1));
   const actual = Math.max(1, Number(session.actual ?? target));
+  const stoppedEarly = Boolean(session.stopped || actual < target);
 
   return {
     id: session.id || `legacy-${index}-${session.at ?? Date.now()}`,
@@ -72,10 +76,16 @@ function modernSession(session: LegacySession, index: number): TrainingSession |
     targetSeconds: target,
     actualSeconds: actual,
     outcome: outcomeFromLegacy(session.outcome),
-    stoppedEarly: Boolean(session.stopped || actual < target),
-    signals: (session.tags ?? [])
-      .map(signalFromTag)
-      .filter((value): value is ObservedSignal => value !== null),
+    stoppedEarly,
+    signals: [],
+    tags: [
+      ...new Set(
+        (session.tags ?? [])
+          .map(tagFromLegacyLabel)
+          .filter((value): value is SessionTag => value !== null)
+      )
+    ],
+    stopReason: stoppedEarly ? String(session.stopReason ?? "").slice(0, 80) : "",
     note: String(session.note ?? "")
   };
 }

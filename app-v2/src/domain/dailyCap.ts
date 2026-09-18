@@ -16,6 +16,10 @@ function startOfDay(now: number): number {
   return date.getTime();
 }
 
+export function effectiveDailyCap(data: AppData): number {
+  return data.dailyCap ?? DEFAULT_DAILY_CAP;
+}
+
 export function sessionsToday(data: AppData, now: number = Date.now()): number {
   const from = startOfDay(now);
   return data.scenarios.reduce(

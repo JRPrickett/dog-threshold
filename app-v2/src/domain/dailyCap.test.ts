@@ -11,6 +11,8 @@ function session(at: number): TrainingSession {
     outcome: "relaxed",
     stoppedEarly: false,
     signals: [],
+    tags: [],
+    stopReason: "",
     note: ""
   };
 }

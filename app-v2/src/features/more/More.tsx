@@ -9,24 +9,35 @@ import {
   backupSummary,
   parseBackupText
 } from "../../data/backup";
-import { formatDuration } from "../../domain/trainingEngine";
+import { DEFAULT_WARMUP_COUNT, formatDuration } from "../../domain/trainingEngine";
+import { effectiveDailyCap } from "../../domain/dailyCap";
 import {
   alertCapabilities,
   requestNotificationPermission,
   type NotificationPermissionState
 } from "../../session/sessionAlerts";
 
+const DEFAULT_REST_SECONDS = 60;
+
 export function More({
   data,
   onSelectScenario,
   onCreateScenario,
   onUpdateScenario,
+  onUpdateDailyCap,
   onRestoreBackup
 }: {
   data: AppData;
   onSelectScenario: (id: string) => Promise<void>;
   onCreateScenario: (label: string, startSeconds: number) => Promise<void>;
-  onUpdateScenario: (id: string, label: string, startSeconds: number) => Promise<void>;
+  onUpdateScenario: (
+    id: string,
+    label: string,
+    startSeconds: number,
+    warmupCount: number,
+    restSeconds: number
+  ) => Promise<void>;
+  onUpdateDailyCap: (cap: number) => Promise<void>;
   onRestoreBackup: (data: AppData) => Promise<void>;
 }) {
   const scenario = activeScenario(data);
@@ -35,8 +46,15 @@ export function More({
   const [restoreError, setRestoreError] = useState("");
   const [trackLabel, setTrackLabel] = useState(scenario.label);
   const [trackStart, setTrackStart] = useState(scenario.startSeconds);
+  const [warmupCount, setWarmupCount] = useState(
+    scenario.warmupCount ?? DEFAULT_WARMUP_COUNT
+  );
+  const [restSeconds, setRestSeconds] = useState(
+    scenario.restSeconds ?? DEFAULT_REST_SECONDS
+  );
   const [newTrackLabel, setNewTrackLabel] = useState("");
   const [newTrackStart, setNewTrackStart] = useState(scenario.startSeconds);
+  const [dailyCap, setDailyCap] = useState(effectiveDailyCap(data));
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermissionState>(
       () => alertCapabilities().notifications
@@ -92,6 +110,8 @@ export function More({
               if (next) {
                 setTrackLabel(next.label);
                 setTrackStart(next.startSeconds);
+                setWarmupCount(next.warmupCount ?? DEFAULT_WARMUP_COUNT);
+                setRestSeconds(next.restSeconds ?? DEFAULT_REST_SECONDS);
               }
               void onSelectScenario(nextId);
             }}
@@ -145,13 +165,75 @@ export function More({
               <span>seconds</span>
             </div>
           </label>
+          <label>
+            Practice departures before the main one
+            <input
+              aria-label="Warm-up count"
+              type="number"
+              min={0}
+              max={4}
+              value={warmupCount}
+              onChange={(event) => setWarmupCount(Number(event.target.value))}
+            />
+          </label>
+          <label>
+            Suggested settle time between departures
+            <div className="duration-input">
+              <input
+                aria-label="Suggested settle time"
+                type="number"
+                min={0}
+                max={3600}
+                value={restSeconds}
+                onChange={(event) => setRestSeconds(Number(event.target.value))}
+              />
+              <span>seconds</span>
+            </div>
+          </label>
           <button
             className="secondary-button"
             onClick={() =>
-              void onUpdateScenario(scenario.id, trackLabel, trackStart)
+              void onUpdateScenario(
+                scenario.id,
+                trackLabel,
+                trackStart,
+                warmupCount,
+                restSeconds
+              )
             }
           >
             Save track changes
+          </button>
+        </div>
+      </section>
+
+      <section className="settings-card">
+        <div>
+          <p className="kicker">Daily ceiling</p>
+          <h2>How many main departures per day, at most.</h2>
+          <p>
+            Counted across every training track, since it's the same dog. Separation
+            training consolidates between sessions — more attempts in one day is not
+            faster progress.
+          </p>
+        </div>
+        <div className="track-form">
+          <label>
+            Main departures per day
+            <input
+              aria-label="Daily main-departure cap"
+              type="number"
+              min={1}
+              max={10}
+              value={dailyCap}
+              onChange={(event) => setDailyCap(Number(event.target.value))}
+            />
+          </label>
+          <button
+            className="secondary-button"
+            onClick={() => void onUpdateDailyCap(dailyCap)}
+          >
+            Save daily ceiling
           </button>
         </div>
       </section>

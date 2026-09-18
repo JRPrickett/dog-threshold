@@ -15,6 +15,8 @@ function session(
     outcome,
     stoppedEarly: false,
     signals,
+    tags: [],
+    stopReason: "",
     note: ""
   };
 }

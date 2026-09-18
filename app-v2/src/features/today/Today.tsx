@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { AppData } from "../../domain/types";
 import type { StorageMode } from "../../data/repository";
 import { activeScenario } from "../../data/appData";
@@ -7,7 +7,7 @@ import {
   formatDuration,
   recommendNext
 } from "../../domain/trainingEngine";
-import { isDailyCapReached, sessionsToday } from "../../domain/dailyCap";
+import { effectiveDailyCap, isDailyCapReached, sessionsToday } from "../../domain/dailyCap";
 import { AccountNotice } from "../../components/AccountNotice";
 import { MilestoneBanner } from "../progress/MilestoneBanner";
 import type { Achievement, EarnedMilestone } from "../../domain/milestones";
@@ -34,9 +34,14 @@ export function Today({
   );
   const practice = buildPracticeDepartures(
     recommendation.targetSeconds,
-    scenario.sessions.length
+    scenario.sessions.length,
+    scenario.warmupCount
   );
-  const capReached = isDailyCapReached(data);
+  const capReached = isDailyCapReached(data, effectiveDailyCap(data));
+  const [restDayOverride, setRestDayOverride] = useState(false);
+  useEffect(() => setRestDayOverride(false), [scenario.id]);
+  const showRestDayCard =
+    recommendation.restDayRecommended && !capReached && !restDayOverride;
 
   return (
     <div className="screen-stack">
@@ -68,7 +73,7 @@ export function Today({
           </span>
         </div>
 
-        {practice.length > 0 && !capReached && (
+        {practice.length > 0 && !capReached && !showRestDayCard && (
           <div className="practice-preview">
             <span>Before the main departure</span>
             <strong>
@@ -83,7 +88,7 @@ export function Today({
           <p>{recommendation.reason}</p>
         </div>
 
-        {recommendation.supportFlag && (
+        {recommendation.supportFlag && !showRestDayCard && (
           <div className="support-card">
             Several recent sessions showed concern. Make things easier and consider
             checking in with a qualified behaviour professional before pushing duration.
@@ -96,6 +101,20 @@ export function Today({
             today — that's today's ceiling. Separation training consolidates in the gaps
             between sessions, and cramming in another attempt tends to set a dog back
             rather than speed things up. Departure-cue practice below is still available.
+          </div>
+        ) : showRestDayCard ? (
+          <div className="support-card rest-day-card">
+            <strong>Consider a rest day.</strong> Recent sessions have been difficult
+            enough that a full day without training — no timed absences at all — is
+            likely to help more than an easier session would. Setbacks are normal;
+            skipping today is part of the plan, not a failure of it.
+            <button
+              type="button"
+              className="text-button rest-day-override"
+              onClick={() => setRestDayOverride(true)}
+            >
+              Train anyway
+            </button>
           </div>
         ) : (
           <>

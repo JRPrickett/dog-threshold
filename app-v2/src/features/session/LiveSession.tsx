@@ -2,9 +2,11 @@ import { useEffect, useMemo, useReducer, useState } from "react";
 import type {
   ObservedSignal,
   Outcome,
+  SessionTag,
   TrainingSession
 } from "../../domain/types";
 import { observedSignalOptions } from "../../domain/observedSignals";
+import { SESSION_TAG_OPTIONS } from "../../domain/sessionTags";
 import {
   buildPracticeDepartures,
   formatDuration
@@ -36,6 +38,8 @@ export function LiveSession({
   dogName,
   initialState,
   variabilitySeed = 0,
+  warmupCount,
+  restSeconds = 60,
   onClose,
   onSaved,
   onPersist
@@ -46,13 +50,15 @@ export function LiveSession({
   dogName: string;
   initialState?: PersistedLiveSession["state"];
   variabilitySeed?: number;
+  warmupCount?: number;
+  restSeconds?: number;
   onClose: () => Promise<void>;
   onSaved: (session: TrainingSession) => Promise<void>;
   onPersist: (snapshot: PersistedLiveSession) => Promise<void>;
 }) {
   const practice = useMemo(
-    () => buildPracticeDepartures(targetSeconds, variabilitySeed),
-    [targetSeconds, variabilitySeed]
+    () => buildPracticeDepartures(targetSeconds, variabilitySeed, warmupCount),
+    [targetSeconds, variabilitySeed, warmupCount]
   );
   const steps = useMemo<SessionStep[]>(
     () => [
@@ -72,7 +78,10 @@ export function LiveSession({
   const [now, setNow] = useState(Date.now());
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [signals, setSignals] = useState<ObservedSignal[]>([]);
+  const [tags, setTags] = useState<SessionTag[]>([]);
+  const [stopReason, setStopReason] = useState("");
   const [note, setNote] = useState("");
+  const [restStartedAt, setRestStartedAt] = useState<number | null>(null);
 
   useEffect(() => {
     const theme =
@@ -104,6 +113,16 @@ export function LiveSession({
       removeWakeRecovery();
       stopSessionAlerts();
     };
+  }, [state.phase]);
+
+  useEffect(() => {
+    setRestStartedAt(state.phase === "between" ? Date.now() : null);
+  }, [state.phase]);
+
+  useEffect(() => {
+    if (state.phase !== "between") return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
   }, [state.phase]);
 
   const step = state.steps[state.stepIndex];
@@ -167,6 +186,17 @@ export function LiveSession({
     );
   }
 
+  function toggleTag(tag: SessionTag) {
+    setTags((current) =>
+      current.includes(tag)
+        ? current.filter((value) => value !== tag)
+        : [...current, tag]
+    );
+  }
+
+  const stoppedEarly =
+    state.mainActualSeconds !== null && state.mainActualSeconds < targetSeconds;
+
   function saveReview() {
     if (!outcome || state.mainActualSeconds === null) return;
     void onSaved({
@@ -175,11 +205,18 @@ export function LiveSession({
       targetSeconds,
       actualSeconds: state.mainActualSeconds,
       outcome,
-      stoppedEarly: state.mainActualSeconds < targetSeconds,
+      stoppedEarly,
       signals,
+      tags,
+      stopReason: stoppedEarly ? stopReason.trim().slice(0, 80) : "",
       note: note.trim()
     });
   }
+
+  const restElapsed = restStartedAt
+    ? Math.max(0, Math.floor((now - restStartedAt) / 1000))
+    : 0;
+  const restSuggestionMet = restSeconds > 0 && restElapsed >= restSeconds;
 
   if (state.phase === "review") {
     return (
@@ -227,6 +264,34 @@ export function LiveSession({
             </div>
           )}
 
+          {stoppedEarly && (
+            <label className="note-field">
+              Why did you come back early? <small>Optional</small>
+              <input
+                type="text"
+                value={stopReason}
+                onChange={(event) => setStopReason(event.target.value)}
+                maxLength={80}
+                placeholder="Dog showed concern, interruption, needed a break…"
+              />
+            </label>
+          )}
+
+          <div className="signals-section">
+            <span>Context <small>Optional</small></span>
+            <div className="signal-grid">
+              {SESSION_TAG_OPTIONS.map(({ value, label }) => (
+                <button
+                  className={tags.includes(value) ? "selected" : ""}
+                  key={value}
+                  onClick={() => toggleTag(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <label className="note-field">
             Note <small>Optional</small>
             <textarea
@@ -263,6 +328,13 @@ export function LiveSession({
           <p className="live-copy">
             There is no countdown here. Continue only when {dogName} is comfortably settled.
           </p>
+          {restSeconds > 0 && (
+            <p className="live-elapsed">
+              {restSuggestionMet
+                ? `Settled for ${formatDuration(restElapsed)} — past the suggested ${formatDuration(restSeconds)}.`
+                : `Settled for ${formatDuration(restElapsed)} · suggested ${formatDuration(restSeconds)}`}
+            </p>
+          )}
           <button
             className="live-primary"
             onClick={() => dispatch({ type: "NEXT_STEP" })}
