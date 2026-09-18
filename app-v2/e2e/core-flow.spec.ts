@@ -6,7 +6,7 @@ async function completeSetup(page: import("@playwright/test").Page, seconds = 1)
   await page
     .getByLabel("A duration you already know feels comfortable")
     .fill(String(seconds));
-  await page.getByRole("button", { name: "Set up today's training" }).click();
+  await page.getByRole("button", { name: "Set up your first session" }).click();
   await expect(page.getByRole("button", { name: "Start today\'s session" })).toBeVisible();
 }
 
