@@ -12,7 +12,8 @@
     "verify": "npm run check && npm run build:v2",
     "test:e2e": "playwright test --config app-v2/playwright.config.ts",
     "preview:cloudflare": "npm run build:v2 && wrangler dev --config wrangler.app.jsonc",
-    "deploy:cloudflare": "npm run build:v2 && wrangler deploy --config wrangler.app.jsonc"
+    "deploy:cloudflare": "npm run build:v2 && wrangler deploy --config wrangler.app.jsonc",
+    "deploy:preview": "npm run build:v2 && wrangler deploy --config wrangler.preview.jsonc"
   },
   "dependencies": {
     "react": "19.3.0",
