@@ -2691,3 +2691,12 @@ a:focus-visible {
   border-radius: 10px;
   background: var(--ink);
 }
+
+.marketing-builder-link {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.marketing-builder-link:hover {
+  color: var(--ink);
+}
