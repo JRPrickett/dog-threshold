@@ -10,6 +10,7 @@ export function PublicSite() {
         <nav aria-label="Public site">
           <a href="#how-it-works">How it works</a>
           <a href="#why-settledsolo">Why SettledSolo</a>
+          <a href="/evidence">Evidence</a>
           <a href="/app/" className="marketing-nav-cta">Open app</a>
         </nav>
       </header>
@@ -141,6 +142,47 @@ export function PublicSite() {
           </div>
         </section>
 
+        <section className="marketing-section marketing-faq" id="faq">
+          <div className="marketing-section-heading">
+            <p className="marketing-eyebrow">Questions</p>
+            <h2>Useful before you ever create an account.</h2>
+          </div>
+          <div className="faq-list">
+            <details>
+              <summary>Is SettledSolo only for dogs already struggling with separation?</summary>
+              <p>
+                No. The same calm, gradual approach can also support puppies or newly
+                adopted dogs learning comfortable alone time. Severe or escalating
+                distress should involve professional support.
+              </p>
+            </details>
+            <details>
+              <summary>Does the app tell me to leave my dog until they react?</summary>
+              <p>
+                No. Setup starts from a duration you have already observed your dog
+                manage comfortably. The app does not use deliberate distress as a
+                baseline test.
+              </p>
+            </details>
+            <details>
+              <summary>Do I need an account?</summary>
+              <p>
+                No. Core training works locally first. Optional account backup and
+                cross-device sync are planned without making signup a prerequisite
+                for starting.
+              </p>
+            </details>
+            <details>
+              <summary>Is the generated target a clinical prescription?</summary>
+              <p>
+                No. SettledSolo uses evidence-supported behavioural principles, while
+                its exact software step sizes are conservative product heuristics.
+                The reason for each recommendation is shown in plain English.
+              </p>
+            </details>
+          </div>
+        </section>
+
         <section className="marketing-final-cta">
           <BrandMark />
           <h2>Build comfortable alone time, gradually.</h2>
@@ -156,6 +198,7 @@ export function PublicSite() {
             <a href="/privacy">Privacy</a>
             <a href="/terms">Terms</a>
             <a href="/help">Help</a>
+            <a href="/evidence">Evidence</a>
           </span>
           <span>SettledSolo is a training and record-keeping aid, not a diagnosis.</span>
           <span>Built by South West Websites.</span>
