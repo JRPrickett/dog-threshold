@@ -498,6 +498,7 @@ function DepartureCuePracticeView({
 }
 
 function LiveSession({
+  scenarioId,
   targetSeconds,
   dogName,
   initialState,
@@ -505,6 +506,7 @@ function LiveSession({
   onSaved,
   onPersist
 }: {
+  scenarioId: string;
   targetSeconds: number;
   dogName: string;
   initialState?: PersistedLiveSession["state"];
@@ -537,8 +539,8 @@ function LiveSession({
   const [note, setNote] = useState("");
 
   useEffect(() => {
-    void onPersist(makePersistedLiveSession(targetSeconds, state));
-  }, [onPersist, state, targetSeconds]);
+    void onPersist(makePersistedLiveSession(scenarioId, targetSeconds, state));
+  }, [onPersist, scenarioId, state, targetSeconds]);
 
   useEffect(() => {
     if (state.phase !== "running") return;
@@ -740,7 +742,11 @@ export default function App() {
       if (cancelled) return;
       setData(loadedData);
 
-      if (isRestorableLiveSession(active)) {
+      if (
+        isRestorableLiveSession(active) &&
+        loadedData.scenarios.some((scenario) => scenario.id === active.scenarioId)
+      ) {
+        setData({ ...loadedData, activeScenarioId: active.scenarioId });
         setLiveTarget(active.targetSeconds);
         setRestoredState(active.state);
       }
@@ -790,6 +796,7 @@ export default function App() {
   if (liveTarget !== null) {
     return (
       <LiveSession
+        scenarioId={activeScenario(data).id}
         targetSeconds={liveTarget}
         dogName={data.dogName}
         initialState={restoredState}
@@ -800,7 +807,9 @@ export default function App() {
           setRestoredState(undefined);
         }}
         onSaved={async (session) => {
-          setData(await repository.appendSession(session));
+          setData(
+            await repository.appendSession(session, activeScenario(data).id)
+          );
           await repository.clearActiveSession();
           setLiveTarget(null);
           setRestoredState(undefined);
