@@ -2592,3 +2592,61 @@ a:focus-visible {
     justify-content: flex-start;
   }
 }
+
+
+.marketing-faq {
+  padding-top: 55px;
+}
+
+.faq-list {
+  margin-top: 34px;
+  display: grid;
+  gap: 10px;
+}
+
+.faq-list details {
+  border: 1px solid rgba(21,36,44,.08);
+  border-radius: 18px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.faq-list summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 18px 20px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.faq-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-list summary::after {
+  content: "+";
+  float: right;
+  color: var(--glow);
+  font-size: 20px;
+  line-height: .8;
+}
+
+.faq-list details[open] summary::after {
+  content: "−";
+}
+
+.faq-list details p {
+  margin: 0;
+  padding: 0 20px 20px;
+  max-width: 64ch;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 13px;
+}
+
+.info-page-copy a {
+  color: var(--ink);
+  text-underline-offset: 3px;
+  text-decoration-color: var(--glow);
+  text-decoration-thickness: 2px;
+}
