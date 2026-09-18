@@ -1,58 +1,45 @@
 # Threshold analytics setup
 
-Threshold v26 includes two independent analytics features. Both are disabled
-until you add your Cloudflare account values.
+Threshold uses two deliberately limited analytics layers.
 
 ## 1. Cloudflare Web Analytics
 
-This confirms that Threshold is being opened and revisited.
+Cloudflare Web Analytics is used for aggregate site traffic and does not require a
+Threshold account.
 
-1. Sign in to Cloudflare.
-2. Open **Web Analytics**.
-3. Select **Add a site**.
-4. Enter the GitHub Pages hostname, for example:
+The configured token lives in `js/analytics-config.js`.
 
-   ```text
-   YOUR-USERNAME.github.io
-   ```
+## 2. Product event counts
 
-5. Open **Manage site** and copy the JavaScript snippet.
-6. From that snippet, copy only the token value.
-7. Open `js/analytics-config.js` and paste it here:
+The `cloudflare-worker/` Worker accepts only:
 
-   ```js
-   cloudflareWebAnalyticsToken:"YOUR_TOKEN"
-   ```
-
-Threshold loads Cloudflare's official Web Analytics beacon only when this value
-is present.
-
-## 2. Anonymous session events
-
-The `cloudflare-worker/` folder contains a Worker and D1 schema that record only:
-
+- `app_open`
 - `session_started`
 - `session_saved`
-- App version
-- Event and receipt timestamps
 
-Follow `cloudflare-worker/README.md` to create and deploy it. Then paste its
-`/events` URL into:
+The event service stores only the app version, timestamps and basic platform metadata
+(device type, browser, operating system/display mode where relevant).
 
-```js
-eventEndpoint:"https://threshold-events.YOUR-SUBDOMAIN.workers.dev/events"
-```
+It does **not** receive dog names, scenario names, notes, ratings, planned/actual
+durations, outcomes or training history.
+
+This separation is intentional. Future account sync will use a different authenticated
+API and database model; private training records must never be mixed into analytics.
 
 ## Offline behaviour
 
-When the Worker endpoint is configured but the phone is offline, events are held
-in a small local queue. Threshold sends them when it next has a connection and
-removes them from the queue after Cloudflare accepts them.
+When the event endpoint is configured but the phone is offline, events are held in a
+small local queue. Threshold sends them when it next has a connection and removes them
+after Cloudflare accepts them.
 
-The queue holds no training details or user/device identifier.
+## Existing D1 databases
 
-## Privacy statement
+Older Threshold schemas included nullable columns for additional metadata. The v38
+Worker no longer writes those values. Existing databases can keep the old nullable
+columns until a later maintenance migration; new databases should use
+`cloudflare-worker/schema.sql`.
 
-The in-app guide now tells users that anonymous visits and session start/save
-counts may be collected, and explicitly lists the training information that is
-not sent.
+## Privacy rule
+
+Product analytics answer questions such as "is the app being used?" and "are sessions
+being completed?". They are not a second copy of the user's training log.
