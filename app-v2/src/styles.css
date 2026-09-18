@@ -1516,6 +1516,30 @@ a:focus-visible {
   height: 30px;
 }
 
+/* Trial mark — swap variant="photo" back to "mark" on any BrandMark call
+   to revert to the doorway-glow lockup. */
+.settled-photo {
+  width: 60px;
+  height: 60px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.settled-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.settled-photo-compact {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+
 .brand-lockup {
   display: inline-flex;
   align-items: center;

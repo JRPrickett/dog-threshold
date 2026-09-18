@@ -12,7 +12,7 @@ export function Setup({
   return (
     <main className="setup-shell">
       <section className="setup-card">
-        <BrandMark light />
+        <BrandMark light variant="photo" />
         <p className="setup-brand">SettledSolo</p>
         <p className="kicker">Separation training for dogs</p>
         <h1>Calm starts with small steps.</h1>
