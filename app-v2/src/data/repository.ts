@@ -13,6 +13,10 @@ const DB_VERSION = 1;
 const STORE = "records";
 const APP_KEY = "app-data";
 const ACTIVE_KEY = "active-session";
+const FALLBACK_APP_KEY = "dog-training-app.fallback.v1";
+const FALLBACK_ACTIVE_KEY = "dog-training-app.active.fallback.v1";
+
+export type StorageMode = "indexeddb" | "localstorage" | "memory";
 
 type RecordValue = AppData | PersistedLiveSession | null;
 
@@ -35,6 +39,7 @@ export interface AppRepository {
   loadActiveSession(): Promise<PersistedLiveSession | null>;
   saveActiveSession(session: PersistedLiveSession): Promise<void>;
   clearActiveSession(): Promise<void>;
+  storageMode(): StorageMode;
 }
 
 function requestResult<T>(request: IDBRequest<T>): Promise<T> {
@@ -156,9 +161,59 @@ function normaliseAppData(data: AppData): AppData {
   };
 }
 
-function memoryRepository(initial: AppData): AppRepository {
+function safeLocalStorage(): Storage | null {
+  try {
+    const storage = globalThis.localStorage;
+    const probe = "__dog_training_storage_probe__";
+    storage.setItem(probe, "1");
+    storage.removeItem(probe);
+    return storage;
+  } catch {
+    return null;
+  }
+}
+
+function fallbackRepository(initial: AppData): AppRepository {
+  const storage = safeLocalStorage();
+  let persistent = Boolean(storage);
   let data = normaliseAppData(initial);
   let active: PersistedLiveSession | null = null;
+
+  if (storage) {
+    try {
+      const saved = storage.getItem(FALLBACK_APP_KEY);
+      if (saved) data = normaliseAppData(JSON.parse(saved) as AppData);
+
+      const savedActive = storage.getItem(FALLBACK_ACTIVE_KEY);
+      if (savedActive) {
+        active = JSON.parse(savedActive) as PersistedLiveSession;
+      }
+    } catch {
+      persistent = false;
+    }
+  }
+
+  function persistData() {
+    if (!storage || !persistent) return;
+    try {
+      storage.setItem(FALLBACK_APP_KEY, JSON.stringify(data));
+    } catch {
+      persistent = false;
+    }
+  }
+
+  function persistActive() {
+    if (!storage || !persistent) return;
+    try {
+      if (active) {
+        storage.setItem(FALLBACK_ACTIVE_KEY, JSON.stringify(active));
+      } else {
+        storage.removeItem(FALLBACK_ACTIVE_KEY);
+      }
+    } catch {
+      persistent = false;
+    }
+  }
 
   return {
     async loadAppData() {
@@ -166,6 +221,7 @@ function memoryRepository(initial: AppData): AppRepository {
     },
     async saveAppData(next) {
       data = normaliseAppData(next);
+      persistData();
     },
     async saveSetup(dogName, startSeconds) {
       const scenario = activeScenario(data);
@@ -175,6 +231,7 @@ function memoryRepository(initial: AppData): AppRepository {
           { ...scenario, startSeconds }
         )
       );
+      persistData();
       return data;
     },
     async appendSession(session, scenarioId) {
@@ -188,6 +245,7 @@ function memoryRepository(initial: AppData): AppRepository {
             sessions: [...scenario.sessions, session]
           })
         );
+        persistData();
       }
       return data;
     },
@@ -204,12 +262,14 @@ function memoryRepository(initial: AppData): AppRepository {
             }
           })
         );
+        persistData();
       }
       return data;
     },
     async setActiveScenario(id) {
       if (data.scenarios.some((scenario) => scenario.id === id)) {
         data = { ...data, activeScenarioId: id };
+        persistData();
       }
       return data;
     },
@@ -218,9 +278,14 @@ function memoryRepository(initial: AppData): AppRepository {
     },
     async saveActiveSession(session) {
       active = session;
+      persistActive();
     },
     async clearActiveSession() {
       active = null;
+      persistActive();
+    },
+    storageMode() {
+      return persistent ? "localstorage" : "memory";
     }
   };
 }
@@ -245,10 +310,10 @@ export function createAppRepository(): AppRepository {
   }
 
   if (typeof indexedDB === "undefined") {
-    return memoryRepository(legacy);
+    return fallbackRepository(legacy);
   }
 
-  const fallback = memoryRepository(legacy);
+  const fallback = fallbackRepository(legacy);
   let useFallback = false;
 
   async function safely<T>(
@@ -382,6 +447,10 @@ export function createAppRepository(): AppRepository {
         },
         async () => {}
       );
+    },
+
+    storageMode() {
+      return useFallback ? fallback.storageMode() : "indexeddb";
     }
   };
 
