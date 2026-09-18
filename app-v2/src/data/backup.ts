@@ -4,9 +4,11 @@ import type {
   ObservedSignal,
   Outcome,
   Scenario,
+  SessionTag,
   TrainingSession
 } from "../domain/types";
 import { readLegacyAppData } from "./legacyImport";
+import { SESSION_TAG_VALUES } from "../domain/sessionTags";
 
 const outcomes: Outcome[] = ["relaxed", "concern", "distressed"];
 const signals: ObservedSignal[] = [
@@ -42,6 +44,15 @@ function cleanSignals(value: unknown): ObservedSignal[] {
   )];
 }
 
+function cleanTags(value: unknown): SessionTag[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(
+    value.filter((item): item is SessionTag =>
+      SESSION_TAG_VALUES.includes(item as SessionTag)
+    )
+  )];
+}
+
 function cleanSession(value: unknown, index: number): TrainingSession | null {
   if (!isRecord(value)) return null;
 
@@ -59,6 +70,8 @@ function cleanSession(value: unknown, index: number): TrainingSession | null {
     outcome: cleanOutcome(value.outcome),
     stoppedEarly: Boolean(value.stoppedEarly),
     signals: cleanSignals(value.signals),
+    tags: cleanTags(value.tags),
+    stopReason: String(value.stopReason || "").slice(0, 80),
     note: String(value.note || "").slice(0, 2000)
   };
 }
@@ -139,7 +152,15 @@ function cleanScenario(
           ),
           sessions: cueSessions
         }
-      : undefined
+      : undefined,
+    warmupCount:
+      value.warmupCount == null
+        ? undefined
+        : Math.max(0, Math.min(4, Math.round(finiteNumber(value.warmupCount, 2)))),
+    restSeconds:
+      value.restSeconds == null
+        ? undefined
+        : Math.max(0, Math.min(3600, Math.round(finiteNumber(value.restSeconds, 60))))
   };
 }
 
@@ -166,7 +187,11 @@ export function sanitiseImportedAppData(value: unknown): AppData {
   return {
     dogName: String(value.dogName || "").trim().slice(0, 40),
     activeScenarioId,
-    scenarios
+    scenarios,
+    dailyCap:
+      value.dailyCap == null
+        ? undefined
+        : Math.max(1, Math.min(10, Math.round(finiteNumber(value.dailyCap, 2))))
   };
 }
 

@@ -19,6 +19,8 @@ const data: AppData = {
           outcome: "concern",
           stoppedEarly: true,
           signals: ["pacing"],
+          tags: ["after-a-walk"],
+          stopReason: "Dog seemed unsettled",
           note: 'Watched the door, then "paced"'
         }
       ]
@@ -43,6 +45,8 @@ describe("data exports", () => {
     expect(csv).toContain('"Morning"');
     expect(csv).toContain('"concern"');
     expect(csv).toContain('"pacing"');
+    expect(csv).toContain('"After a walk"');
+    expect(csv).toContain('"Dog seemed unsettled"');
     expect(csv).toContain('"Watched the door, then ""paced"""');
   });
 });

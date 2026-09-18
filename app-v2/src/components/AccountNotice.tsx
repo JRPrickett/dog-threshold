@@ -1,4 +1,5 @@
 import type { StorageMode } from "../data/repository";
+import { isStandalone } from "../pwa/installStatus";
 
 export function AccountNotice({ storageMode }: { storageMode: StorageMode }) {
   if (storageMode === "memory") {
@@ -15,6 +16,8 @@ export function AccountNotice({ storageMode }: { storageMode: StorageMode }) {
     );
   }
 
+  const installed = isStandalone();
+
   return (
     <aside className="account-notice">
       <div>
@@ -23,6 +26,11 @@ export function AccountNotice({ storageMode }: { storageMode: StorageMode }) {
           {storageMode === "localstorage"
             ? "Using compatibility storage. Create a free account later for safer backup across devices."
             : "Create a free account later to back it up and use it on other devices."}
+        </span>
+        <span>
+          {installed
+            ? "Running as an installed app — the safest place for your log."
+            : "Running in the browser. Installing it to your Home Screen protects the log from being cleared."}
         </span>
       </div>
       <button type="button" disabled title="Account sync is the next production phase">

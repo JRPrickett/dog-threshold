@@ -63,6 +63,39 @@ describe("legacy Threshold import", () => {
     });
   });
 
+  it("maps legacy freeform tags onto known context tags and keeps stop reason", () => {
+    const data = readLegacyAppData(
+      storageFor({
+        name: "Mabel",
+        active: "training",
+        scenarios: [
+          {
+            id: "training",
+            label: "Separation training",
+            start: 5,
+            sessions: [
+              {
+                id: "a",
+                kind: "absence",
+                at: 100,
+                target: 20,
+                actual: 12,
+                stopped: true,
+                stopReason: "Doorbell rang",
+                outcome: "ok",
+                tags: ["After a walk", "Radio or TV on", "something unrecognised"]
+              }
+            ]
+          }
+        ]
+      })
+    );
+
+    const session = data.scenarios[0].sessions[0];
+    expect(session.tags).toEqual(["after-a-walk", "radio-or-tv-on"]);
+    expect(session.stopReason).toBe("Doorbell rang");
+  });
+
   it("maps legacy door-practice history without losing the timed log", () => {
     const data = readLegacyAppData(
       storageFor({

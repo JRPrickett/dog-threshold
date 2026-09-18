@@ -1,4 +1,9 @@
-import type { AppData } from "../domain/types";
+import type { AppData, SessionTag } from "../domain/types";
+import { SESSION_TAG_OPTIONS } from "../domain/sessionTags";
+
+const tagLabel = new Map<SessionTag, string>(
+  SESSION_TAG_OPTIONS.map(({ value, label }) => [value, label])
+);
 
 function csvCell(value: unknown): string {
   const text = String(value ?? "");
@@ -22,7 +27,9 @@ export function makeSessionsCsv(data: AppData): string {
       "actual_seconds",
       "outcome",
       "stopped_early",
+      "stop_reason",
       "observed_signals",
+      "context_tags",
       "note"
     ]
   ];
@@ -36,7 +43,9 @@ export function makeSessionsCsv(data: AppData): string {
         String(session.actualSeconds),
         session.outcome,
         session.stoppedEarly ? "yes" : "no",
+        session.stopReason,
         session.signals.join("; "),
+        session.tags.map((tag) => tagLabel.get(tag) ?? tag).join("; "),
         session.note
       ]);
     }

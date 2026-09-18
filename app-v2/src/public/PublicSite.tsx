@@ -5,7 +5,7 @@ export function PublicSite() {
     <div className="marketing-shell">
       <header className="marketing-header">
         <a className="marketing-brand" href="/" aria-label="SettledSolo home">
-          <BrandWordmark compact />
+          <BrandWordmark compact light />
         </a>
         <nav aria-label="Public site">
           <a href="#how-it-works">How it works</a>
@@ -35,13 +35,9 @@ export function PublicSite() {
           </div>
 
           <div className="marketing-hero-art" aria-hidden="true">
-            <div className="marketing-door-scene">
-              <BrandMark />
-              <span className="marketing-glow-line" />
-              <div className="marketing-scene-copy">
-                <strong>SettledSolo</strong>
-                <span>Build comfortable alone time, gradually.</span>
-              </div>
+            <div className="marketing-scene-copy">
+              <strong>SettledSolo</strong>
+              <span>Build comfortable alone time, gradually.</span>
             </div>
           </div>
         </section>
@@ -117,7 +113,7 @@ export function PublicSite() {
         </section>
 
         <section className="marketing-quote">
-          <BrandMark compact />
+          <BrandMark compact light />
           <blockquote>
             “Progress isn't how long you're gone. It's how settled your dog
             feels while you're away.”
@@ -192,7 +188,7 @@ export function PublicSite() {
       </main>
 
       <footer className="marketing-footer">
-        <BrandWordmark compact />
+        <BrandWordmark compact light />
         <div>
           <span className="marketing-footer-links">
             <a href="/privacy">Privacy</a>

@@ -10,6 +10,7 @@ import {
   type PersistedLiveSession
 } from "./session/sessionPersistence";
 import { PwaUpdateNotice } from "./pwa/PwaUpdateNotice";
+import { InstallNotice } from "./pwa/InstallNotice";
 import { Setup } from "./features/setup/Setup";
 import { Today } from "./features/today/Today";
 import { Progress } from "./features/progress/Progress";
@@ -18,6 +19,8 @@ import { More } from "./features/more/More";
 import { DepartureCuePracticeView } from "./features/cues/DepartureCuePracticeView";
 import { LiveSession } from "./features/session/LiveSession";
 import { BrandMark, BrandWordmark } from "./brand/BrandMark";
+import type { Celebration } from "./features/progress/MilestoneBanner";
+import { newlyEarnedAchievements, newlyEarnedMilestones } from "./domain/milestones";
 
 type Screen = "today" | "progress" | "history" | "more";
 
@@ -30,6 +33,7 @@ export default function App() {
   const [cuePracticeOpen, setCuePracticeOpen] = useState(false);
   const [restoredState, setRestoredState] =
     useState<PersistedLiveSession["state"] | undefined>(undefined);
+  const [celebration, setCelebration] = useState<Celebration | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,7 +65,7 @@ export default function App() {
     return (
       <main className="setup-shell">
         <section className="setup-card loading-card" aria-live="polite">
-          <BrandMark />
+          <BrandMark light />
           <p className="kicker">Opening SettledSolo</p>
           <h1>Getting things ready.</h1>
         </section>
@@ -103,6 +107,9 @@ export default function App() {
         targetSeconds={liveTarget}
         dogName={data.dogName}
         initialState={restoredState}
+        variabilitySeed={activeScenario(data).sessions.length}
+        warmupCount={activeScenario(data).warmupCount}
+        restSeconds={activeScenario(data).restSeconds ?? 60}
         onPersist={(snapshot) => repository.saveActiveSession(snapshot)}
         onClose={async () => {
           await repository.clearActiveSession();
@@ -110,14 +117,25 @@ export default function App() {
           setRestoredState(undefined);
         }}
         onSaved={async (session) => {
-          setData(
-            await repository.appendSession(session, activeScenario(data).id)
+          const before = data;
+          const after = await repository.appendSession(
+            session,
+            activeScenario(data).id
           );
+          setData(after);
           setStorageMode(repository.storageMode());
           await repository.clearActiveSession();
           setLiveTarget(null);
           setRestoredState(undefined);
           setScreen("today");
+
+          const milestones = newlyEarnedMilestones(before, after);
+          const achievements = newlyEarnedAchievements(before, after);
+          setCelebration(
+            milestones.length || achievements.length
+              ? { milestones, achievements }
+              : null
+          );
         }}
       />
     );
@@ -127,17 +145,21 @@ export default function App() {
     <div className="app-shell">
       <header className="app-header">
         <a className="app-brand-link" href="/" aria-label="SettledSolo home">
-          <BrandWordmark compact />
+          <BrandWordmark compact light />
         </a>
         <div className="dog-chip">{data.dogName}</div>
       </header>
 
       <main className="app-content">
+        <InstallNotice />
         {screen === "today" && (
           <Today
             data={data}
             storageMode={storageMode}
+            celebration={celebration}
+            onDismissCelebration={() => setCelebration(null)}
             onStart={(target) => {
+              setCelebration(null);
               setRestoredState(undefined);
               setLiveTarget(target);
             }}
@@ -145,7 +167,23 @@ export default function App() {
           />
         )}
         {screen === "progress" && <Progress data={data} />}
-        {screen === "history" && <History data={data} />}
+        {screen === "history" && (
+          <History
+            data={data}
+            onAddSession={async (scenarioId, session) => {
+              setData(await repository.appendSession(session, scenarioId));
+              setStorageMode(repository.storageMode());
+            }}
+            onUpdateSession={async (scenarioId, session) => {
+              setData(await repository.updateSession(scenarioId, session));
+              setStorageMode(repository.storageMode());
+            }}
+            onDeleteSession={async (scenarioId, sessionId) => {
+              setData(await repository.deleteSession(scenarioId, sessionId));
+              setStorageMode(repository.storageMode());
+            }}
+          />
+        )}
         {screen === "more" && (
           <More
             data={data}
@@ -157,8 +195,20 @@ export default function App() {
               setData(await repository.createScenario(label, startSeconds));
               setStorageMode(repository.storageMode());
             }}
-            onUpdateScenario={async (id, label, startSeconds) => {
-              setData(await repository.updateScenario(id, label, startSeconds));
+            onUpdateScenario={async (id, label, startSeconds, warmupCount, restSeconds) => {
+              setData(
+                await repository.updateScenario(
+                  id,
+                  label,
+                  startSeconds,
+                  warmupCount,
+                  restSeconds
+                )
+              );
+              setStorageMode(repository.storageMode());
+            }}
+            onUpdateDailyCap={async (cap) => {
+              setData(await repository.updateDailyCap(cap));
               setStorageMode(repository.storageMode());
             }}
             onRestoreBackup={async (restored) => {
@@ -168,6 +218,7 @@ export default function App() {
               setStorageMode(repository.storageMode());
               setRestoredState(undefined);
               setLiveTarget(null);
+              setCelebration(null);
               setScreen("today");
             }}
           />

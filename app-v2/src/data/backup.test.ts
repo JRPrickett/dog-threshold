@@ -21,14 +21,24 @@ describe("backup restore", () => {
             outcome: "relaxed",
             stoppedEarly: false,
             signals: ["pacing", "invalid"],
+            tags: ["after-a-walk", "invalid-tag"],
+            stopReason: "doorbell rang",
             note: "calm"
-          }]
-        }]
+          }],
+          warmupCount: 1,
+          restSeconds: 45
+        }],
+        dailyCap: 3
       }
     }));
 
     expect(data.dogName).toBe("Mabel");
     expect(data.scenarios[0].sessions[0].signals).toEqual(["pacing"]);
+    expect(data.scenarios[0].sessions[0].tags).toEqual(["after-a-walk"]);
+    expect(data.scenarios[0].sessions[0].stopReason).toBe("doorbell rang");
+    expect(data.scenarios[0].warmupCount).toBe(1);
+    expect(data.scenarios[0].restSeconds).toBe(45);
+    expect(data.dailyCap).toBe(3);
   });
 
   it("accepts a raw legacy Threshold backup", () => {

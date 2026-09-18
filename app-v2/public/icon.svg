@@ -1,15 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <radialGradient id="g" cx="50%" cy="100%" r="68%">
-      <stop offset="0%" stop-color="#F2A65A" stop-opacity="1"/>
-      <stop offset="46%" stop-color="#F2A65A" stop-opacity=".48"/>
+    <radialGradient id="g" cx="50%" cy="100%" r="70%">
+      <stop offset="0%" stop-color="#F6C989"/>
+      <stop offset="55%" stop-color="#F2A65A" stop-opacity=".7"/>
       <stop offset="100%" stop-color="#F2A65A" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="512" height="512" rx="116" fill="#15242C"/>
-  <ellipse cx="256" cy="366" rx="142" ry="88" fill="url(#g)"/>
-  <path d="M156 370V242c0-80 44-136 100-136s100 56 100 136v128"
-        fill="none" stroke="#F1E7D6" stroke-width="24"
-        stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M156 370h200" fill="none" stroke="#F1E7D6" stroke-width="14" stroke-linecap="round"/>
+  <rect x="26" y="26" width="460" height="460" rx="111" fill="#15242C"/>
+  <path d="M145 410 L145 239 A111 111 0 0 1 367 239 L367 410 Z" fill="url(#g)"/>
+  <path d="M145 410 L145 239 A111 111 0 0 1 367 239 L367 410"
+        fill="none" stroke="#F1E7D6" stroke-width="15" stroke-linecap="round"/>
 </svg>

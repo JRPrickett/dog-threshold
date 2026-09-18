@@ -454,6 +454,102 @@ textarea:focus-visible {
   font-size: 13px;
 }
 
+.history-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.history-chip {
+  font-size: 10px;
+  font-weight: 650;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f2f1ea;
+  color: var(--muted);
+}
+
+.history-chip-stop {
+  background: var(--rose-soft);
+  color: #7a493f;
+}
+
+.history-note {
+  width: 100%;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.history-edit {
+  margin-top: 4px;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--sea-dark);
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  justify-self: end;
+}
+
+.history-row-editing {
+  display: block;
+  padding: 16px;
+}
+
+.session-form {
+  display: grid;
+  gap: 12px;
+}
+
+.session-form label {
+  display: grid;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.session-form input,
+.session-form select,
+.session-form textarea {
+  font-size: 14px;
+  color: var(--ink);
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(21,36,44,.11);
+  background: #F6F0E5;
+}
+
+.session-form textarea {
+  min-height: 64px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.session-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.session-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.session-delete {
+  color: #7a493f !important;
+  padding: 0;
+  font-weight: 700;
+}
+
 .menu-card {
   background: var(--paper);
   border-radius: 19px;
@@ -1079,6 +1175,56 @@ textarea:focus-visible {
   }
 }
 
+.install-notice {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--amber-soft);
+  margin-bottom: 14px;
+}
+
+.install-notice strong {
+  display: block;
+  font-size: 13px;
+}
+
+.install-notice > div > span {
+  display: block;
+  color: #6b4d24;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 3px;
+}
+
+.install-steps {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b4d24;
+}
+
+.install-steps summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.install-steps ol {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  line-height: 1.6;
+}
+
+.install-notice-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.install-dismiss {
+  color: #6b4d24 !important;
+  padding: 0;
+}
+
 
 .pwa-notice {
   position: fixed;
@@ -1254,6 +1400,49 @@ textarea:focus-visible {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.55;
+}
+
+.trend-chart {
+  width: 100%;
+  height: 120px;
+  display: block;
+}
+
+.trend-chart rect {
+  cursor: pointer;
+  transition: opacity .12s ease;
+}
+
+.trend-caption {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.trend-caption strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.trend-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.trend-legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  display: inline-block;
 }
 
 .signal-summary {
@@ -1473,8 +1662,8 @@ a:focus-visible {
 }
 
 .settled-mark {
-  width: 66px;
-  height: 76px;
+  width: 60px;
+  height: 60px;
   display: inline-flex;
   flex: 0 0 auto;
 }
@@ -1485,20 +1674,35 @@ a:focus-visible {
   overflow: visible;
 }
 
-.settled-mark-arch,
-.settled-mark-floor {
+.settled-mark-arch {
   stroke: #F1E7D6;
-  stroke-width: 5.5;
+  stroke-width: 6;
 }
 
 .settled-mark-compact {
-  width: 32px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
 }
 
-.settled-mark-light .settled-mark-arch,
-.settled-mark-light .settled-mark-floor {
+.settled-mark-light .settled-mark-arch {
   stroke: #15242C;
+}
+
+.settled-badge {
+  width: 60px;
+  height: 60px;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.settled-badge svg {
+  width: 100%;
+  height: 100%;
+}
+
+.settled-badge-compact {
+  width: 30px;
+  height: 30px;
 }
 
 .brand-lockup {
@@ -1732,11 +1936,8 @@ a:focus-visible {
 .setup-card > .settled-mark {
   display: flex;
   margin-bottom: 12px;
-  padding: 7px;
-  width: 74px;
-  height: 86px;
-  border-radius: 20px;
-  background: var(--ink);
+  width: 72px;
+  height: 72px;
 }
 
 .setup-brand {
@@ -2057,57 +2258,25 @@ a:focus-visible {
   margin: 13px 0 0;
 }
 
+/*
+ * A real photo carries the warmth here rather than the mark — the mark
+ * stays the clean arch+glow lockup everywhere else (header, footer, the
+ * app icon); it never needs to hold a dog itself. Placeholder stock photo
+ * pending the owner's own photography.
+ */
 .marketing-hero-art {
   min-height: 620px;
-  background:
-    linear-gradient(180deg, rgba(21,36,44,.10), rgba(21,36,44,.78)),
-    radial-gradient(circle at 72% 26%, rgba(242,166,90,.42), transparent 18rem),
-    #26363A;
-  display: grid;
-  align-items: stretch;
-}
-
-.marketing-door-scene {
-  min-height: 100%;
   position: relative;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
-
-.marketing-door-scene::before {
-  content: "";
-  position: absolute;
-  right: 12%;
-  top: 0;
-  width: 38%;
-  height: 100%;
   background:
-    linear-gradient(90deg, rgba(242,166,90,0), rgba(242,166,90,.13)),
-    #18272B;
-  border-left: 1px solid rgba(247,238,223,.08);
-}
-
-.marketing-door-scene > .settled-mark {
-  width: 150px;
-  height: 175px;
-  position: relative;
-  z-index: 1;
-}
-
-.marketing-glow-line {
-  position: absolute;
-  width: 48%;
-  height: 120px;
-  bottom: 19%;
-  background: radial-gradient(ellipse, rgba(242,166,90,.42), transparent 68%);
-  filter: blur(7px);
+    linear-gradient(0deg, rgba(21,36,44,.82), rgba(21,36,44,.08) 55%),
+    url("/photos/hero-window-watch.jpg") center / cover no-repeat;
+  display: grid;
+  align-items: end;
 }
 
 .marketing-scene-copy {
-  position: absolute;
-  left: 11%;
-  bottom: 9%;
+  position: relative;
+  padding: 0 11% 9%;
   display: grid;
   gap: 4px;
   color: #F7EEDF;
@@ -2326,9 +2495,8 @@ a:focus-visible {
 }
 
 .marketing-quote > .settled-mark {
-  padding: 7px;
-  border-radius: 14px;
-  background: var(--ink);
+  width: 52px;
+  height: 52px;
 }
 
 .marketing-quote blockquote {
@@ -2446,11 +2614,6 @@ a:focus-visible {
     min-height: 330px;
   }
 
-  .marketing-door-scene > .settled-mark {
-    width: 110px;
-    height: 130px;
-  }
-
   .marketing-trust-strip {
     grid-template-columns: 1fr;
     padding-bottom: 35px;
@@ -2507,13 +2670,6 @@ a:focus-visible {
   }
 }
 
-
-.app-brand-link .settled-mark,
-.marketing-brand .settled-mark {
-  padding: 4px;
-  border-radius: 10px;
-  background: var(--ink);
-}
 
 .app-brand-link .brand-lockup-copy strong,
 .marketing-brand .brand-lockup-copy strong {
@@ -2690,12 +2846,6 @@ a:focus-visible {
 }
 
 
-.marketing-footer > .brand-lockup .settled-mark {
-  padding: 4px;
-  border-radius: 10px;
-  background: var(--ink);
-}
-
 .marketing-builder-link {
   color: var(--muted);
   text-decoration: none;
@@ -2703,4 +2853,163 @@ a:focus-visible {
 
 .marketing-builder-link:hover {
   color: var(--ink);
+}
+
+.celebration-banner {
+  display: grid;
+  gap: 10px;
+  padding: 15px 17px;
+  border-radius: 18px;
+  background: var(--sage);
+  border: 1px solid rgba(85, 119, 101, .18);
+}
+
+.celebration-lines {
+  display: grid;
+  gap: 6px;
+}
+
+.celebration-lines p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--sea-dark);
+}
+
+.celebration-dismiss {
+  justify-self: end;
+  color: var(--sea-dark) !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-size: 10px;
+}
+
+.daily-cap-card {
+  background: var(--amber-soft);
+  color: #6b4d24;
+}
+
+.rest-day-card {
+  background: var(--rose-soft);
+  color: #7a493f;
+  display: grid;
+  gap: 8px;
+}
+
+.rest-day-override {
+  justify-self: start;
+  color: #7a493f !important;
+  font-weight: 700;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.milestone-card {
+  display: grid;
+  gap: 15px;
+  padding: 18px;
+  border-radius: 20px;
+  background: var(--paper);
+  border: 1px solid rgba(58, 70, 64, .08);
+  box-shadow: var(--shadow);
+}
+
+.milestone-card h2 {
+  margin: 4px 0 0;
+  font-size: 19px;
+  letter-spacing: -.025em;
+}
+
+.milestone-card p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.milestone-next {
+  display: grid;
+  gap: 8px;
+}
+
+.milestone-next-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.milestone-next-amount {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.milestone-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--soft);
+  overflow: hidden;
+}
+
+.milestone-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--sea);
+}
+
+.milestone-longest {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.milestone-ladder {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+}
+
+.milestone-rung {
+  display: grid;
+  gap: 3px;
+  padding: 10px 8px;
+  border-radius: 13px;
+  text-align: center;
+  background: #f5f4ef;
+  border: 1px solid transparent;
+}
+
+.milestone-rung-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.milestone-rung-sub {
+  font-size: 9px;
+  color: var(--muted);
+  min-height: 11px;
+}
+
+.milestone-rung.earned {
+  background: var(--sage);
+  border-color: rgba(85, 119, 101, .22);
+}
+
+.milestone-rung.earned .milestone-rung-label {
+  color: var(--sea-dark);
+}
+
+.milestone-rung.next {
+  border-color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.milestone-rung.next .milestone-rung-label {
+  color: #78552c;
 }

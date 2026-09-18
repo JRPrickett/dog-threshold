@@ -25,7 +25,10 @@ Current modern stack:
 - timestamp-based interruption/reload recovery
 - evidence-informed, explainable recommendation engine
 - departure-cue practice
+- varied-order warm-up departures before the main departure
 - behavioural observation summaries
+- cross-track duration-milestone ladder with earned-milestone/achievement celebration
+- a safety-minded daily main-departure cap, carried forward from the legacy app
 - portable JSON backup/restore and CSV export
 - Workbox-generated offline PWA
 - optional audio / Media Session / notification return cues
