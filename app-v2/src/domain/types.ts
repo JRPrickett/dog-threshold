@@ -33,7 +33,22 @@ export interface Recommendation {
   supportFlag: boolean;
 }
 
+export interface DepartureCueSession {
+  id: string;
+  at: number;
+  cueIndex: number;
+  relaxedReps: number;
+  concernReps: number;
+  outcome: Outcome;
+}
+
+export interface DepartureCuePractice {
+  level: number;
+  sessions: DepartureCueSession[];
+}
+
 export interface AppData {
   dogName: string;
   scenario: Scenario;
+  cuePractice?: DepartureCuePractice;
 }
