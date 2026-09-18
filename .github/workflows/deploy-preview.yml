@@ -50,6 +50,69 @@ jobs:
             echo "::notice::SettledSolo preview deployment skipped because CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID are not configured in the preview environment."
           fi
 
+      - name: Validate Cloudflare token safely
+        if: steps.cloudflare.outputs.configured == 'true'
+        id: tokencheck
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          case "$CLOUDFLARE_API_TOKEN" in
+            cfat_*)
+              echo "kind=account" >> "$GITHUB_OUTPUT"
+              echo "Cloudflare credential format: account-owned API token."
+              VERIFY_URL="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/tokens/verify"
+              ;;
+            cfut_*)
+              echo "kind=user" >> "$GITHUB_OUTPUT"
+              echo "Cloudflare credential format: user-owned API token."
+              VERIFY_URL="https://api.cloudflare.com/client/v4/user/tokens/verify"
+              ;;
+            Bearer\ *)
+              echo "::error::CLOUDFLARE_API_TOKEN contains a Bearer prefix. Store only the token value."
+              exit 1
+              ;;
+            \"*|*\")
+              echo "::error::CLOUDFLARE_API_TOKEN appears to contain quotation marks. Store only the token value."
+              exit 1
+              ;;
+            *)
+              echo "kind=legacy-or-unrecognised" >> "$GITHUB_OUTPUT"
+              echo "Cloudflare credential format: legacy/unrecognised token format."
+              VERIFY_URL="https://api.cloudflare.com/client/v4/user/tokens/verify"
+              ;;
+          esac
+
+          HTTP_CODE="$(curl --silent --show-error --output /tmp/cloudflare-token-check.json --write-out '%{http_code}' \
+            --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            --header "Content-Type: application/json" \
+            "$VERIFY_URL")"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::Cloudflare rejected the stored API token at its matching verification endpoint (HTTP $HTTP_CODE)."
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          try:
+              data = json.loads(Path("/tmp/cloudflare-token-check.json").read_text())
+              for error in data.get("errors", []):
+                  code = error.get("code", "unknown")
+                  message = error.get("message", "Unknown Cloudflare error")
+                  print(f"Cloudflare error {code}: {message}")
+          except Exception:
+              print("Cloudflare returned a non-JSON verification error.")
+          PY
+            exit 1
+          fi
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("/tmp/cloudflare-token-check.json").read_text())
+          result = data.get("result") or {}
+          print(f"Cloudflare token verification: {result.get('status', 'active')}.")
+          PY
+
       - name: Install dependencies
         run: npm install --ignore-scripts
 
