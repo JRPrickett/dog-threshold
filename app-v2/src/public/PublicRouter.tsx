@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { PublicSite } from "./PublicSite";
 import { BrandWordmark } from "../brand/BrandMark";
 
@@ -8,7 +9,7 @@ function InfoPage({
 }: {
   eyebrow: string;
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="marketing-shell">
