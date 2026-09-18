@@ -19,12 +19,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
-      - name: Check JavaScript syntax
-        run: |
-          node --check js/app.js
-          node --check js/analytics.js
-          node --check cloudflare-worker/src/index.js
+      - name: Install dependencies
+        run: npm install --ignore-scripts
 
-      - name: Run tests
-        run: npm test
+      - name: Verify legacy and modern apps
+        run: npm run verify
