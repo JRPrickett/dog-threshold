@@ -7,13 +7,13 @@ async function completeSetup(page: import("@playwright/test").Page, seconds = 1)
     .getByLabel("A duration you already know feels comfortable")
     .fill(String(seconds));
   await page.getByRole("button", { name: "Set up your first session" }).click();
-  await expect(page.getByRole("button", { name: "Start today\'s session" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start today's session" })).toBeVisible();
 }
 
 test("first session can be completed and appears in history", async ({ page }) => {
   await completeSetup(page, 1);
 
-  await page.getByRole("button", { name: "Start today\'s session" }).click();
+  await page.getByRole("button", { name: "Start today's session" }).click();
   await expect(page.getByText("Today's main departure")).toBeVisible();
 
   await page.getByRole("button", { name: "I'm leaving now" }).click();
@@ -32,7 +32,7 @@ test("first session can be completed and appears in history", async ({ page }) =
 test("a running session survives a reload and keeps its original timer", async ({ page }) => {
   await completeSetup(page, 5);
 
-  await page.getByRole("button", { name: "Start today\'s session" }).click();
+  await page.getByRole("button", { name: "Start today's session" }).click();
   await page.getByRole("button", { name: "I'm leaving now" }).click();
   await page.waitForTimeout(600);
 
@@ -106,8 +106,10 @@ test("legacy users keep multiple training tracks after migration", async ({ page
   const selector = page.getByLabel("Training track");
   await expect(selector).toHaveValue("evening");
   await selector.selectOption("morning");
+  await expect(selector).toHaveValue("morning");
 
-  await expect(page.getByRole("button", { name: "Start today\'s session" })).toBeVisible();
+  await page.getByRole("button", { name: "Today" }).click();
+  await expect(page.getByRole("button", { name: "Start today's session" })).toBeVisible();
   await expect(page.getByText("Morning routine")).toBeVisible();
 });
 
@@ -160,7 +162,7 @@ test("a validated backup can replace local data after confirmation", async ({ pa
 
 test("a running session remains usable after the browser goes offline", async ({ page, context }) => {
   await completeSetup(page, 2);
-  await page.getByRole("button", { name: "Start today\'s session" }).click();
+  await page.getByRole("button", { name: "Start today's session" }).click();
   await context.setOffline(true);
 
   await page.getByRole("button", { name: "I'm leaving now" }).click();
@@ -172,7 +174,7 @@ test("a running session remains usable after the browser goes offline", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: /Relaxed/ }).click();
   await page.getByRole("button", { name: "Save session" }).click();
-  await expect(page.getByRole("button", { name: "Start today\'s session" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start today's session" })).toBeVisible();
 });
 
 
@@ -195,9 +197,9 @@ test("a user can create and rename a separate training track", async ({ page }) 
   await page.getByRole("button", { name: "Add training track" }).click();
 
   await expect(page.getByLabel("Training track")).toHaveValue(/scenario-/);
-  await expect(page.getByLabel("Track name")).toHaveValue("School run");
+  await expect(page.getByLabel("Track name", { exact: true })).toHaveValue("School run");
 
-  await page.getByLabel("Track name").fill("Weekday school run");
+  await page.getByLabel("Track name", { exact: true }).fill("Weekday school run");
   await page.getByRole("button", { name: "Save track changes" }).click();
 
   await page.getByRole("button", { name: "Today" }).click();
