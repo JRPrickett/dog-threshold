@@ -1231,3 +1231,51 @@ textarea:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+
+.pattern-card {
+  display: grid;
+  gap: 15px;
+  padding: 18px;
+  border-radius: 20px;
+  background: var(--paper);
+  border: 1px solid rgba(58, 70, 64, .08);
+  box-shadow: var(--shadow);
+}
+
+.pattern-card h2 {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: -.025em;
+}
+
+.pattern-card p:not(.kicker) {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.signal-summary {
+  display: grid;
+  gap: 7px;
+}
+
+.signal-summary > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 11px;
+  border-radius: 12px;
+  background: #f5f4ef;
+}
+
+.signal-summary strong {
+  font-size: 12px;
+}
+
+.signal-summary small {
+  color: var(--muted);
+  font-size: 10px;
+}
