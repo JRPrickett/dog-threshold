@@ -40,12 +40,6 @@ function cleanText(value,max){
   return text?text.slice(0,max):null;
 }
 
-function cleanInteger(value,min,max){
-  if(value===null||value===undefined||value==="") return null;
-  const number=Number(value);
-  return Number.isFinite(number)&&number>=min&&number<=max?Math.round(number):null;
-}
-
 export function normaliseEvent(event){
   if(!event||!ALLOWED_EVENTS.has(event.name)) return null;
 
@@ -60,10 +54,6 @@ export function normaliseEvent(event){
     name:event.name,
     version:String(event.version||"unknown").slice(0,20),
     occurredAt:new Date(occurredAt).toISOString(),
-    dogName:cleanText(event.dogName,40),
-    targetSeconds:cleanInteger(event.targetSeconds,1,14400),
-    stopped:typeof event.stopped==="boolean"?(event.stopped?1:0):null,
-    sessionType:ALLOWED_SESSION_TYPES.has(event.sessionType)?event.sessionType:null,
     deviceType:ALLOWED_DEVICE_TYPES.has(event.deviceType)?event.deviceType:"unknown",
     browser:cleanText(event.browser,30),
     operatingSystem:cleanText(event.operatingSystem,20),
@@ -75,13 +65,12 @@ function statementFor(event,env){
   if(event.name==="app_open"){
     return env.DB.prepare(
       `INSERT INTO app_open_events (
-        app_version, occurred_at, dog_name, device_type, browser,
+        app_version, occurred_at, device_type, browser,
         operating_system, display_mode
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
     ).bind(
       event.version,
       event.occurredAt,
-      event.dogName,
       event.deviceType,
       event.browser,
       event.operatingSystem,
@@ -91,17 +80,12 @@ function statementFor(event,env){
 
   return env.DB.prepare(
     `INSERT INTO usage_events (
-      event_name, app_version, occurred_at, dog_name, target_seconds,
-      stopped, session_type, device_type, browser
-    ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`
+      event_name, app_version, occurred_at, device_type, browser
+    ) VALUES (?1, ?2, ?3, ?4, ?5)`
   ).bind(
     event.name,
     event.version,
     event.occurredAt,
-    event.dogName,
-    event.targetSeconds,
-    event.stopped,
-    event.sessionType,
     event.deviceType,
     event.browser
   );
