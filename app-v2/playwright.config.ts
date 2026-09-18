@@ -12,9 +12,15 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "chromium-mobile",
+      name: "chromium-android",
       use: {
         ...devices["Pixel 7"]
+      }
+    },
+    {
+      name: "webkit-iphone",
+      use: {
+        ...devices["iPhone 15"]
       }
     }
   ],
