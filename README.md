@@ -1,64 +1,80 @@
-# Threshold — production development
+# AloneReady — production development
 
-Threshold is an installable, offline-first separation-anxiety training web app. The
-current name is a **working name** while the product is being developed as a South West
-Websites project.
+**AloneReady** is an offline-first, installable web app for gradual dog separation
+training. The repository retains its original `dog-threshold` name for engineering
+continuity, but AloneReady is the selected production product identity.
 
-The app remains immediately usable without signup. Production development is adding
-optional free accounts so people can back up progress and use the same training history
-across devices without losing the local-first/offline behaviour.
+A user can start without creating an account. The modern application keeps training local
+and usable offline, with optional free account backup/cross-device sync planned after the
+local product completes its production device gates.
 
 > **Your progress is currently saved on this device.**  
-> Create a free account to back it up and use Threshold on your other devices.
+> Create a free account to back it up and use AloneReady on your other devices.
 
-See:
+## Modern production application
 
-- `docs/PRODUCT-PLAN.md` — product principles and phased roadmap
-- `docs/BRAND-BRIEF.md` — naming and visual-brand direction
-- `docs/ACCOUNT-SYNC.md` — proposed account, data and offline-sync architecture
-- `ANALYTICS-SETUP.md` — privacy-limited product analytics
+The replacement application is being built in `app-v2/` alongside the existing root PWA
+until migration and device reliability have been demonstrated.
 
-## Current architecture
+Current modern stack:
 
-- Static installable PWA
-- ES modules with no application runtime framework
-- Local-first training state and migrations
-- Service worker/offline support
-- Adaptive progression and warm-up planning
-- Interruption-proof active sessions
-- Notifications/audio return cues
-- Dashboards, milestones, history and exports
-- Cloudflare Worker + D1 for aggregate product event counts
-- Automated Node tests and GitHub Actions CI
+- React 19 + TypeScript + Vite
+- feature-based mobile application shell
+- IndexedDB primary storage with compatibility fallback
+- migration of legacy Threshold scenarios and history
+- timestamp-based interruption/reload recovery
+- evidence-informed, explainable recommendation engine
+- departure-cue practice
+- behavioural observation summaries
+- portable JSON backup/restore and CSV export
+- Workbox-generated offline PWA
+- optional audio / Media Session / notification return cues
+- Vitest + Playwright browser journeys
+- Android-style Chromium and iPhone-style WebKit CI profiles
+
+The old root app remains present during this migration and its regression tests continue to
+run.
+
+## Evidence and safety
+
+The production engine uses evidence-supported principles such as gradual systematic
+desensitisation and direct observation while keeping the app's exact progression increments
+clearly labelled as product heuristics rather than clinically validated dosage.
+
+See `docs/EVIDENCE-BASE.md`.
 
 ## Privacy boundary
 
-The training log is local in the current production-development build. Aggregate analytics
-count app opens and session start/save events plus basic platform information; dog names,
-scenario names, notes, ratings, durations and training history are not sent to analytics.
+Private training data remains local in the current production-development build. Aggregate
+analytics are separate and do not include dog names, scenario names, notes, ratings, durations
+or training history.
 
-Future account sync will use a separate authenticated API/database and will remain
-optional.
+Future account sync will use a separate authenticated data path and remain optional.
+
+## Useful documents
+
+- `docs/PRODUCT-PLAN.md` — product principles and phased roadmap
+- `docs/BRAND-DECISION.md` — AloneReady name and brand system
+- `docs/EVIDENCE-BASE.md` — research basis and product-heuristic boundaries
+- `docs/DEVICE-TEST-MATRIX.md` — real-device release gate
+- `docs/ACCOUNT-SYNC.md` — account, cloud-data and offline-sync architecture
+- `ANALYTICS-SETUP.md` — privacy-limited product analytics
 
 ## Development
 
-Serve the app over HTTP:
+Modern app:
 
 ```bash
-python3 -m http.server 8000
+npm install
+npm run dev:v2
 ```
 
-Run the production checks:
+Full verification:
 
 ```bash
-npm run check
+npm run verify
+npm run test:e2e
 ```
-
-## Production roadmap
-
-The next major implementation slice is free accounts and cross-device sync. The existing
-local data model will remain the immediate working copy so a training session is never
-blocked by a weak connection.
 
 ## Development history
 
