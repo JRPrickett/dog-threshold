@@ -38,7 +38,7 @@ describe("recommendNext", () => {
     });
   });
 
-  it("returns to the previous relaxed anchor after distress", () => {
+  it("stays below the observed distress point even if an older relaxed session was longer", () => {
     const result = recommendNext(
       [
         session({ targetSeconds: 24, actualSeconds: 24 }),
@@ -51,7 +51,24 @@ describe("recommendNext", () => {
       ],
       5
     );
-    expect(result.targetSeconds).toBe(24);
+    expect(result.targetSeconds).toBe(16);
+    expect(result.direction).toBe("reduce");
+  });
+
+  it("stays below an early concern point instead of returning to a longer old anchor", () => {
+    const result = recommendNext(
+      [
+        session({ targetSeconds: 25, actualSeconds: 25 }),
+        session({
+          targetSeconds: 30,
+          actualSeconds: 12,
+          outcome: "concern",
+          stoppedEarly: true
+        })
+      ],
+      5
+    );
+    expect(result.targetSeconds).toBe(10);
     expect(result.direction).toBe("reduce");
   });
 
@@ -67,7 +84,7 @@ describe("recommendNext", () => {
       ],
       4
     );
-    expect(result.targetSeconds).toBe(4);
+    expect(result.targetSeconds).toBe(7);
   });
 
   it("treats an early relaxed return as a comfortable anchor", () => {
