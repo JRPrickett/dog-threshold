@@ -12,12 +12,16 @@ export interface LiveSessionState {
   startedAt: number | null;
   returnedAt: number | null;
   mainActualSeconds: number | null;
+  warningIssued: boolean;
+  targetIssued: boolean;
 }
 
 export type LiveSessionAction =
   | { type: "START_STEP"; now: number }
   | { type: "RETURN"; now: number }
   | { type: "NEXT_STEP" }
+  | { type: "MARK_WARNING_ISSUED" }
+  | { type: "MARK_TARGET_ISSUED" }
   | { type: "RESET" };
 
 export function initialLiveSession(steps: SessionStep[]): LiveSessionState {
@@ -27,7 +31,9 @@ export function initialLiveSession(steps: SessionStep[]): LiveSessionState {
     stepIndex: 0,
     startedAt: null,
     returnedAt: null,
-    mainActualSeconds: null
+    mainActualSeconds: null,
+    warningIssued: false,
+    targetIssued: false
   };
 }
 
@@ -48,7 +54,9 @@ export function liveSessionReducer(
         ...state,
         phase: "running",
         startedAt: action.now,
-        returnedAt: null
+        returnedAt: null,
+        warningIssued: false,
+        targetIssued: false
       };
 
     case "RETURN": {
@@ -71,8 +79,20 @@ export function liveSessionReducer(
         phase: "idle",
         stepIndex: Math.min(state.stepIndex + 1, state.steps.length - 1),
         startedAt: null,
-        returnedAt: null
+        returnedAt: null,
+        warningIssued: false,
+        targetIssued: false
       };
+
+    case "MARK_WARNING_ISSUED":
+      return state.warningIssued
+        ? state
+        : { ...state, warningIssued: true };
+
+    case "MARK_TARGET_ISSUED":
+      return state.targetIssued
+        ? state
+        : { ...state, targetIssued: true };
 
     case "RESET":
       return initialLiveSession(state.steps);
