@@ -2684,3 +2684,10 @@ a:focus-visible {
   opacity: .45;
   cursor: default;
 }
+
+
+.marketing-footer > .brand-lockup .settled-mark {
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--ink);
+}
