@@ -110,3 +110,67 @@ test("legacy users keep multiple training tracks after migration", async ({ page
   await expect(page.getByRole("button", { name: "Start session" })).toBeVisible();
   await expect(page.getByText("Morning routine")).toBeVisible();
 });
+
+
+test("a validated backup can replace local data after confirmation", async ({ page }) => {
+  await completeSetup(page, 5);
+  await page.getByRole("button", { name: "More" }).click();
+
+  const backup = {
+    schemaVersion: 1,
+    exportedAt: "2026-09-18T00:00:00.000Z",
+    appData: {
+      dogName: "Ruby",
+      activeScenarioId: "training",
+      scenarios: [{
+        id: "training",
+        label: "Home alone",
+        startSeconds: 7,
+        sessions: [{
+          id: "restored-session",
+          at: Date.UTC(2026, 8, 18, 12, 0, 0),
+          targetSeconds: 7,
+          actualSeconds: 7,
+          outcome: "relaxed",
+          stoppedEarly: false,
+          signals: [],
+          note: "restored"
+        }]
+      }]
+    }
+  };
+
+  await page.getByLabel("Choose backup file").setInputFiles({
+    name: "backup.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(backup))
+  });
+
+  await expect(page.getByText("Ready to restore Ruby")).toBeVisible();
+  await expect(page.getByText(/1 timed session/)).toBeVisible();
+  await page.getByRole("button", { name: "Restore this backup" }).click();
+
+  await expect(page.getByText("Ruby")).toBeVisible();
+  await expect(page.getByText("Home alone")).toBeVisible();
+
+  await page.getByRole("button", { name: "History" }).click();
+  await expect(page.getByText("Relaxed")).toBeVisible();
+  await expect(page.getByText("target 7s")).toBeVisible();
+});
+
+test("a running session remains usable after the browser goes offline", async ({ page, context }) => {
+  await completeSetup(page, 2);
+  await page.getByRole("button", { name: "Start session" }).click();
+  await context.setOffline(true);
+
+  await page.getByRole("button", { name: "I'm leaving now" }).click();
+  await page.waitForTimeout(1_100);
+  await page.getByRole("button", { name: "I'm back" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "How was Mabel while you were away?" })
+  ).toBeVisible();
+  await page.getByRole("button", { name: /Relaxed/ }).click();
+  await page.getByRole("button", { name: "Save session" }).click();
+  await expect(page.getByRole("button", { name: "Start session" })).toBeVisible();
+});
