@@ -10,8 +10,8 @@ export default defineConfig({
       includeAssets: ["icon.svg"],
       manifest: {
         id: "/",
-        name: "Threshold — separation training",
-        short_name: "Threshold",
+        name: "AloneReady — dog separation training",
+        short_name: "AloneReady",
         description:
           "A calm, structured companion for gradual dog separation training.",
         start_url: "/",
