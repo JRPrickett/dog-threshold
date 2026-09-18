@@ -1,15 +1,15 @@
-# AloneReady — production development
+# SettledSolo — production development
 
-**AloneReady** is an offline-first, installable web app for gradual dog separation
-training. The repository retains its original `dog-threshold` name for engineering
-continuity, but AloneReady is the selected production product identity.
+**SettledSolo** is an offline-first, installable web app for gradual dog separation
+training. **Calm starts with small steps.** The repository retains its original `dog-threshold` name for engineering
+continuity, but SettledSolo is the selected production product identity.
 
 A user can start without creating an account. The modern application keeps training local
 and usable offline, with optional free account backup/cross-device sync planned after the
 local product completes its production device gates.
 
 > **Your progress is currently saved on this device.**  
-> Create a free account to back it up and use AloneReady on your other devices.
+> Create a free account to back it up and use SettledSolo on your other devices.
 
 ## Modern production application
 
@@ -54,7 +54,7 @@ Future account sync will use a separate authenticated data path and remain optio
 ## Useful documents
 
 - `docs/PRODUCT-PLAN.md` — product principles and phased roadmap
-- `docs/BRAND-DECISION.md` — AloneReady name and brand system
+- `docs/BRAND-DECISION.md` — SettledSolo name and brand system
 - `docs/EVIDENCE-BASE.md` — research basis and product-heuristic boundaries
 - `docs/DEVICE-TEST-MATRIX.md` — real-device release gate
 - `docs/ACCOUNT-SYNC.md` — account, cloud-data and offline-sync architecture
