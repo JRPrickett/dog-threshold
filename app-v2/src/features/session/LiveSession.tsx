@@ -230,11 +230,27 @@ export function LiveSession({
           <p className="kicker light">You came back at</p>
           <div className="review-time">{formatDuration(state.mainActualSeconds ?? 0)}</div>
           <h1>How was {dogName} while you were away?</h1>
+          <p className="outcome-help">
+            Rate what you actually saw, not whether you reached the timer target. Coming back
+            at the first meaningful sign of concern is a good outcome, not a failure.
+          </p>
           <div className="outcome-grid">
             {([
-              ["relaxed", "Relaxed", "No meaningful signs of concern"],
-              ["concern", "Some concern", "Mild or transient signs"],
-              ["distressed", "Distressed", "Clear or escalating difficulty"]
+              [
+                "relaxed",
+                "Relaxed",
+                "Settled quickly. No pacing, whining, or watching the exit for more than a few seconds."
+              ],
+              [
+                "concern",
+                "Some concern",
+                "Pacing, whining, or watching the exit — but it eased on its own, or you returned and it was mild."
+              ],
+              [
+                "distressed",
+                "Distressed",
+                "Sustained barking/howling, couldn't settle at all, or that's why you came back early."
+              ]
             ] as const).map(([value, label, detail]) => (
               <button
                 key={value}
