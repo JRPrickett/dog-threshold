@@ -15,11 +15,12 @@ import type {
   Outcome,
   TrainingSession
 } from "./domain/types";
+import { createAppRepository } from "./data/repository";
 import {
-  appendSession,
-  loadAppData,
-  saveSetup
-} from "./data/legacyStorage";
+  isRestorableLiveSession,
+  makePersistedLiveSession,
+  type PersistedLiveSession
+} from "./session/sessionPersistence";
 import {
   elapsedSeconds,
   initialLiveSession,
@@ -41,7 +42,7 @@ const signalOptions: Array<{ value: ObservedSignal; label: string }> = [
 function Setup({
   onSaved
 }: {
-  onSaved: (data: AppData) => void;
+  onSaved: (dogName: string, startSeconds: number) => Promise<void>;
 }) {
   const [name, setName] = useState("");
   const [seconds, setSeconds] = useState(5);
@@ -92,7 +93,7 @@ function Setup({
         <button
           className="primary-button"
           disabled={!name.trim() || !Number.isFinite(seconds) || seconds < 1}
-          onClick={() => onSaved(saveSetup(name, seconds))}
+          onClick={() => void onSaved(name, seconds)}
         >
           Set up today's training
         </button>
@@ -327,13 +328,17 @@ function More({ data }: { data: AppData }) {
 function LiveSession({
   targetSeconds,
   dogName,
+  initialState,
   onClose,
-  onSaved
+  onSaved,
+  onPersist
 }: {
   targetSeconds: number;
   dogName: string;
-  onClose: () => void;
-  onSaved: (session: TrainingSession, practice: number[]) => void;
+  initialState?: PersistedLiveSession["state"];
+  onClose: () => Promise<void>;
+  onSaved: (session: TrainingSession) => Promise<void>;
+  onPersist: (snapshot: PersistedLiveSession) => Promise<void>;
 }) {
   const practice = useMemo(
     () => buildPracticeDepartures(targetSeconds),
@@ -348,13 +353,20 @@ function LiveSession({
   );
   const [state, dispatch] = useReducer(
     liveSessionReducer,
-    steps,
-    initialLiveSession
+    initialState ?? steps,
+    (seed) =>
+      Array.isArray(seed)
+        ? initialLiveSession(seed as SessionStep[])
+        : seed as PersistedLiveSession["state"]
   );
   const [now, setNow] = useState(Date.now());
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [signals, setSignals] = useState<ObservedSignal[]>([]);
   const [note, setNote] = useState("");
+
+  useEffect(() => {
+    void onPersist(makePersistedLiveSession(targetSeconds, state));
+  }, [onPersist, state, targetSeconds]);
 
   useEffect(() => {
     if (state.phase !== "running") return;
@@ -377,26 +389,23 @@ function LiveSession({
 
   function saveReview() {
     if (!outcome || state.mainActualSeconds === null) return;
-    onSaved(
-      {
-        id: `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
-        at: Date.now(),
-        targetSeconds,
-        actualSeconds: state.mainActualSeconds,
-        outcome,
-        stoppedEarly: state.mainActualSeconds < targetSeconds,
-        signals,
-        note: note.trim()
-      },
-      practice
-    );
+    void onSaved({
+      id: `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+      at: Date.now(),
+      targetSeconds,
+      actualSeconds: state.mainActualSeconds,
+      outcome,
+      stoppedEarly: state.mainActualSeconds < targetSeconds,
+      signals,
+      note: note.trim()
+    });
   }
 
   if (state.phase === "review") {
     return (
       <div className="live-shell review-shell">
         <header className="live-header">
-          <button className="text-button" onClick={onClose}>Close</button>
+          <button className="text-button" onClick={() => void onClose()}>Close</button>
           <span>Session review</span>
           <span />
         </header>
@@ -464,7 +473,7 @@ function LiveSession({
     return (
       <div className="live-shell">
         <header className="live-header">
-          <button className="text-button" onClick={onClose}>End session</button>
+          <button className="text-button" onClick={() => void onClose()}>End session</button>
           <span>Settle break</span>
           <span />
         </header>
@@ -488,7 +497,7 @@ function LiveSession({
   return (
     <div className="live-shell">
       <header className="live-header">
-        <button className="text-button" onClick={onClose}>End session</button>
+        <button className="text-button" onClick={() => void onClose()}>End session</button>
         <span>
           {step.kind === "practice"
             ? `Practice ${state.stepIndex + 1} of ${practice.length}`
@@ -541,12 +550,54 @@ function LiveSession({
 }
 
 export default function App() {
-  const [data, setData] = useState<AppData>(() => loadAppData());
+  const repository = useMemo(() => createAppRepository(), []);
+  const [data, setData] = useState<AppData | null>(null);
   const [screen, setScreen] = useState<Screen>("today");
   const [liveTarget, setLiveTarget] = useState<number | null>(null);
+  const [restoredState, setRestoredState] =
+    useState<PersistedLiveSession["state"] | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void Promise.all([
+      repository.loadAppData(),
+      repository.loadActiveSession()
+    ]).then(([loadedData, active]) => {
+      if (cancelled) return;
+      setData(loadedData);
+
+      if (isRestorableLiveSession(active)) {
+        setLiveTarget(active.targetSeconds);
+        setRestoredState(active.state);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [repository]);
+
+  if (!data) {
+    return (
+      <main className="setup-shell">
+        <section className="setup-card loading-card" aria-live="polite">
+          <div className="brand-orbit" aria-hidden="true"><span /></div>
+          <p className="kicker">Opening your training log</p>
+          <h1>Getting things ready.</h1>
+        </section>
+      </main>
+    );
+  }
 
   if (!data.dogName) {
-    return <Setup onSaved={setData} />;
+    return (
+      <Setup
+        onSaved={async (dogName, startSeconds) => {
+          setData(await repository.saveSetup(dogName, startSeconds));
+        }}
+      />
+    );
   }
 
   if (liveTarget !== null) {
@@ -554,10 +605,18 @@ export default function App() {
       <LiveSession
         targetSeconds={liveTarget}
         dogName={data.dogName}
-        onClose={() => setLiveTarget(null)}
-        onSaved={(session, practice) => {
-          setData(appendSession(session, practice));
+        initialState={restoredState}
+        onPersist={(snapshot) => repository.saveActiveSession(snapshot)}
+        onClose={async () => {
+          await repository.clearActiveSession();
           setLiveTarget(null);
+          setRestoredState(undefined);
+        }}
+        onSaved={async (session) => {
+          setData(await repository.appendSession(session));
+          await repository.clearActiveSession();
+          setLiveTarget(null);
+          setRestoredState(undefined);
           setScreen("today");
         }}
       />
@@ -575,7 +634,15 @@ export default function App() {
       </header>
 
       <main className="app-content">
-        {screen === "today" && <Today data={data} onStart={setLiveTarget} />}
+        {screen === "today" && (
+          <Today
+            data={data}
+            onStart={(target) => {
+              setRestoredState(undefined);
+              setLiveTarget(target);
+            }}
+          />
+        )}
         {screen === "progress" && <Progress data={data} />}
         {screen === "history" && <History data={data} />}
         {screen === "more" && <More data={data} />}
