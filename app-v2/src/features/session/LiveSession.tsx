@@ -73,6 +73,18 @@ export function LiveSession({
   const [note, setNote] = useState("");
 
   useEffect(() => {
+    const theme =
+      document.querySelector<HTMLMetaElement>('meta[name="theme-color"]') ??
+      document.head.appendChild(document.createElement("meta"));
+    theme.name = "theme-color";
+    theme.content = state.phase === "review" ? "#F1E7D6" : "#15242C";
+
+    return () => {
+      theme.content = "#F1E7D6";
+    };
+  }, [state.phase]);
+
+  useEffect(() => {
     void onPersist(makePersistedLiveSession(scenarioId, targetSeconds, state));
   }, [onPersist, scenarioId, state, targetSeconds]);
 
