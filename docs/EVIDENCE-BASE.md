@@ -117,6 +117,41 @@ Published research does not establish a universal rule such as:
 Those were reasonable prototype heuristics, but they must not be described as evidence-based
 dosage rules.
 
+## Practitioner credentials and clinical guidance
+
+The peer-reviewed studies above establish the underlying mechanism. Separately, it's worth
+naming the credentials that actually exist in this space, since user-facing copy references
+"an accredited separation anxiety specialist" and should say what that means concretely:
+
+- **CSAT** — Certified Separation Anxiety Trainer, a certification issued by Malena
+  DeMartini-Price's training program (demartinidogtraining.com). The dominant dedicated
+  credential for separation anxiety specifically. CSATs coach remotely (video call plus
+  live-camera observation of the dog) and do not prescribe medication.
+- **CDBC** — Certified Dog Behavior Consultant, issued by the International Association of
+  Animal Behavior Consultants (IAABC). LIMA-based, broader than separation anxiety alone,
+  also cannot prescribe medication.
+- **DACVB** — Diplomate, American College of Veterinary Behaviorists. Requires a DVM. The
+  only one of the three that can prescribe or manage medication. Fewer than 100 worldwide.
+
+Source: Rover, "Understanding Dog Trainer/Behaviorist Credentials"
+(rover.com/blog/understanding-dog-training-behaviorist-credentials); AVSAB, "Selecting a
+Behavior Consultant" (avsab.org).
+
+**AVSAB has no position statement dedicated to separation anxiety.** Its closest applicable
+statement is the general "Humane Dog Training" position (2021), a reward-based/LIMA
+statement that applies here as general guidance, not as SA-specific backing. Don't cite AVSAB
+as if it has issued separation-anxiety-specific guidance — it hasn't.
+
+**Clinical guidance, not peer-reviewed research:** Bain M. "Algorithmic Approach: Separation
+Anxiety in Dogs." Today's Veterinary Practice, April 2025. Written by a DACVB, this proposes a
+five-pillar clinical framework (management, social communication/cues, tools,
+desensitization/counterconditioning, medication) consistent with the desensitization principle
+above. It sits at the same evidence tier as the existing VCA citation — useful clinical
+framing, not a controlled study — and should not be presented as equivalent to the
+peer-reviewed sources higher in this document. It's the source for one product-relevant point:
+before starting a structured protocol, video-recording the dog alone once can help rule out
+confinement anxiety or incomplete housetraining being mistaken for separation anxiety.
+
 ## Production engine philosophy
 
 The production recommendation engine follows these principles:
@@ -187,8 +222,8 @@ The app should always encourage returning before distress develops.
 
 ## Professional review gate
 
-Before public launch, a qualified veterinary behaviourist or appropriately credentialled canine
-behaviour professional should review:
+Before public launch, review by a CSAT, CDBC, or veterinary behaviourist (DACVB) — see
+"Practitioner credentials and clinical guidance" above — should cover:
 
 - onboarding and safety wording;
 - outcome descriptions;
