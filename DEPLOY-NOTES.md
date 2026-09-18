@@ -26,9 +26,17 @@ The isolated preview Worker is configured in `wrangler.preview.jsonc`.
 npm run deploy:preview
 ```
 
-This deploys the static SPA as the `settledsolo-preview` Worker.
+This deploys the SPA as the `settledsolo-preview` Worker.
 
-Use this URL for the physical-device test matrix before any root-app cutover.
+The manual GitHub workflow `.github/workflows/deploy-preview.yml` expects repository/environment
+secrets:
+
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+
+Preview hosts are automatically returned with `X-Robots-Tag: noindex, nofollow`.
+
+Use the resulting workers.dev URL for the physical-device test matrix before any root-app cutover.
 
 ## Cloudflare production
 
