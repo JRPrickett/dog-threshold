@@ -875,6 +875,13 @@ textarea:focus-visible {
   color: var(--muted);
 }
 
+.context-help {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 .outcome-grid {
   display: grid;
   gap: 9px;

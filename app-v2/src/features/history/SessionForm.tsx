@@ -146,6 +146,10 @@ export function SessionForm({
 
       <div className="signals-section">
         <span>Context <small>Optional</small></span>
+        <p className="context-help">
+          If signs only show up while crated or confined, that can point to confinement
+          anxiety rather than separation anxiety — worth trying a free-roam session to compare.
+        </p>
         <div className="signal-grid">
           {SESSION_TAG_OPTIONS.map(({ value, label }) => (
             <button
