@@ -70,3 +70,43 @@ test("departure cue practice only advances after repeated calm sets", async ({ p
     page.getByRole("heading", { name: "Stand near the exit for a moment, then move away" })
   ).toBeVisible();
 });
+
+
+test("legacy users keep multiple training tracks after migration", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "threshold.v2",
+      JSON.stringify({
+        version: 5,
+        name: "Mabel",
+        active: "evening",
+        setupDone: true,
+        scenarios: [
+          {
+            id: "morning",
+            label: "Morning routine",
+            start: 5,
+            sessions: []
+          },
+          {
+            id: "evening",
+            label: "Evening routine",
+            start: 12,
+            sessions: []
+          }
+        ]
+      })
+    );
+  });
+
+  await page.goto("/");
+  await expect(page.getByText("Mabel")).toBeVisible();
+  await page.getByRole("button", { name: "More" }).click();
+
+  const selector = page.getByLabel("Training track");
+  await expect(selector).toHaveValue("evening");
+  await selector.selectOption("morning");
+
+  await expect(page.getByRole("button", { name: "Start session" })).toBeVisible();
+  await expect(page.getByText("Morning routine")).toBeVisible();
+});
