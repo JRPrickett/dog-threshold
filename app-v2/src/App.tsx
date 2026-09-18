@@ -22,6 +22,7 @@ import type {
   Outcome,
   TrainingSession
 } from "./domain/types";
+import { activeScenario } from "./data/appData";
 import { createAppRepository } from "./data/repository";
 import {
   isRestorableLiveSession,
@@ -138,9 +139,10 @@ function Today({
   onStart: (target: number) => void;
   onOpenCuePractice: () => void;
 }) {
+  const scenario = activeScenario(data);
   const recommendation = useMemo(
-    () => recommendNext(data.scenario.sessions, data.scenario.startSeconds),
-    [data]
+    () => recommendNext(scenario.sessions, scenario.startSeconds),
+    [scenario]
   );
   const practice = buildPracticeDepartures(recommendation.targetSeconds);
 
@@ -202,10 +204,10 @@ function Today({
       <section className="quiet-card">
         <div>
           <p className="kicker">Current track</p>
-          <h2>{data.scenario.label}</h2>
+          <h2>{scenario.label}</h2>
         </div>
         <div className="mini-stat">
-          <strong>{data.scenario.sessions.length}</strong>
+          <strong>{scenario.sessions.length}</strong>
           <span>sessions logged</span>
         </div>
       </section>
@@ -228,7 +230,8 @@ function Today({
 }
 
 function Progress({ data }: { data: AppData }) {
-  const sessions = data.scenario.sessions;
+  const scenario = activeScenario(data);
+  const sessions = scenario.sessions;
   const relaxed = sessions.filter((session) => session.outcome === "relaxed");
   const longest = relaxed.reduce(
     (best, session) => Math.max(best, session.actualSeconds),
@@ -274,7 +277,8 @@ function Progress({ data }: { data: AppData }) {
 }
 
 function History({ data }: { data: AppData }) {
-  const sessions = [...data.scenario.sessions].reverse();
+  const scenario = activeScenario(data);
+  const sessions = [...scenario.sessions].reverse();
 
   return (
     <div className="screen-stack">
@@ -314,6 +318,7 @@ function History({ data }: { data: AppData }) {
 }
 
 function More({ data }: { data: AppData }) {
+  const scenario = activeScenario(data);
   return (
     <div className="screen-stack">
       <section className="page-heading">
@@ -332,7 +337,7 @@ function More({ data }: { data: AppData }) {
       <section className="menu-card">
         <div>
           <strong>Starting comfort</strong>
-          <span>{formatDuration(data.scenario.startSeconds)} known comfortable duration</span>
+          <span>{formatDuration(scenario.startSeconds)} known comfortable duration</span>
         </div>
       </section>
 
@@ -358,9 +363,10 @@ function DepartureCuePracticeView({
   onClose: () => void;
   onSaved: (session: DepartureCueSession, nextLevel: number) => Promise<void>;
 }) {
+  const scenario = activeScenario(data);
   const recommendation = useMemo(
-    () => recommendCueLevel(data.cuePractice),
-    [data.cuePractice]
+    () => recommendCueLevel(scenario.cuePractice),
+    [scenario.cuePractice]
   );
   const [rep, setRep] = useState(0);
   const [relaxedReps, setRelaxedReps] = useState(0);
@@ -387,7 +393,7 @@ function DepartureCuePracticeView({
 
     const previewPractice = {
       level: recommendation.cueIndex,
-      sessions: [...(data.cuePractice?.sessions ?? []), session]
+      sessions: [...(scenario.cuePractice?.sessions ?? []), session]
     };
     const next = recommendCueLevel(previewPractice);
     await onSaved(session, next.cueIndex);
