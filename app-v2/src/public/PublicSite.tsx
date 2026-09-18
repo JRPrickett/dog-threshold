@@ -169,6 +169,15 @@ export function PublicSite() {
               </p>
             </details>
             <details>
+              <summary>Will I get charged without warning?</summary>
+              <p>
+                No. Core training is free, with no signup wall and no trial that silently
+                converts to a paid plan. If optional paid features are ever added, they will
+                require clear opt-in and be easy to cancel — the same standard we'd want as
+                users of any other app.
+              </p>
+            </details>
+            <details>
               <summary>Is the generated target a clinical prescription?</summary>
               <p>
                 No. SettledSolo uses evidence-supported behavioural principles, while

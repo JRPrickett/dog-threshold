@@ -74,6 +74,12 @@ function TermsPage() {
         SettledSolo helps you plan gradual separation-training sessions, time them,
         record observations and review progress.
       </p>
+      <h2>Pricing and billing</h2>
+      <p>
+        Core training is free, with no signup wall. There is no trial that silently converts
+        to a paid subscription. If optional paid features are introduced, enrolment will
+        require clear, explicit opt-in and cancellation will not require contacting support.
+      </p>
       <h2>What it does not do</h2>
       <p>
         It does not diagnose separation anxiety, provide veterinary care or guarantee
