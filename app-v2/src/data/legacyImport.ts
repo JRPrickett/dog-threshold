@@ -2,6 +2,7 @@ import type {
   AppData,
   ObservedSignal,
   Outcome,
+  DepartureCueSession,
   Scenario,
   TrainingSession
 } from "../domain/types";
@@ -19,6 +20,10 @@ type LegacySession = {
   stopped?: boolean;
   tags?: string[];
   note?: string;
+  level?: number;
+  steps?: number;
+  planned?: number;
+  wobbles?: number;
 };
 
 type LegacyScenario = {
@@ -52,6 +57,23 @@ function outcomeFromLegacy(value: LegacySession["outcome"]): Outcome {
 function signalFromTag(tag: string): ObservedSignal | null {
   const match = Object.entries(signalLabels).find(([, label]) => label === tag);
   return (match?.[0] as ObservedSignal | undefined) ?? null;
+}
+
+function modernCueSession(session: LegacySession, index: number): DepartureCueSession | null {
+  if (session.kind !== "door") return null;
+
+  const concernReps = Math.max(0, Number(session.wobbles ?? 0));
+  const planned = Math.max(1, Number(session.planned ?? 3));
+  const relaxedReps = Math.max(0, planned - concernReps);
+
+  return {
+    id: session.id || `legacy-cue-${index}-${session.at ?? Date.now()}`,
+    at: Number(session.at ?? Date.now()),
+    cueIndex: Math.max(0, Math.min(7, Number(session.level ?? 0))),
+    relaxedReps,
+    concernReps,
+    outcome: outcomeFromLegacy(session.outcome)
+  };
 }
 
 function modernSession(session: LegacySession, index: number): TrainingSession | null {
