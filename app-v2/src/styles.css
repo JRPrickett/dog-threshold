@@ -1024,6 +1024,22 @@ textarea:focus-visible {
   line-height: 1.55;
 }
 
+.coverage-options {
+  font-size: 13px;
+}
+
+.coverage-options summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.coverage-options ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
 .secondary-button {
   width: 100%;
   border: 1px solid rgba(47, 101, 91, .16);
