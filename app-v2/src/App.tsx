@@ -98,6 +98,7 @@ export default function App() {
     return (
       <LiveSession
         scenarioId={activeScenario(data).id}
+        scenarioLabel={activeScenario(data).label}
         targetSeconds={liveTarget}
         dogName={data.dogName}
         initialState={restoredState}
