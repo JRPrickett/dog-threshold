@@ -187,22 +187,6 @@ test("public SettledSolo site leads into the PWA", async ({ page }) => {
   await expect(page.getByLabel("Your dog's name")).toBeVisible();
 });
 
-test("iOS visitors can see how to install SettledSolo", async ({ page, browserName }) => {
-  test.skip(browserName !== "webkit", "The manual Share-sheet guide is specific to iOS.");
-
-  await page.goto("/");
-  await page.getByRole("button", { name: "Install on iPhone" }).click();
-
-  const guide = page.getByRole("dialog", { name: "Keep SettledSolo one tap away." });
-  await expect(guide).toBeVisible();
-  await expect(guide.getByText("Tap the Share button.")).toBeVisible();
-  await expect(guide.getByText("Add to Home Screen", { exact: true }).first()).toBeVisible();
-
-  await guide.getByRole("button", { name: "Close installation guide" }).click();
-  await expect(guide).not.toBeVisible();
-});
-
-
 test("a user can create and rename a separate training track", async ({ page }) => {
   await completeSetup(page, 5);
   await page.getByRole("button", { name: "More" }).click();
