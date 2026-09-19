@@ -1,8 +1,8 @@
 # SettledSolo — production development
 
 **SettledSolo** is an offline-first, installable web app for gradual dog separation
-training. **Calm starts with small steps.** The repository retains its original `dog-threshold` name for engineering
-continuity, but SettledSolo is the selected production product identity.
+training. **Calm starts with small steps.** The repository and production product are now named **SettledSolo**. Legacy storage and
+migration identifiers are retained where changing them could risk existing user data.
 
 A user can start without creating an account. The modern application keeps training local
 and usable offline, with optional free account backup/cross-device sync planned after the
@@ -56,6 +56,8 @@ Future account sync will use a separate authenticated data path and remain optio
 
 ## Useful documents
 
+- `AGENTS.md` — repository, product, evidence, privacy and delivery rules for agents/contributors
+- `docs/HANDOVER.md` — current project state, latest merged work, known gaps and recommended next steps
 - `docs/PRODUCT-PLAN.md` — product principles and phased roadmap
 - `docs/BRAND-DECISION.md` — SettledSolo name and brand system
 - `docs/EVIDENCE-BASE.md` — research basis and product-heuristic boundaries
