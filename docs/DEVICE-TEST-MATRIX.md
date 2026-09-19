@@ -24,10 +24,15 @@ Automated journeys include:
 - departure-cue progression;
 - legacy multi-scenario migration.
 
-CI also builds the **production PWA** and runs a separate service-worker journey against
-Chromium/Pixel 7 and WebKit/iPhone 15 profiles. That journey waits for the generated service
-worker to control the app, simulates an Airplane Mode relaunch, completes/saves a session while
-offline, restores connectivity and confirms the same local history remains present.
+CI also builds the **production PWA** and runs a separate service-worker gate against
+Chromium/Pixel 7 and WebKit/iPhone 15 profiles. Both profiles must prove the generated service
+worker installs and controls the app. Chromium additionally simulates an Airplane Mode relaunch,
+completes/saves a session while offline, restores connectivity and confirms the same local
+history remains present.
+
+Playwright WebKit currently throws an internal engine error when its offline-emulation mode is
+combined with a reload. We therefore do **not** claim that WebKit CI proves an iOS offline
+relaunch. The installed-iPhone Airplane Mode check remains a real-device release gate.
 
 Playwright WebKit is **not** a substitute for Mobile Safari or an installed iOS Home Screen app.
 The production-service-worker test proves the web/PWA code path, not iOS lifecycle behaviour.
