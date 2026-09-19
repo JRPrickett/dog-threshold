@@ -172,7 +172,7 @@ This follows the evidence-supported principles of systematic desensitisation, ve
 graduated departures that remain below the point that evokes anxiety, and direct observation.
 It does **not** establish a universal starting duration.
 
-SettledSolo currently uses **1 second** for the unknown-duration route. That exact number is a
+SettledSolo currently uses **3 seconds** for the unknown-duration route. That exact number is a
 deliberately conservative **product heuristic**, not a clinically validated dosage or diagnostic
 threshold. It should remain labelled as such and is part of the professional-review gate.
 
