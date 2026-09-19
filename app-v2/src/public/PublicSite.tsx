@@ -56,7 +56,7 @@ export function PublicSite() {
 
           <figure className="marketing-hero-art">
             <img
-              src="/photos/hero-settled-at-home-v2.webp"
+              src="/photos/hero-settled-at-home-v2.webp?v=2"
               alt="A relaxed dog sleeping comfortably in a warm, softly lit living room."
               width="1122"
               height="1402"
