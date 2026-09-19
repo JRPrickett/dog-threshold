@@ -50,3 +50,6 @@ jobs:
 
       - name: Run mobile browser journeys
         run: npm run test:e2e
+
+      - name: Verify production PWA offline relaunch
+        run: npm run test:pwa
