@@ -5328,3 +5328,17 @@ a:focus-visible {
 .account-panel details { min-width: 0; }
 .account-panel summary { cursor: pointer; padding-block: 10px; }
 .account-panel [role="alert"] { color: var(--rose); }
+
+.referral-card strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.referral-card p {
+  margin: 0 0 8px;
+  line-height: 1.55;
+}
+
+.referral-card p:last-child {
+  margin-bottom: 0;
+}
