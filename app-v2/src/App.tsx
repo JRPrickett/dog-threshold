@@ -232,6 +232,16 @@ export default function App() {
               setCelebration(null);
               setScreen("today");
             }}
+            onResetApp={async () => {
+              const fresh = await repository.resetAppData();
+              setData(fresh);
+              setStorageMode(repository.storageMode());
+              setRestoredState(undefined);
+              setLiveTarget(null);
+              setCuePracticeOpen(false);
+              setCelebration(null);
+              setScreen("today");
+            }}
           />
         )}
       </main>
