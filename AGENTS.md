@@ -92,9 +92,10 @@ Before calling a PR ready:
 npm install --ignore-scripts
 npm run verify
 npm run test:e2e
+npm run test:pwa
 ```
 
-CI runs `npm run verify` first, then the Playwright suite against Chromium/Pixel 7 and WebKit/iPhone 15 profiles.
+CI runs `npm run verify` first, then the normal Playwright suite against Chromium/Pixel 7 and WebKit/iPhone 15 profiles, followed by `npm run test:pwa` against the production build/service worker.
 
 Automated WebKit is not proof of installed iOS PWA behaviour. Changes affecting timers, notifications, audio, offline behaviour, install flows, safe areas or app lifecycle may also require the real-device gates in `docs/DEVICE-TEST-MATRIX.md`.
 
