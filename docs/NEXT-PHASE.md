@@ -1,30 +1,33 @@
 # SettledSolo next phase — Release Candidate to Accounts & Sync
 
-Date: 18 September 2026
+Date: 19 September 2026
 
 ## Current position
 
-The modern SettledSolo PWA is live on the isolated Cloudflare preview Worker.
+Current reviewed main: `8cf04d9` (PR #26 merged). Its final PR CI run passed.
+No open PRs were found at the start of this review. Deployment of that commit to production
+has not been verified; production remains a manual workflow dispatch.
 
-Automated CI is green across the modern TypeScript/Vitest suite, legacy regression tests, the
-Cloudflare Worker dry-run, Chromium mobile journeys and WebKit mobile journeys.
+The React/TypeScript app is already merged and is the configured production build.
+Guided onboarding, reset/re-onboarding, mobile form zoom fixes, recovery/double-save
+protection and production service-worker gates are implemented.
 
-Real iPhone testing has now confirmed the core live-session resilience path:
+The active phase is **release hardening**, followed by the remaining behaviour-quality
+items. Accounts and sync remain planned. See `HANDOVER.md` for current implementation
+status and `DEVICE-TEST-MATRIX.md` for device evidence; automated browser profiles do not
+clear physical-device gates.
 
-- switching apps does not lose the session;
-- lock/unlock does not lose the session;
-- closing/reopening does not lose the session;
-- the session chime works on the tested device.
-
-That means the next phase should shift from timer-risk reduction toward release preparation and
-optional accounts.
+The current storage-recovery branch fixes startup when IndexedDB becomes available with
+an empty database after a localStorage-only visit. It carries forward setup, history and a
+valid active-session checkpoint without regenerating IDs or timestamps. It does not claim
+to reconcile divergent populated stores or concurrent tabs.
 
 ## Phase A — Release Candidate
 
 Goal: reach a modern local-first build that is safe to merge and use as the production baseline
 before account code changes the data path.
 
-### A0. Guided starting assessment
+### A0. Guided starting assessment — complete (PR #21)
 
 - replace the single duration field with a short first-run assessment;
 - route cue-sensitive/uncertain dogs into departure-cue practice before real leaving;
@@ -110,12 +113,23 @@ Still required:
 
 When A1-A4 are satisfied:
 
-1. Merge PR #11.
-2. Deploy the merged build to `settledsolo-web`.
+1. Select the verified main commit and record the previous production commit for rollback.
+2. Manually deploy that commit to `settledsolo-web`.
 3. Connect the canonical domain.
 4. Preserve legacy import compatibility.
 5. Keep analytics/events on its separate Worker.
 6. Treat this build as the rollback point before accounts/sync.
+
+### A6. Remaining behaviour-quality work
+
+After release-hardening fixes, implement separately:
+
+- optional food/treat-refusal observation;
+- a one-time observation/recording guide that does not ask users to provoke distress;
+- cautious vet/qualified-behaviour-professional support wording for repeated difficulties.
+
+Keep exact software thresholds labelled as product heuristics. Qualified review remains a
+release gate; implementing these items does not establish clinical validation.
 
 ## Phase B — Optional Accounts
 
@@ -230,7 +244,7 @@ Do not use training outcomes as an efficacy claim.
 
 ## Suggested implementation PR sequence
 
-1. **RC polish and cutover readiness**
+1. **Storage recovery and remaining release gates**, then separate behaviour-quality changes
 2. **Better Auth + preview D1 + OTP**
 3. **Account UI + passkeys**
 4. **Guest import + local sync metadata**

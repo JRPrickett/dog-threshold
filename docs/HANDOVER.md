@@ -1,8 +1,8 @@
 # SettledSolo handover
 
-**Last updated:** 19 September 2026, 16:21 BST  
+**Last updated:** 19 September 2026 (production-readiness review)
 **Repository:** `JRPrickett/settledsolo`  
-**Current main before PR #26:** `b298fa10b52c1b58fabfe62f58163ecbdcfe8458`
+**Reviewed main:** `8cf04d9` (PR #26 merged)
 
 This is the current-state handover for another agent or contributor picking up SettledSolo. Read `AGENTS.md` first for repository rules.
 
@@ -12,19 +12,32 @@ SettledSolo is now well beyond the original prototype stage. The active product 
 
 **Phase 1 of the current production-readiness roadmap — guided onboarding — is complete and merged.**
 
-PRs **#21–#25** are merged. **PR #26 is the current open release-hardening PR** at this handover update. The last merged functional change, PR #24, completed CI successfully; PR #25 added the agent rules and this living handover.
+PRs **#21–#26** are merged. PR #26 final PR CI run **35453753932** succeeded. No open PRs existed when this review began. The storage-recovery work described below is on `fix/storage-recovery-readiness`, pending merge. Production deployment of reviewed main has not been verified.
 
-The project is now in **release hardening / real-device gates**. The first hardening pass is PR #26, which adds duplicate-save protection, recovery/notification regressions, a production-service-worker offline relaunch gate and preview-deployment cleanup. After those automated gates are green, finish the genuinely OS-dependent checks on real iOS/Android devices before moving to the remaining behaviour-quality items and then D1/accounts/sync.
+The project is now in **release hardening / real-device gates**. The first hardening pass, PR #26, is merged and adds duplicate-save protection, recovery/notification regressions, a production-service-worker offline relaunch gate and preview-deployment cleanup. With its automated gates green, finish the genuinely OS-dependent checks on real iOS/Android devices before moving to the remaining behaviour-quality items and then D1/accounts/sync.
 
 Do not jump straight into cloud sync in a way that destabilises the currently reliable local-first session path.
 
 ## What changed most recently
 
-### PR #26 — Release hardening gates — open at this handover update
+### Storage recovery and roadmap refresh — current branch, pending merge
+
+- Review found that an empty/recovered IndexedDB database was seeded from legacy data,
+  ignoring newer training data saved through the localStorage fallback.
+- Startup now promotes the existing fallback app data when the primary app record is absent.
+- A valid fallback active session also carries forward, retaining original timer/review state.
+- Expired or invalid fallback checkpoints are cleared rather than revived.
+- Browser regressions cover history/ID preservation, active-timer recovery, save/reload and
+  expired-checkpoint rejection across both mobile browser profiles.
+- This is empty-primary recovery, not reconciliation of divergent populated stores or
+  concurrent-tab edits. Those remain data-layer review work before account sync.
+- `NEXT-PHASE.md` and `PRODUCT-PLAN.md` now distinguish merged work from outstanding gates.
+
+### PR #26 — Release hardening gates — merged
 
 This starts the post-onboarding release-hardening phase.
 
-Changes on the PR branch:
+Merged changes:
 
 - prevents duplicate history records from a fast/double tap on **Save session** by using an in-flight save guard;
 - the new recovered-review test exposed a real lifecycle/persistence race: an older active-session checkpoint could finish after the post-save clear, and a parent rerender could also retrigger persistence because the callback identity changed;
@@ -391,17 +404,11 @@ Unless the user explicitly changes priorities, the recommended order is:
    - observe onboarding completion, first-session completion, repeat use and multi-week use;
    - fix friction before broader launch.
 
-## Known documentation debt
+## Documentation status
 
-Several older documents were written before the latest merges.
-
-In particular:
-
-- `docs/NEXT-PHASE.md` still contains historical wording such as "Merge PR #11" and should not be used literally for current PR state.
-- `docs/PRODUCT-PLAN.md` still describes some modern-app cutover work as future even though the current Cloudflare build uses `app-v2`.
-- `README.md` contains long legacy development-history sections that are useful context but are not the best source for today's priority.
-
-Use this handover as current status and update the older roadmap docs opportunistically when touching the relevant area.
+`NEXT-PHASE.md` and `PRODUCT-PLAN.md` were refreshed in the storage-recovery branch to
+remove obsolete merge/cutover instructions and record current phase status. `README.md`
+still contains historical development sections; use this handover for current priorities.
 
 ## How the next agent should begin
 
