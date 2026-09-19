@@ -62,6 +62,11 @@ export function Today({
     scenario.sessions.length === 0;
   const showRestDayCard =
     recommendation.restDayRecommended && !capReached && !restDayOverride;
+  const planReason = firstMicroObservation
+    ? "There is no known-comfortable absence yet, so the first departure is intentionally tiny and should be adjusted from what you observe."
+    : cueReady
+      ? "Repeated calm practice at the most departure-like doorway cue suggests it is reasonable to try one very brief departure."
+      : recommendation.reason;
 
   return (
     <div className="screen-stack">
@@ -170,7 +175,7 @@ export function Today({
 
           <div className="why-card">
             <span>Why this plan?</span>
-            <p>{recommendation.reason}</p>
+            <p>{planReason}</p>
           </div>
 
           {recommendation.supportFlag && !showRestDayCard && (
@@ -237,9 +242,9 @@ export function Today({
           <p className="kicker">While you&apos;re actively training</p>
           <h2>Cover real absences, not just training sessions.</h2>
           <p>
-            Training works best when {data.dogName} isn&apos;t practising anxiety outside of a
-            session too. Try not to leave them alone longer than today&apos;s plan for anything
-            else this week — errands included.
+            {cuePracticeOnly
+              ? `While ${data.dogName} is working on departure cues, avoid unnecessary real absences where practical so those cues are not repeatedly followed by a difficult separation.`
+              : `Training works best when ${data.dogName} isn't practising anxiety outside of a session too. Try not to leave them alone longer than today's plan for anything else this week — errands included.`}
           </p>
         </div>
         <details className="coverage-options">
