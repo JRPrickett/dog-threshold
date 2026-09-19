@@ -28,7 +28,8 @@ export function More({
   onCreateScenario,
   onUpdateScenario,
   onUpdateDailyCap,
-  onRestoreBackup
+  onRestoreBackup,
+  onResetApp
 }: {
   data: AppData;
   onSelectScenario: (id: string) => Promise<void>;
@@ -43,11 +44,14 @@ export function More({
   ) => Promise<void>;
   onUpdateDailyCap: (cap: number) => Promise<void>;
   onRestoreBackup: (data: AppData) => Promise<void>;
+  onResetApp: () => Promise<void>;
 }) {
   const scenario = activeScenario(data);
   const fileInput = useRef<HTMLInputElement>(null);
   const [pendingRestore, setPendingRestore] = useState<AppData | null>(null);
   const [restoreError, setRestoreError] = useState("");
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetConfirmation, setResetConfirmation] = useState("");
   const [trackLabel, setTrackLabel] = useState(scenario.label);
   const [trackStart, setTrackStart] = useState(scenario.startSeconds);
   const [warmupCount, setWarmupCount] = useState(
@@ -416,6 +420,79 @@ export function More({
                 Restore this backup
               </button>
               <button onClick={() => setPendingRestore(null)}>Cancel</button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="settings-card danger-zone">
+        <div>
+          <p className="kicker">Danger zone</p>
+          <h2>Reset SettledSolo and start again.</h2>
+          <p>
+            This permanently deletes {data.dogName}&apos;s local training tracks,
+            session history, departure-cue progress and onboarding setup on this
+            device. You&apos;ll return to the first-run assessment.
+          </p>
+          <p>
+            Download a backup first if there is anything you may want to restore
+            later.
+          </p>
+        </div>
+
+        {!resetOpen ? (
+          <button
+            className="danger-button"
+            type="button"
+            onClick={() => setResetOpen(true)}
+          >
+            Reset SettledSolo
+          </button>
+        ) : (
+          <div className="reset-confirmation" role="group" aria-label="Confirm app reset">
+            <div className="reset-warning" id="reset-warning">
+              <strong>This cannot be undone without a backup.</strong>
+              <span>
+                Type <b>RESET</b> below to confirm that you want to delete the
+                local training data and run onboarding again.
+              </span>
+            </div>
+            <label>
+              Type RESET to confirm
+              <input
+                value={resetConfirmation}
+                autoComplete="off"
+                spellCheck={false}
+                aria-describedby="reset-warning"
+                onChange={(event) => setResetConfirmation(event.target.value)}
+              />
+            </label>
+            <div className="reset-actions">
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => downloadBackup(data)}
+              >
+                Download backup first
+              </button>
+              <button
+                className="danger-button danger-confirm"
+                type="button"
+                disabled={resetConfirmation.trim().toUpperCase() !== "RESET"}
+                onClick={() => void onResetApp()}
+              >
+                Delete local data and start over
+              </button>
+              <button
+                className="text-reset-button"
+                type="button"
+                onClick={() => {
+                  setResetOpen(false);
+                  setResetConfirmation("");
+                }}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         )}

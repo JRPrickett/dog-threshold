@@ -16,3 +16,19 @@ export function replaceScenario(data: AppData, scenario: Scenario): AppData {
     )
   };
 }
+
+
+export function freshAppData(): AppData {
+  return {
+    dogName: "",
+    activeScenarioId: "training",
+    scenarios: [
+      {
+        id: "training",
+        label: "Separation training",
+        startSeconds: 5,
+        sessions: []
+      }
+    ]
+  };
+}

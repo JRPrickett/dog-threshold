@@ -176,6 +176,55 @@ test("legacy users keep multiple training tracks after migration", async ({ page
 });
 
 
+test("danger-zone reset deletes local training state and restarts onboarding", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "threshold.v2",
+      JSON.stringify({
+        version: 5,
+        name: "Mabel",
+        active: "training",
+        setupDone: true,
+        scenarios: [
+          {
+            id: "training",
+            label: "Existing training",
+            start: 12,
+            sessions: [
+              {
+                id: "old-session",
+                kind: "absence",
+                at: Date.now() - 60_000,
+                target: 12,
+                actual: 12,
+                outcome: "success"
+              }
+            ]
+          }
+        ]
+      })
+    );
+  });
+
+  await page.goto("/app/");
+  await expect(page.getByRole("heading", { name: "You & Mabel" })).toBeVisible();
+  await page.getByRole("button", { name: "More" }).click();
+
+  await page.getByRole("button", { name: "Reset SettledSolo" }).click();
+  const confirmation = page.getByLabel("Type RESET to confirm");
+  await confirmation.fill("RESET");
+
+  await page
+    .getByRole("button", { name: "Delete local data and start over" })
+    .click();
+
+  await expect(page.getByLabel("Your dog's name")).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByLabel("Your dog's name")).toBeVisible();
+  await expect(page.getByText("Mabel", { exact: true })).toHaveCount(0);
+});
+
 test("a validated backup can replace local data after confirmation", async ({ page }) => {
   await completeSetup(page, 5);
   await page.getByRole("button", { name: "More" }).click();

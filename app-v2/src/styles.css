@@ -2376,6 +2376,104 @@ a:focus-visible {
   font-size: 12px;
 }
 
+
+.danger-zone {
+  border: 1px solid rgba(117,72,67,.18);
+  background: rgba(246,224,220,.42);
+}
+
+.danger-zone .kicker {
+  color: #8B5048;
+}
+
+.danger-button {
+  width: 100%;
+  border: 1px solid rgba(117,72,67,.28);
+  border-radius: 14px;
+  padding: 13px 14px;
+  background: var(--rose-soft);
+  color: #754843;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.danger-button:disabled {
+  opacity: .42;
+  cursor: default;
+}
+
+.reset-confirmation {
+  display: grid;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.reset-warning {
+  display: grid;
+  gap: 4px;
+  padding: 13px 14px;
+  border-radius: 14px;
+  background: rgba(117,72,67,.08);
+  color: #754843;
+}
+
+.reset-warning strong {
+  font-size: 12px;
+}
+
+.reset-warning span {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.reset-confirmation label {
+  display: grid;
+  gap: 7px;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 720;
+}
+
+.reset-confirmation input {
+  min-width: 0;
+  border: 1px solid rgba(117,72,67,.22);
+  border-radius: 13px;
+  padding: 12px 13px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+
+.reset-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.reset-actions .secondary-button,
+.reset-actions .danger-button {
+  margin: 0;
+}
+
+.text-reset-button {
+  border: 0;
+  padding: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+@media (min-width: 560px) {
+  .reset-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .reset-actions .text-reset-button {
+    grid-column: 1 / -1;
+  }
+}
+
 .alert-status.enabled {
   background: #DFE7DE;
   color: #45624B;

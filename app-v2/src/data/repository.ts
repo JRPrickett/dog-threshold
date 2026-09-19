@@ -6,8 +6,8 @@ import type {
   TrainingSession
 } from "../domain/types";
 import type { PersistedLiveSession } from "../session/sessionPersistence";
-import { activeScenario, replaceScenario } from "./appData";
-import { readLegacyAppData } from "./legacyImport";
+import { activeScenario, freshAppData, replaceScenario } from "./appData";
+import { LEGACY_KEY, readLegacyAppData } from "./legacyImport";
 
 const DB_NAME = "dog-training-app";
 const DB_VERSION = 1;
@@ -56,6 +56,7 @@ export interface AppRepository {
   loadActiveSession(): Promise<PersistedLiveSession | null>;
   saveActiveSession(session: PersistedLiveSession): Promise<void>;
   clearActiveSession(): Promise<void>;
+  resetAppData(): Promise<AppData>;
   storageMode(): StorageMode;
 }
 
@@ -414,6 +415,20 @@ function fallbackRepository(initial: AppData): AppRepository {
       active = null;
       persistActive();
     },
+    async resetAppData() {
+      data = normaliseAppData(freshAppData());
+      active = null;
+      if (storage && persistent) {
+        try {
+          storage.setItem(FALLBACK_APP_KEY, JSON.stringify(data));
+          storage.removeItem(FALLBACK_ACTIVE_KEY);
+          storage.removeItem(LEGACY_KEY);
+        } catch {
+          persistent = false;
+        }
+      }
+      return data;
+    },
     storageMode() {
       return persistent ? "localstorage" : "memory";
     }
@@ -661,6 +676,19 @@ export function createAppRepository(): AppRepository {
         },
         async () => {}
       );
+    },
+
+    async resetAppData() {
+      const fresh = normaliseAppData(freshAppData());
+      await fallback.resetAppData();
+      await safely(
+        async () => {
+          await putRecord(APP_KEY, fresh);
+          await deleteRecord(ACTIVE_KEY);
+        },
+        async () => {}
+      );
+      return fresh;
     },
 
     storageMode() {
