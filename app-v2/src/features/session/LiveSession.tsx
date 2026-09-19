@@ -7,6 +7,7 @@ import type {
 } from "../../domain/types";
 import { observedSignalOptions } from "../../domain/observedSignals";
 import { SESSION_TAG_OPTIONS } from "../../domain/sessionTags";
+import { ProgressRing } from "../../components/ProgressRing";
 import {
   buildPracticeDepartures,
   formatDuration
@@ -16,14 +17,18 @@ import {
   type PersistedLiveSession
 } from "../../session/sessionPersistence";
 import {
+  alertCapabilities,
   configureMediaSession,
   installWakeLockRecovery,
   playHeadBackSoonChime,
   playTargetReachedChime,
   prepareSessionAudio,
+  requestNotificationPermission,
   showSessionNotification,
-  stopSessionAlerts
+  stopSessionAlerts,
+  type NotificationPermissionState
 } from "../../session/sessionAlerts";
+import { isIOS, isStandalone } from "../../pwa/installStatus";
 import {
   elapsedSeconds,
   initialLiveSession,
@@ -39,6 +44,7 @@ export function LiveSession({
   initialState,
   variabilitySeed = 0,
   warmupCount,
+  shuffleWarmups,
   restSeconds = 60,
   onClose,
   onSaved,
@@ -51,14 +57,21 @@ export function LiveSession({
   initialState?: PersistedLiveSession["state"];
   variabilitySeed?: number;
   warmupCount?: number;
+  shuffleWarmups?: boolean;
   restSeconds?: number;
   onClose: () => Promise<void>;
   onSaved: (session: TrainingSession) => Promise<void>;
   onPersist: (snapshot: PersistedLiveSession) => Promise<void>;
 }) {
   const practice = useMemo(
-    () => buildPracticeDepartures(targetSeconds, variabilitySeed, warmupCount),
-    [targetSeconds, variabilitySeed, warmupCount]
+    () =>
+      buildPracticeDepartures(
+        targetSeconds,
+        variabilitySeed,
+        warmupCount,
+        shuffleWarmups
+      ),
+    [targetSeconds, variabilitySeed, warmupCount, shuffleWarmups]
   );
   const steps = useMemo<SessionStep[]>(
     () => [
@@ -82,6 +95,12 @@ export function LiveSession({
   const [stopReason, setStopReason] = useState("");
   const [note, setNote] = useState("");
   const [restStartedAt, setRestStartedAt] = useState<number | null>(null);
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermissionState>(
+      () => alertCapabilities().notifications
+    );
+  const runningStandalone = isStandalone();
+  const iosDevice = isIOS();
 
   useEffect(() => {
     const theme =
@@ -158,12 +177,11 @@ export function LiveSession({
 
     if (elapsed >= step.targetSeconds && !state.targetIssued) {
       playTargetReachedChime();
-      if (step.kind === "main") {
-        void showSessionNotification(
-          "Training target reached",
-          `${dogName} · head back when appropriate`
-        );
-      }
+      void showSessionNotification(
+        step.kind === "main" ? "Training target reached" : "Practice complete",
+        `${dogName} · time to come back`,
+        { requireInteraction: true }
+      );
       dispatch({ type: "MARK_TARGET_ISSUED" });
     }
   }, [
@@ -211,6 +229,27 @@ export function LiveSession({
       stopReason: stoppedEarly ? stopReason.trim().slice(0, 80) : "",
       note: note.trim()
     });
+  }
+
+  async function enableReturnAlerts() {
+    const permission = await requestNotificationPermission();
+    setNotificationPermission(permission);
+  }
+
+  async function startDeparture() {
+    // Notification permission must be requested from a direct user gesture. Ask
+    // before any timed departure because every return point can alert the user.
+    if (
+      notificationPermission === "default" &&
+      (!iosDevice || runningStandalone)
+    ) {
+      await enableReturnAlerts();
+    }
+
+    const started = Date.now();
+    prepareSessionAudio();
+    setNow(started);
+    dispatch({ type: "START_STEP", now: started });
   }
 
   const restElapsed = restStartedAt
@@ -390,14 +429,33 @@ export function LiveSession({
               Watch {dogName} on your camera. Come back at the first meaningful sign
               of concern — you never need to finish the clock.
             </p>
+            {step.kind === "main" && (
+              <div className="return-alert" role="status" aria-live="polite">
+                {notificationPermission === "granted" ? (
+                  <span>System return alert ready while you watch the camera.</span>
+                ) : notificationPermission === "unsupported" || (iosDevice && !runningStandalone) ? (
+                  <span>
+                    Add SettledSolo to your Home Screen for the best chance of a
+                    background reminder.
+                  </span>
+                ) : notificationPermission === "denied" ? (
+                  <span>
+                    System alerts are blocked. Turn them on in your browser or
+                    iPhone Settings if you want a background reminder.
+                  </span>
+                ) : (
+                  <>
+                    <span>Watching the camera in another app?</span>
+                    <button type="button" onClick={() => void enableReturnAlerts()}>
+                      Enable return alerts
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
             <button
               className="live-primary"
-              onClick={() => {
-                const started = Date.now();
-                prepareSessionAudio();
-                setNow(started);
-                dispatch({ type: "START_STEP", now: started });
-              }}
+              onClick={() => void startDeparture()}
             >
               I'm leaving now
             </button>
@@ -405,9 +463,11 @@ export function LiveSession({
         ) : (
           <>
             <p className="kicker light">{over ? "Target reached" : "Time remaining"}</p>
-            <div className={`live-clock ${over ? "over" : ""}`}>
-              {over ? `+${formatDuration(elapsed - step.targetSeconds)}` : formatDuration(remaining)}
-            </div>
+            <ProgressRing
+              elapsed={elapsed}
+              targetSeconds={step.targetSeconds}
+              over={over}
+            />
             <p className="live-elapsed">
               {formatDuration(elapsed)} away · target {formatDuration(step.targetSeconds)}
             </p>

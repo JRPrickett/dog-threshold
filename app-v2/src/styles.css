@@ -37,7 +37,8 @@ body {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -716,6 +717,23 @@ textarea:focus-visible {
   font-size: 12px;
 }
 
+.duration-input select {
+  min-width: 100px;
+  border: 0;
+  border-left: 1px solid rgba(21, 36, 44, .08);
+  border-radius: 0;
+  padding: 13px 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.duration-input select:focus-visible {
+  outline: 3px solid rgba(47, 101, 91, .28);
+  outline-offset: -3px;
+}
+
 .field-help,
 .disclaimer {
   max-width: 52ch;
@@ -771,6 +789,8 @@ textarea:focus-visible {
   text-align: center;
   padding: 28px 22px calc(32px + env(safe-area-inset-bottom));
   width: min(100%, 620px);
+  max-width: 100%;
+  min-width: 0;
   margin: 0 auto;
 }
 
@@ -824,6 +844,39 @@ textarea:focus-visible {
   background: #f5f6f1;
   color: #253c34;
   font-size: 17px;
+}
+
+.live-primary,
+.return-button {
+  box-sizing: border-box;
+  width: min(100%, 420px);
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.return-alert {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: min(100%, 420px);
+  max-width: 100%;
+  margin: 0 auto 18px;
+  color: rgba(247, 238, 223, .62);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.return-alert button {
+  border: 1px solid rgba(247, 238, 223, .20);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(247, 238, 223, .08);
+  color: #F7EEDF;
+  font-size: 11px;
+  font-weight: 720;
+  cursor: pointer;
 }
 
 .settle-title {
@@ -2032,6 +2085,65 @@ a:focus-visible {
   color: var(--glow);
 }
 
+.progress-ring {
+  position: relative;
+  width: min(76vw, 300px);
+  aspect-ratio: 1;
+  margin: 4px auto 10px;
+  flex: 0 0 auto;
+}
+
+.progress-ring-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.progress-ring-track,
+.progress-ring-value {
+  stroke-width: 14;
+}
+
+.progress-ring-track {
+  stroke: rgba(138, 174, 144, .28);
+}
+
+.progress-ring-value {
+  stroke: var(--glow);
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 7px rgba(242, 166, 90, .18));
+  transition: stroke-dashoffset .25s linear;
+}
+
+.progress-ring-content {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.progress-ring .live-clock {
+  font-size: clamp(42px, 13vw, 64px);
+  line-height: 1;
+  letter-spacing: -.065em;
+}
+
+.progress-ring-of {
+  color: rgba(247, 238, 223, .58);
+  font-size: 12px;
+  letter-spacing: .03em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-ring-value {
+    transition: none;
+  }
+}
+
 .live-copy,
 .live-elapsed {
   color: rgba(247,238,223,.62);
@@ -2864,6 +2976,34 @@ a:focus-visible {
   font-weight: 700;
 }
 
+.track-form label.warmup-option {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 0 2px;
+}
+
+.warmup-option > span {
+  display: grid;
+  gap: 4px;
+}
+
+.warmup-option small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.warmup-option input[type="checkbox"] {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: var(--sea);
+}
+
 .track-form input {
   width: 100%;
   border: 1px solid rgba(21,36,44,.11);
@@ -2871,6 +3011,15 @@ a:focus-visible {
   background: #F6F0E5;
   color: var(--ink);
   padding: 11px 12px;
+}
+
+.track-form .warmup-option input[type="checkbox"] {
+  width: 19px;
+  height: 19px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  padding: 0;
 }
 
 .track-form .duration-input input {

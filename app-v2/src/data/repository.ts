@@ -44,7 +44,8 @@ export interface AppRepository {
     label: string,
     startSeconds: number,
     warmupCount?: number,
-    restSeconds?: number
+    restSeconds?: number,
+    shuffleWarmups?: boolean
   ): Promise<AppData>;
   updateDailyCap(cap: number): Promise<AppData>;
   loadActiveSession(): Promise<PersistedLiveSession | null>;
@@ -147,6 +148,10 @@ function normaliseScenario(scenario: Scenario, index: number): Scenario {
       scenario?.warmupCount == null
         ? undefined
         : Math.max(0, Math.min(4, Math.round(scenario.warmupCount))),
+    shuffleWarmups:
+      scenario?.shuffleWarmups == null
+        ? undefined
+        : Boolean(scenario.shuffleWarmups),
     restSeconds:
       scenario?.restSeconds == null
         ? undefined
@@ -338,7 +343,14 @@ function fallbackRepository(initial: AppData): AppRepository {
       persistData();
       return data;
     },
-    async updateScenario(id, label, startSeconds, warmupCount, restSeconds) {
+    async updateScenario(
+      id,
+      label,
+      startSeconds,
+      warmupCount,
+      restSeconds,
+      shuffleWarmups
+    ) {
       const existing = data.scenarios.find((scenario) => scenario.id === id);
       if (!existing) return data;
       data = normaliseAppData(
@@ -347,7 +359,8 @@ function fallbackRepository(initial: AppData): AppRepository {
           label: label.trim() || existing.label,
           startSeconds: Math.max(1, Math.round(startSeconds || existing.startSeconds)),
           warmupCount: warmupCount ?? existing.warmupCount,
-          restSeconds: restSeconds ?? existing.restSeconds
+          restSeconds: restSeconds ?? existing.restSeconds,
+          shuffleWarmups: shuffleWarmups ?? existing.shuffleWarmups
         })
       );
       persistData();
@@ -540,7 +553,14 @@ export function createAppRepository(): AppRepository {
       return next;
     },
 
-    async updateScenario(id, label, startSeconds, warmupCount, restSeconds) {
+    async updateScenario(
+      id,
+      label,
+      startSeconds,
+      warmupCount,
+      restSeconds,
+      shuffleWarmups
+    ) {
       const data = await repository.loadAppData();
       const existing = data.scenarios.find((scenario) => scenario.id === id);
       if (!existing) return data;
@@ -550,7 +570,8 @@ export function createAppRepository(): AppRepository {
           label: label.trim() || existing.label,
           startSeconds: Math.max(1, Math.round(startSeconds || existing.startSeconds)),
           warmupCount: warmupCount ?? existing.warmupCount,
-          restSeconds: restSeconds ?? existing.restSeconds
+          restSeconds: restSeconds ?? existing.restSeconds,
+          shuffleWarmups: shuffleWarmups ?? existing.shuffleWarmups
         })
       );
       await repository.saveAppData(next);

@@ -53,8 +53,10 @@ export interface Scenario {
   startSeconds: number;
   sessions: TrainingSession[];
   cuePractice?: DepartureCuePractice;
-  /** Number of short practice departures before the main one. Defaults to 2 when unset. */
+  /** Number of short practice departures before the main one. Defaults to four below ten minutes. */
   warmupCount?: number;
+  /** Vary the warm-up order from session to session when enabled. */
+  shuffleWarmups?: boolean;
   /** Suggested minimum settle time between departures, in seconds. Defaults to 60 when unset. */
   restSeconds?: number;
 }
