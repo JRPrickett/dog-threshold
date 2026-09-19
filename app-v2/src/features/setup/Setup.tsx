@@ -278,14 +278,14 @@ export function Setup({
 
             {plan.startingPath === "micro-departure" && (
               <>
-                <h1>Start with a 1-second observation.</h1>
+                <h1>Start with a 3-second observation.</h1>
                 <p className="lead">
                   You don&apos;t need to discover {dogName}&apos;s maximum. The goal
                   is simply to begin with an extremely brief departure and observe.
                 </p>
                 <div className="setup-plan">
                   <span className="setup-plan-badge">Very brief first departure</span>
-                  <strong>1 second, with a camera if you can.</strong>
+                  <strong>3 seconds, with a camera if you can.</strong>
                   <p>
                     Starting below distress is the evidence-led principle. The exact
                     1-second value is a conservative SettledSolo heuristic, not a
