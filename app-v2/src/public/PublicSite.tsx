@@ -1,4 +1,13 @@
 import { BrandMark, BrandWordmark } from "../brand/BrandMark";
+import { PublicInstallAction } from "./PublicInstall";
+
+function ArrowIcon() {
+  return (
+    <svg className="marketing-link-arrow" viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M4 10h11m-4-4 4 4-4 4" />
+    </svg>
+  );
+}
 
 export function PublicSite() {
   return (
@@ -8,10 +17,21 @@ export function PublicSite() {
           <BrandWordmark compact light />
         </a>
         <nav aria-label="Public site">
-          <a href="#how-it-works">How it works</a>
-          <a href="#why-settledsolo">Why SettledSolo</a>
-          <a href="/evidence">Evidence</a>
-          <a href="/app/" className="marketing-nav-cta">Open app</a>
+          <div className="marketing-desktop-links">
+            <a href="#how-it-works">How it works</a>
+            <a href="#the-session">The session</a>
+            <a href="/evidence">Evidence</a>
+          </div>
+          <details className="marketing-mobile-menu">
+            <summary>Explore</summary>
+            <div>
+              <a href="#how-it-works">How it works</a>
+              <a href="#the-session">The session</a>
+              <a href="/evidence">Evidence</a>
+              <a href="/help">Help</a>
+            </div>
+          </details>
+          <a href="/app/" className="marketing-nav-cta">Start free</a>
         </nav>
       </header>
 
@@ -20,123 +40,160 @@ export function PublicSite() {
           <div className="marketing-hero-copy">
             <h1>Calm starts with small steps.</h1>
             <p className="marketing-lead">
-              Build comfortable alone time gradually, with an explainable plan,
-              a reliable session timer and a private record of what your dog
-              actually experienced.
+              A gentle, practical way to build comfortable alone time—one
+              observable, manageable departure at a time.
             </p>
             <div className="marketing-actions">
-              <a className="marketing-primary" href="/app/">Start training free</a>
+              <PublicInstallAction />
               <a className="marketing-secondary" href="#how-it-works">See how it works</a>
             </div>
-            <p className="marketing-fineprint">
-              No account required. Your training can start locally on this device.
-            </p>
+            <ul className="marketing-hero-assurances" aria-label="What to expect">
+              <li>No account required</li>
+              <li>No streaks or pressure</li>
+              <li>Your training stays on your device</li>
+            </ul>
           </div>
 
-          <div className="marketing-hero-art" aria-hidden="true">
-            <div className="marketing-scene-copy">
-              <strong>SettledSolo</strong>
-              <span>Build comfortable alone time, gradually.</span>
-            </div>
-          </div>
+          <figure className="marketing-hero-art">
+            <img
+              src="/photos/hero-window-watch.jpg"
+              alt="A dog sitting quietly beside a softly lit window."
+              width="1440"
+              height="2560"
+            />
+            <figcaption className="marketing-scene-copy">
+              <span>Observe comfort, not just the clock.</span>
+              <strong>Leave gently. Watch closely. Return early.</strong>
+            </figcaption>
+          </figure>
         </section>
 
         <section className="marketing-trust-strip" aria-label="Product principles">
-          <div><strong>Evidence-aware</strong><span>Principles grounded in gradual desensitisation.</span></div>
-          <div><strong>Dog-first</strong><span>The target is a ceiling, never a quota.</span></div>
-          <div><strong>Private by design</strong><span>Core training works locally without an account.</span></div>
-          <div><strong>Built for real life</strong><span>Offline sessions and interruption recovery.</span></div>
+          <div><strong>Start below worry</strong><span>Begin with something your dog can already manage.</span></div>
+          <div><strong>Watch the dog</strong><span>The target is a ceiling, never a reason to push on.</span></div>
+          <div><strong>Adapt without judgement</strong><span>A difficult session simply makes the next one easier.</span></div>
         </section>
 
         <section className="marketing-section" id="how-it-works">
           <div className="marketing-section-heading">
-            <h2>A training loop that stays simple.</h2>
+            <h2>A small loop you can trust.</h2>
             <p>
-              SettledSolo keeps the focus on observation and comfort rather than
-              chasing increasingly large numbers.
+              SettledSolo turns a complicated, emotional process into one calm
+              decision at a time. There is always permission to make it easier.
             </p>
           </div>
 
-          <div className="marketing-steps">
-            <article>
-              <span>01</span>
-              <h3>Start below worry.</h3>
-              <p>Choose a duration you have already seen your dog manage calmly.</p>
-            </article>
-            <article>
-              <span>02</span>
-              <h3>Train and observe.</h3>
-              <p>Use a camera when you can, return early if concern appears, and log what you saw.</p>
-            </article>
-            <article>
-              <span>03</span>
-              <h3>Adapt the next step.</h3>
-              <p>The next plan is explained in plain English and becomes easier when difficulty appears.</p>
-            </article>
-          </div>
-        </section>
-
-        <section className="marketing-app-preview" id="why-settledsolo">
-          <div className="marketing-preview-copy">
-            <h2>Designed for the moment you actually leave.</h2>
-            <p>
-              The everyday app is light and quiet. Start a live session and it
-              shifts into the dusk interface: large timer, minimal distractions,
-              return cues and recovery if the browser is interrupted.
-            </p>
-            <ul>
-              <li>Explainable recommendations</li>
-              <li>Relaxed / some concern / distressed review</li>
-              <li>Observed-signal tracking without heavy journalling</li>
-              <li>JSON backup, restore and CSV export</li>
-              <li>Installable PWA, no app-store barrier</li>
-            </ul>
-          </div>
-
-          <div className="marketing-phone" aria-label="SettledSolo Today screen preview">
-            <div className="marketing-phone-top" />
-            <div className="marketing-phone-content">
-              <p>Good morning</p>
-              <h3>You &amp; Biscuit</h3>
-              <div className="marketing-phone-card">
-                <span>Today's practice</span>
-                <strong>1:20</strong>
-                <small>Suggested absence</small>
-                <p>A small step from your last comfortable session.</p>
+          <ol className="marketing-steps">
+            <li>
+              <span aria-hidden="true">01</span>
+              <div>
+                <h3>Plan something manageable.</h3>
+                <p>Start from a duration you have already seen your dog handle comfortably.</p>
               </div>
-              <button type="button" tabIndex={-1}>Start session</button>
-            </div>
-          </div>
+            </li>
+            <li>
+              <span aria-hidden="true">02</span>
+              <div>
+                <h3>Leave, watch and listen.</h3>
+                <p>Use a camera when you can. If concern appears, returning early is the right call.</p>
+              </div>
+            </li>
+            <li>
+              <span aria-hidden="true">03</span>
+              <div>
+                <h3>Record what really happened.</h3>
+                <p>The next suggestion responds to your observation, with the reason shown in plain English.</p>
+              </div>
+            </li>
+          </ol>
         </section>
 
-        <section className="marketing-quote">
+        <section className="marketing-session" id="the-session">
+          <div className="marketing-preview-copy">
+            <h2>A quiet guide for the moment you actually leave.</h2>
+            <p>
+              Before you go, you get a gentle plan. While you are away, the screen
+              pares back to what matters. When you return, a few quick observations
+              shape the next step.
+            </p>
+            <ul className="marketing-outcomes">
+              <li><strong>Know why</strong><span>Every suggested duration comes with a clear reason.</span></li>
+              <li><strong>Stay in control</strong><span>Come back early, pause, or make the next session easier.</span></li>
+              <li><strong>Keep the useful details</strong><span>See patterns without turning training into a diary.</span></li>
+            </ul>
+            <a className="marketing-text-link" href="/app/">Explore the app <ArrowIcon /></a>
+          </div>
+
+          <figure className="marketing-session-visual" aria-label="A SettledSolo session from plan to review">
+            <div className="session-frame session-plan">
+              <div className="session-frame-top"><span>Today with</span><strong>You &amp; Biscuit</strong></div>
+              <div className="session-plan-target">
+                <span>Today's plan</span>
+                <strong>1:20</strong>
+                <small>A small step from the last comfortable session.</small>
+              </div>
+              <div className="session-warmups"><span>Warm up</span><b>0:20</b><b>0:35</b><b>0:50</b><b>1:00</b></div>
+              <span className="session-preview-action">Start today's session</span>
+            </div>
+            <div className="session-frame session-live">
+              <div className="session-live-top"><span>Live session</span><strong>Biscuit · Front door</strong></div>
+              <div className="session-live-clock"><span>Time away</span><strong>0:42</strong><small>of a 1:20 ceiling</small></div>
+              <span className="session-return-action">I'm back with Biscuit</span>
+            </div>
+            <div className="session-frame session-review">
+              <div className="session-frame-top"><span>Welcome back</span><strong>What did you notice?</strong></div>
+              <div className="session-outcomes">
+                <span className="selected"><b>Relaxed</b><small>Comfortable throughout</small></span>
+                <span><b>Some concern</b><small>Make the next step easier</small></span>
+              </div>
+              <p>Next time: repeat 1:20 to build confidence.</p>
+            </div>
+            <figcaption>Plan <span>/</span> observe <span>/</span> adapt</figcaption>
+          </figure>
+        </section>
+
+        <section className="marketing-reassurance">
           <BrandMark compact light />
-          <blockquote>
-            “Progress isn't how long you're gone. It's how settled your dog
-            feels while you're away.”
-          </blockquote>
+          <div>
+            <h2>You do not need to prove anything today.</h2>
+            <p>
+              One calm repetition is useful. If your dog looks worried, come back.
+              Progress is not how long you stay away—it is how safe the experience feels.
+            </p>
+          </div>
         </section>
 
         <section className="marketing-section marketing-evidence">
           <div className="marketing-section-heading">
-            <h2>Transparent about what science can and cannot tell us.</h2>
-          </div>
-          <div className="marketing-evidence-grid">
+            <h2>Evidence-aware. Honest about the gaps.</h2>
             <p>
-              SettledSolo uses established behaviour-change principles such as
-              gradual systematic desensitisation and direct observation.
-            </p>
-            <p>
-              Exact step sizes are conservative product heuristics, not presented
-              as a clinically proven formula. Every recommendation should be
-              understandable and easy to override.
+              Good guidance should make its foundations clear without pretending
+              that every dog follows the same formula.
             </p>
           </div>
+          <div className="marketing-proof-list">
+            <article>
+              <span>What guides the app</span>
+              <h3>Gradual exposure and direct observation.</h3>
+              <p>The method starts below meaningful worry and changes according to what you observe.</p>
+            </article>
+            <article>
+              <span>What the app will not claim</span>
+              <h3>A perfect formula or a clinical prescription.</h3>
+              <p>Step sizes are conservative planning suggestions. You can always make them easier.</p>
+            </article>
+            <article>
+              <span>Where the product stands</span>
+              <h3>Built transparently, with review still to complete.</h3>
+              <p>Training wording and heuristics are scheduled for qualified professional review before general launch.</p>
+            </article>
+          </div>
+          <a className="marketing-text-link" href="/evidence">Read the evidence notes <ArrowIcon /></a>
         </section>
 
         <section className="marketing-section marketing-faq" id="faq">
           <div className="marketing-section-heading">
-            <h2>Useful before you ever create an account.</h2>
+            <h2>Questions worth asking before you begin.</h2>
           </div>
           <div className="faq-list">
             <details>
@@ -156,20 +213,11 @@ export function PublicSite() {
               </p>
             </details>
             <details>
-              <summary>Do I need an account?</summary>
+              <summary>Do I need an account or a payment card?</summary>
               <p>
-                No. Core training works locally first. Optional account backup and
-                cross-device sync are planned without making signup a prerequisite
-                for starting.
-              </p>
-            </details>
-            <details>
-              <summary>Will I get charged without warning?</summary>
-              <p>
-                No. Core training is free, with no signup wall and no trial that silently
-                converts to a paid plan. If optional paid features are ever added, they will
-                require clear opt-in and be easy to cancel — the same standard we'd want as
-                users of any other app.
+                No. Core training works locally and is free, with no signup wall or trial
+                that silently converts. Optional account backup and cross-device sync are
+                planned, and any future paid features would require clear opt-in.
               </p>
             </details>
             <details>
@@ -186,8 +234,8 @@ export function PublicSite() {
         <section className="marketing-final-cta">
           <BrandMark />
           <h2>Build comfortable alone time, gradually.</h2>
-          <p>Start with one calm, manageable step. No account required.</p>
-          <a className="marketing-primary" href="/app/">Open SettledSolo</a>
+          <p>Your first plan takes less than a minute to set up. No account required.</p>
+          <a className="marketing-primary" href="/app/">Start training free</a>
         </section>
       </main>
 
