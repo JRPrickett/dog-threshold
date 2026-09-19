@@ -460,6 +460,13 @@ export function createAppRepository(): AppRepository {
 
   const fallback = fallbackRepository(legacy);
   let useFallback = false;
+  let activeMutation: Promise<void> = Promise.resolve();
+
+  function queueActiveMutation(operation: () => Promise<void>): Promise<void> {
+    const run = activeMutation.then(operation, operation);
+    activeMutation = run.catch(() => {});
+    return run;
+  }
 
   async function safely<T>(
     primary: () => Promise<T>,
@@ -641,6 +648,7 @@ export function createAppRepository(): AppRepository {
     },
 
     async loadActiveSession() {
+      await activeMutation;
       return safely(
         async () => {
           const active = await getRecord<PersistedLiveSession>(ACTIVE_KEY);
@@ -659,35 +667,41 @@ export function createAppRepository(): AppRepository {
     },
 
     async saveActiveSession(session) {
-      await fallback.saveActiveSession(session);
-      return safely(
-        async () => {
-          await putRecord(ACTIVE_KEY, session);
-        },
-        async () => {}
-      );
+      return queueActiveMutation(async () => {
+        await fallback.saveActiveSession(session);
+        await safely(
+          async () => {
+            await putRecord(ACTIVE_KEY, session);
+          },
+          async () => {}
+        );
+      });
     },
 
     async clearActiveSession() {
-      await fallback.clearActiveSession();
-      return safely(
-        async () => {
-          await deleteRecord(ACTIVE_KEY);
-        },
-        async () => {}
-      );
+      return queueActiveMutation(async () => {
+        await fallback.clearActiveSession();
+        await safely(
+          async () => {
+            await deleteRecord(ACTIVE_KEY);
+          },
+          async () => {}
+        );
+      });
     },
 
     async resetAppData() {
       const fresh = normaliseAppData(freshAppData());
-      await fallback.resetAppData();
-      await safely(
-        async () => {
-          await putRecord(APP_KEY, fresh);
-          await deleteRecord(ACTIVE_KEY);
-        },
-        async () => {}
-      );
+      await queueActiveMutation(async () => {
+        await fallback.resetAppData();
+        await safely(
+          async () => {
+            await putRecord(APP_KEY, fresh);
+            await deleteRecord(ACTIVE_KEY);
+          },
+          async () => {}
+        );
+      });
       return fresh;
     },
 
