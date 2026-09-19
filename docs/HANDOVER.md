@@ -27,6 +27,8 @@ This starts the post-onboarding release-hardening phase.
 Changes on the PR branch:
 
 - prevents duplicate history records from a fast/double tap on **Save session** by using an in-flight save guard;
+- the new recovered-review test exposed a real IndexedDB ordering race: an older active-session checkpoint could finish after the post-save clear and resurrect a completed review on reload;
+- active-session save/clear/reset mutations are now serialized so the latest operation wins deterministically;
 - adds a recovered-review browser journey that reloads before save, deliberately double-taps save and proves one history record remains after a second reload;
 - adds notification-denial coverage proving denial does not block training and is not immediately re-prompted;
 - adds a separate production-PWA Playwright gate that builds the real service worker, relaunches offline, saves offline and verifies the data after connectivity returns;
