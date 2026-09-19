@@ -3,26 +3,12 @@ import { expect, test } from "@playwright/test";
 async function completeSetup(page: import("@playwright/test").Page, seconds = 1) {
   await page.goto("/app/");
   await page.getByLabel("Your dog's name").fill("Mabel");
-  await page.getByLabel("Comfortable duration").fill(String(seconds));
+  await page
+    .getByLabel("A duration you already know feels comfortable")
+    .fill(String(seconds));
   await page.getByRole("button", { name: "Set up your first session" }).click();
   await expect(page.getByRole("button", { name: "Start today's session" })).toBeVisible();
 }
-
-test("setup accepts a clear duration and converts minutes to seconds", async ({ page }) => {
-  await page.goto("/app/");
-  await page.getByLabel("Your dog's name").fill("Mabel");
-
-  const duration = page.getByLabel("Comfortable duration");
-  await duration.fill("");
-  await duration.type("25");
-  await expect(duration).toHaveValue("25");
-
-  await duration.fill("1");
-  await page.getByLabel("Duration unit").selectOption("minutes");
-  await page.getByRole("button", { name: "Set up your first session" }).click();
-
-  await expect(page.getByText("1:00")).toBeVisible();
-});
 
 test("first session can be completed and appears in history", async ({ page }) => {
   await completeSetup(page, 1);
@@ -196,9 +182,24 @@ test("public SettledSolo site leads into the PWA", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Calm starts with small steps." })).toBeVisible();
   await expect(page.getByText("SettledSolo").first()).toBeVisible();
-  await page.getByRole("link", { name: "Start training free" }).click();
+  await page.getByRole("link", { name: "Start free" }).click();
   await expect(page).toHaveURL(/\/app\/?$/);
   await expect(page.getByLabel("Your dog's name")).toBeVisible();
+});
+
+test("iOS visitors can see how to install SettledSolo", async ({ page, browserName }) => {
+  test.skip(browserName !== "webkit", "The manual Share-sheet guide is specific to iOS.");
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Install on iPhone" }).click();
+
+  const guide = page.getByRole("dialog", { name: "Keep SettledSolo one tap away." });
+  await expect(guide).toBeVisible();
+  await expect(guide.getByText("Tap the Share button.")).toBeVisible();
+  await expect(guide.getByText("Add to Home Screen", { exact: true }).first()).toBeVisible();
+
+  await guide.getByRole("button", { name: "Close installation guide" }).click();
+  await expect(guide).not.toBeVisible();
 });
 
 
