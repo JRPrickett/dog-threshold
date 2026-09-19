@@ -13,19 +13,26 @@ Verified on 19 September 2026, after PR #28 merged as `e13f5d4`:
 | Account/sync code on `main` | Merged, CI green |
 | Preview Worker | Deployed at `https://settledsolo-web-preview.jasonrprickett.workers.dev` |
 | `ACCOUNTS_ENABLED` on the deployed preview Worker | `false` |
-| Account D1 databases | **Not created.** The provisioning workflow has never run |
-| Account variables and secrets | **All unset** in the GitHub `preview` environment |
-| Cloudflare deployment credentials | Present in the GitHub `preview` environment |
+| Account D1 databases | **Created and empty.** `settledsolo-accounts-preview` and `settledsolo-accounts-production`, with distinct IDs |
+| Account D1 migrations | **Not applied.** Deployment applies them when accounts are enabled |
+| Account variables and secrets | **All unset.** Both D1 IDs still need storing as repository variables |
+| Cloudflare deployment credentials | Present in both the `preview` and `production` GitHub environments, with D1 read/edit permission |
 | Live `/api/account/status` on preview | `{"available":false}`, private and noindexed |
 | Unknown API paths on preview | Fail closed as JSON, never the app shell |
 
 So the code path is deployed and failing closed exactly as intended, and every
 remaining step is provisioning and configuration rather than implementation.
 
-Two things are not yet known and are established by running the steps below:
+Provisioning confirmed that the existing Cloudflare API token carries D1 read/edit
+permission and that both GitHub environments hold Cloudflare credentials.
 
-- whether the existing Cloudflare API token carries D1 read/edit permission;
-- whether the GitHub `production` environment holds Cloudflare credentials at all.
+The remaining blocker is email delivery: accounts cannot be activated without a verified
+sender, and `AUTH_ORIGIN`, `AUTH_EMAIL_FROM`, `RESEND_API_KEY` and `BETTER_AUTH_SECRET`
+are all still unset.
+
+The provisioning workflow is idempotent: it reuses a database that already exists and
+reprints its ID, so re-run it rather than recording the UUIDs here, where they would go
+stale. The run log and job summary both print them.
 
 ## Check configuration without deploying
 
@@ -124,8 +131,8 @@ remains a manual workflow dispatch from main.
 
 ## Activation order
 
-1. Run **Provision isolated account database** for `preview`, then for `production`.
-   Record both printed UUIDs. This creates empty databases only; it enables nothing.
+1. ~~Run **Provision isolated account database** for `preview`, then for `production`.~~
+   Done: both databases exist and are empty. Re-run it at any time to reprint an ID.
 2. Set `ACCOUNTS_PREVIEW_D1_ID` and `ACCOUNTS_PRODUCTION_D1_ID` as repository variables.
 3. Complete Resend sender/domain verification and generate a separate
    `BETTER_AUTH_SECRET` per environment.

@@ -25,12 +25,18 @@ rather than implementation. Verified on `e13f5d4`:
   merged account code with `ACCOUNTS_ENABLED="false"`;
 - `/api/account/status` returns `{"available":false}`, private and noindexed, and unknown API
   paths fail closed as JSON rather than falling through to the app shell;
-- **no account D1 database exists** — the provisioning workflow has never run;
-- **all seven account variables and secrets are unset** in the GitHub `preview` environment;
-- Cloudflare deployment credentials are present in the GitHub `preview` environment.
+- both account D1 databases now exist and are empty, with distinct IDs, and no account
+  migrations have been applied to either yet;
+- the Cloudflare API token carries D1 read/edit permission, and both GitHub environments hold
+  Cloudflare credentials;
+- **all seven account variables and secrets are still unset**, including the two D1 IDs.
 
-Whether that Cloudflare token also carries D1 read/edit permission, and whether the GitHub
-`production` environment holds Cloudflare credentials at all, are not yet established.
+The remaining blocker is email delivery. There is no verified sender yet, so `AUTH_ORIGIN`,
+`AUTH_EMAIL_FROM`, `RESEND_API_KEY` and `BETTER_AUTH_SECRET` cannot be finalised and preview
+cannot be activated. Nothing else stands between the current state and preview accounts.
+
+Re-run **Provision isolated account database** to reprint a database ID: it is idempotent and
+reuses an existing database, so the UUIDs are deliberately not recorded in this repository.
 
 See `ACCOUNTS-DEPLOYMENT.md` for the current state table and the ordered activation runbook,
 and `ACCOUNTS-REVIEW.md` for review results, test coverage and outstanding real-device and
@@ -399,11 +405,11 @@ Do not use training outcomes as an efficacy claim.
 ## Recommended next sequence
 
 1. ~~Finish account-branch CI/review and merge the independently reviewed changes.~~ Done: PR #28.
-2. Provision isolated D1 databases and configure verified email delivery/secrets. **This is the
-   current blocking step.** It needs a Cloudflare API token with D1 read/edit permission and a
-   Resend account with a verified sender; neither can be created from an agent workspace. Run
-   **Provision isolated account database**, then follow the activation order in
-   `ACCOUNTS-DEPLOYMENT.md`, checking progress with **Verify account configuration**.
+2. ~~Provision isolated D1 databases~~ Done: both exist and are empty. Configuring verified
+   email delivery and the remaining secrets is **the current blocking step** — it needs an
+   email provider account with a verified sender, which cannot be created from an agent
+   workspace. Then follow the activation order in `ACCOUNTS-DEPLOYMENT.md`, checking progress
+   with **Verify account configuration**.
 3. Activate preview only, then verify real OTP delivery and two-device sync/recovery.
 4. Complete remaining physical-device and professional behavioural-review gates.
 5. Finish smaller behaviour-quality and public-beta contact/privacy/assets work.
