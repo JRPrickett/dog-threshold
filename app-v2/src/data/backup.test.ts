@@ -8,6 +8,11 @@ describe("backup restore", () => {
       exportedAt: "2026-09-18T00:00:00.000Z",
       appData: {
         dogName: "Mabel",
+        onboarding: {
+          version: 2,
+          startingPath: "known-duration",
+          completedAt: 12345
+        },
         activeScenarioId: "training",
         scenarios: [{
           id: "training",
@@ -34,6 +39,11 @@ describe("backup restore", () => {
     }));
 
     expect(data.dogName).toBe("Mabel");
+    expect(data.onboarding).toEqual({
+      version: 2,
+      startingPath: "known-duration",
+      completedAt: 12345
+    });
     expect(data.scenarios[0].sessions[0].signals).toEqual(["pacing"]);
     expect(data.scenarios[0].sessions[0].tags).toEqual(["after-a-walk"]);
     expect(data.scenarios[0].sessions[0].stopReason).toBe("doorbell rang");
