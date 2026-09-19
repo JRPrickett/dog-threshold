@@ -48,6 +48,6 @@ test("guided onboarding remains accessible through routing and plan review", asy
 
   await page.getByRole("button", { name: /^I'm not sure/ }).click();
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page.getByRole("heading", { name: "Start with a 1-second observation." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Start with a 3-second observation." })).toBeVisible();
   await expectNoSeriousViolations(page);
 });
