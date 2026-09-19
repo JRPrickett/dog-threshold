@@ -27,7 +27,7 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      "npm run build:v2 && npx vite preview app-v2 --host 127.0.0.1 --port 4174",
+      "npm run build:v2 && cd app-v2 && npx vite preview --host 127.0.0.1 --port 4174",
     url: "http://127.0.0.1:4174",
     reuseExistingServer: !process.env.CI
   }
