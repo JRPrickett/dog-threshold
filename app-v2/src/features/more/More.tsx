@@ -9,7 +9,10 @@ import {
   backupSummary,
   parseBackupText
 } from "../../data/backup";
-import { DEFAULT_WARMUP_COUNT, formatDuration } from "../../domain/trainingEngine";
+import {
+  defaultWarmupCount,
+  formatDuration
+} from "../../domain/trainingEngine";
 import { effectiveDailyCap } from "../../domain/dailyCap";
 import {
   alertCapabilities,
@@ -35,7 +38,8 @@ export function More({
     label: string,
     startSeconds: number,
     warmupCount: number,
-    restSeconds: number
+    restSeconds: number,
+    shuffleWarmups: boolean
   ) => Promise<void>;
   onUpdateDailyCap: (cap: number) => Promise<void>;
   onRestoreBackup: (data: AppData) => Promise<void>;
@@ -47,7 +51,10 @@ export function More({
   const [trackLabel, setTrackLabel] = useState(scenario.label);
   const [trackStart, setTrackStart] = useState(scenario.startSeconds);
   const [warmupCount, setWarmupCount] = useState(
-    scenario.warmupCount ?? DEFAULT_WARMUP_COUNT
+    scenario.warmupCount ?? defaultWarmupCount(scenario.startSeconds)
+  );
+  const [shuffleWarmups, setShuffleWarmups] = useState(
+    scenario.shuffleWarmups ?? true
   );
   const [restSeconds, setRestSeconds] = useState(
     scenario.restSeconds ?? DEFAULT_REST_SECONDS
@@ -110,7 +117,10 @@ export function More({
               if (next) {
                 setTrackLabel(next.label);
                 setTrackStart(next.startSeconds);
-                setWarmupCount(next.warmupCount ?? DEFAULT_WARMUP_COUNT);
+                setWarmupCount(
+                  next.warmupCount ?? defaultWarmupCount(next.startSeconds)
+                );
+                setShuffleWarmups(next.shuffleWarmups ?? true);
                 setRestSeconds(next.restSeconds ?? DEFAULT_REST_SECONDS);
               }
               void onSelectScenario(nextId);
@@ -141,6 +151,11 @@ export function More({
             Edit this track's name or known-comfortable starting point without
             touching its history.
           </p>
+          <p>
+            Short sessions use four warm-ups by default. Each stays at or below
+            one minute, and targets under two minutes keep warm-ups to half the
+            target at most.
+          </p>
         </div>
         <div className="track-form">
           <label>
@@ -160,7 +175,13 @@ export function More({
                 min={1}
                 max={7200}
                 value={trackStart}
-                onChange={(event) => setTrackStart(Number(event.target.value))}
+                onChange={(event) => {
+                  const nextStart = Number(event.target.value);
+                  setTrackStart(nextStart);
+                  if (scenario.warmupCount == null) {
+                    setWarmupCount(defaultWarmupCount(nextStart));
+                  }
+                }}
               />
               <span>seconds</span>
             </div>
@@ -174,6 +195,18 @@ export function More({
               max={4}
               value={warmupCount}
               onChange={(event) => setWarmupCount(Number(event.target.value))}
+            />
+          </label>
+          <label className="warmup-option">
+            <span>
+              Shuffle warm-up steps
+              <small>Vary their order from session to session.</small>
+            </span>
+            <input
+              aria-label="Shuffle warm-up steps"
+              type="checkbox"
+              checked={shuffleWarmups}
+              onChange={(event) => setShuffleWarmups(event.target.checked)}
             />
           </label>
           <label>
@@ -198,7 +231,8 @@ export function More({
                 trackLabel,
                 trackStart,
                 warmupCount,
-                restSeconds
+                restSeconds,
+                shuffleWarmups
               )
             }
           >
@@ -291,10 +325,11 @@ export function More({
       <section className="settings-card">
         <div>
           <p className="kicker">Return alerts</p>
-          <h2>Chimes stay part of the live session.</h2>
+          <h2>Know when it is time to come back.</h2>
           <p>
-            System notifications are optional. The timer and saved session never
-            depend on notification delivery.
+            Enable system alerts for a reminder while you watch the camera. The
+            live-session chime remains a fallback, and the timer and saved session
+            never depend on notification delivery.
           </p>
         </div>
         {notificationPermission === "default" && (

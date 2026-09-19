@@ -7,7 +7,22 @@ export function Setup({
   onSaved: (dogName: string, startSeconds: number) => Promise<void>;
 }) {
   const [name, setName] = useState("");
-  const [seconds, setSeconds] = useState(5);
+  const [durationValue, setDurationValue] = useState("5");
+  const [durationUnit, setDurationUnit] = useState<"seconds" | "minutes">(
+    "seconds"
+  );
+
+  const numericDuration = Number.parseInt(durationValue, 10);
+  const durationSeconds =
+    Number.isFinite(numericDuration) && numericDuration > 0
+      ? numericDuration * (durationUnit === "minutes" ? 60 : 1)
+      : 0;
+  const durationIsValid = durationSeconds >= 1 && durationSeconds <= 7200;
+
+  function changeDuration(value: string) {
+    const digitsOnly = value.replace(/\D/g, "");
+    setDurationValue(digitsOnly.replace(/^0+(?=\d)/, ""));
+  }
 
   return (
     <main className="setup-shell">
@@ -31,17 +46,28 @@ export function Setup({
           />
         </label>
 
-        <label>
+        <label className="duration-field">
           A duration you already know feels comfortable
           <div className="duration-input">
             <input
-              type="number"
-              min={1}
-              max={7200}
-              value={seconds}
-              onChange={(event) => setSeconds(Number(event.target.value))}
+              aria-label="Comfortable duration"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={4}
+              value={durationValue}
+              onChange={(event) => changeDuration(event.target.value)}
             />
-            <span>seconds</span>
+            <select
+              aria-label="Duration unit"
+              value={durationUnit}
+              onChange={(event) =>
+                setDurationUnit(event.target.value as "seconds" | "minutes")
+              }
+            >
+              <option value="seconds">seconds</option>
+              <option value="minutes">minutes</option>
+            </select>
           </div>
         </label>
 
@@ -52,8 +78,8 @@ export function Setup({
 
         <button
           className="primary-button"
-          disabled={!name.trim() || !Number.isFinite(seconds) || seconds < 1}
-          onClick={() => void onSaved(name, seconds)}
+          disabled={!name.trim() || !durationIsValid}
+          onClick={() => void onSaved(name, durationSeconds)}
         >
           Set up your first session
         </button>

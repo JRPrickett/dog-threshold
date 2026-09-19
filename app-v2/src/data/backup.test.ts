@@ -26,6 +26,7 @@ describe("backup restore", () => {
             note: "calm"
           }],
           warmupCount: 1,
+          shuffleWarmups: false,
           restSeconds: 45
         }],
         dailyCap: 3
@@ -37,6 +38,7 @@ describe("backup restore", () => {
     expect(data.scenarios[0].sessions[0].tags).toEqual(["after-a-walk"]);
     expect(data.scenarios[0].sessions[0].stopReason).toBe("doorbell rang");
     expect(data.scenarios[0].warmupCount).toBe(1);
+    expect(data.scenarios[0].shuffleWarmups).toBe(false);
     expect(data.scenarios[0].restSeconds).toBe(45);
     expect(data.dailyCap).toBe(3);
   });

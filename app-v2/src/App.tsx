@@ -109,6 +109,7 @@ export default function App() {
         initialState={restoredState}
         variabilitySeed={activeScenario(data).sessions.length}
         warmupCount={activeScenario(data).warmupCount}
+        shuffleWarmups={activeScenario(data).shuffleWarmups}
         restSeconds={activeScenario(data).restSeconds ?? 60}
         onPersist={(snapshot) => repository.saveActiveSession(snapshot)}
         onClose={async () => {
@@ -195,14 +196,22 @@ export default function App() {
               setData(await repository.createScenario(label, startSeconds));
               setStorageMode(repository.storageMode());
             }}
-            onUpdateScenario={async (id, label, startSeconds, warmupCount, restSeconds) => {
+            onUpdateScenario={async (
+              id,
+              label,
+              startSeconds,
+              warmupCount,
+              restSeconds,
+              shuffleWarmups
+            ) => {
               setData(
                 await repository.updateScenario(
                   id,
                   label,
                   startSeconds,
                   warmupCount,
-                  restSeconds
+                  restSeconds,
+                  shuffleWarmups
                 )
               );
               setStorageMode(repository.storageMode());
@@ -247,4 +256,3 @@ export default function App() {
     </div>
   );
 }
-

@@ -35,7 +35,8 @@ export function Today({
   const practice = buildPracticeDepartures(
     recommendation.targetSeconds,
     scenario.sessions.length,
-    scenario.warmupCount
+    scenario.warmupCount,
+    scenario.shuffleWarmups
   );
   const capReached = isDailyCapReached(data, effectiveDailyCap(data));
   const [restDayOverride, setRestDayOverride] = useState(false);

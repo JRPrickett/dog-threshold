@@ -169,7 +169,10 @@ describe("buildPracticeDepartures", () => {
   it("alternates practice order so the sequence isn't always the same shape", () => {
     const evenSeed = buildPracticeDepartures(120, 0);
     const oddSeed = buildPracticeDepartures(120, 1);
-    expect(oddSeed).toEqual([...evenSeed].reverse());
+    expect(oddSeed).not.toEqual(evenSeed);
+    expect([...oddSeed].sort((a, b) => a - b)).toEqual(
+      [...evenSeed].sort((a, b) => a - b)
+    );
   });
 
   it("respects a configured warm-up count", () => {
@@ -185,9 +188,27 @@ describe("buildPracticeDepartures", () => {
     expect(new Set(practice).size).toBe(practice.length);
   });
 
+  it("defaults to four warm-ups for short targets and two for longer targets", () => {
+    expect(buildPracticeDepartures(599, 0)).toHaveLength(4);
+    expect(buildPracticeDepartures(600, 0)).toHaveLength(2);
+  });
+
+  it("caps warm-ups at one minute and half the target below two minutes", () => {
+    const short = buildPracticeDepartures(119, 0);
+    const longer = buildPracticeDepartures(599, 0);
+
+    expect(short.every((seconds) => seconds <= Math.floor(119 / 2))).toBe(true);
+    expect(longer.every((seconds) => seconds <= 60)).toBe(true);
+  });
+
+  it("keeps warm-ups in ascending order when shuffle is disabled", () => {
+    const practice = buildPracticeDepartures(300, 3, 4, false);
+    expect(practice).toEqual([...practice].sort((a, b) => a - b));
+  });
+
   it("rotates practice order for counts above two", () => {
-    const seedZero = buildPracticeDepartures(300, 0, 3);
-    const seedOne = buildPracticeDepartures(300, 1, 3);
+    const seedZero = buildPracticeDepartures(300, 0, 3, true);
+    const seedOne = buildPracticeDepartures(300, 1, 3, true);
     expect(seedOne).toEqual([...seedZero.slice(1), seedZero[0]]);
   });
 });

@@ -157,6 +157,8 @@ function cleanScenario(
       value.warmupCount == null
         ? undefined
         : Math.max(0, Math.min(4, Math.round(finiteNumber(value.warmupCount, 2)))),
+    shuffleWarmups:
+      value.shuffleWarmups == null ? undefined : Boolean(value.shuffleWarmups),
     restSeconds:
       value.restSeconds == null
         ? undefined

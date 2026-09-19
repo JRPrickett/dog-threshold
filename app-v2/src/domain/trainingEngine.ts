@@ -159,59 +159,61 @@ export function recommendNext(
   };
 }
 
-export const DEFAULT_WARMUP_COUNT = 2;
+export const DEFAULT_WARMUP_COUNT = 4;
+const LONG_SESSION_WARMUP_COUNT = 2;
+
+export function defaultWarmupCount(targetSeconds: number): number {
+  return Math.round(targetSeconds) < 10 * 60
+    ? DEFAULT_WARMUP_COUNT
+    : LONG_SESSION_WARMUP_COUNT;
+}
 
 /**
  * `variabilitySeed` (typically how many main departures have already been
  * logged) varies the practice order so a dog can't learn the shape of the
- * warm-up and anticipate what's coming next. `warmupCount` defaults to 2 —
- * the original two-value formula is kept exactly as it was for that default
- * so existing behaviour and tests are unaffected; other counts use a general
- * evenly-spaced formula with a seeded rotation for the same anti-pattern
- * reason.
+ * warm-up and anticipate what's coming next. Short targets default to four
+ * warm-ups; longer targets keep two. Every warm-up is capped at one minute,
+ * and targets below two minutes also cap warm-ups at half the main target.
  */
 export function buildPracticeDepartures(
   targetSeconds: number,
   variabilitySeed = 0,
-  warmupCount: number = DEFAULT_WARMUP_COUNT
+  warmupCount?: number,
+  shuffleWarmups = true
 ): number[] {
   const target = Math.max(1, Math.round(targetSeconds));
-  const count = Math.max(0, Math.min(4, Math.round(warmupCount)));
+  const configuredCount = warmupCount ?? defaultWarmupCount(target);
+  const count = Math.max(0, Math.min(4, Math.round(configuredCount)));
   if (target < 8 || count === 0) return [];
 
-  if (count === 2) {
-    const first = Math.max(2, Math.min(30, Math.round(target * 0.25)));
-    const second = Math.max(first + 1, Math.min(60, Math.round(target * 0.5)));
-
-    const values = [first, Math.min(target - 1, second)]
-      .filter((value, index, values) => value > 0 && value < target && values.indexOf(value) === index);
-
-    if (values.length === 2 && Math.abs(Math.round(variabilitySeed)) % 2 === 1) {
-      values.reverse();
-    }
-
-    return values;
-  }
-
-  const low = 0.15;
-  const high = 0.6;
-  const values: number[] = [];
-  for (let index = 0; index < count; index += 1) {
-    const fraction = count === 1 ? (low + high) / 2 : low + (high - low) * (index / (count - 1));
-    let seconds = Math.max(2, Math.min(target - 1, Math.round(target * fraction)));
-    if (index > 0 && seconds <= values[index - 1]) {
-      seconds = Math.min(target - 1, values[index - 1] + 1);
-    }
-    values.push(seconds);
-  }
-
-  const deduped = values.filter(
-    (value, index, all) => value > 0 && value < target && all.indexOf(value) === index
+  const maximum = Math.min(
+    60,
+    target < 2 * 60 ? Math.floor(target / 2) : target - 1
   );
-  if (deduped.length <= 1) return deduped;
+  const minimum = Math.min(
+    maximum,
+    Math.max(2, Math.min(30, Math.round(target * 0.15)))
+  );
+  const available = Math.max(0, maximum - minimum + 1);
+  const actualCount = Math.min(count, available);
+  if (actualCount === 0) return [];
 
-  const rotation = Math.abs(Math.round(variabilitySeed)) % deduped.length;
-  return [...deduped.slice(rotation), ...deduped.slice(0, rotation)];
+  const values: number[] = [];
+  for (let index = 0; index < actualCount; index += 1) {
+    const fraction = actualCount === 1 ? 0.5 : index / (actualCount - 1);
+    let seconds = Math.round(
+      minimum + (maximum - minimum) * fraction
+    );
+    if (index > 0 && seconds <= values[index - 1]) {
+      seconds = values[index - 1] + 1;
+    }
+    values.push(Math.min(maximum, seconds));
+  }
+
+  if (!shuffleWarmups || values.length <= 1) return values;
+
+  const rotation = Math.abs(Math.round(variabilitySeed)) % values.length;
+  return [...values.slice(rotation), ...values.slice(0, rotation)];
 }
 
 export function formatDuration(totalSeconds: number): string {

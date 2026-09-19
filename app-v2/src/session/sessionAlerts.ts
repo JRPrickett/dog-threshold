@@ -8,6 +8,10 @@ export interface AlertCapabilities {
   wakeLock: boolean;
 }
 
+export interface SessionNotificationOptions {
+  requireInteraction?: boolean;
+}
+
 let keeper: HTMLAudioElement | null = null;
 let audioContext: AudioContext | null = null;
 let wakeLock: WakeLockSentinel | null = null;
@@ -127,7 +131,8 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 
 export async function showSessionNotification(
   title: string,
-  body: string
+  body: string,
+  options: SessionNotificationOptions = {}
 ): Promise<void> {
   if (
     typeof Notification === "undefined" ||
@@ -139,12 +144,19 @@ export async function showSessionNotification(
 
   try {
     const registration = await navigator.serviceWorker.ready;
-    await registration.showNotification(title, {
+    const notificationOptions = {
       body,
-      tag: "dog-training-return",
+      tag: "settledsolo-return",
+      renotify: true,
+      requireInteraction: options.requireInteraction ?? false,
+      silent: false,
+      data: {
+        url: new URL("/app/", window.location.origin).href
+      },
       icon: "/icon.svg",
       badge: "/icon.svg"
-    });
+    } as NotificationOptions & { renotify: boolean };
+    await registration.showNotification(title, notificationOptions);
   } catch {
     // Alerts are supplementary. Timer/recovery state must never depend on them.
   }

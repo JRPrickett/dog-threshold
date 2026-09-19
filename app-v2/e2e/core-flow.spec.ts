@@ -3,12 +3,26 @@ import { expect, test } from "@playwright/test";
 async function completeSetup(page: import("@playwright/test").Page, seconds = 1) {
   await page.goto("/app/");
   await page.getByLabel("Your dog's name").fill("Mabel");
-  await page
-    .getByLabel("A duration you already know feels comfortable")
-    .fill(String(seconds));
+  await page.getByLabel("Comfortable duration").fill(String(seconds));
   await page.getByRole("button", { name: "Set up your first session" }).click();
   await expect(page.getByRole("button", { name: "Start today's session" })).toBeVisible();
 }
+
+test("setup accepts a clear duration and converts minutes to seconds", async ({ page }) => {
+  await page.goto("/app/");
+  await page.getByLabel("Your dog's name").fill("Mabel");
+
+  const duration = page.getByLabel("Comfortable duration");
+  await duration.fill("");
+  await duration.type("25");
+  await expect(duration).toHaveValue("25");
+
+  await duration.fill("1");
+  await page.getByLabel("Duration unit").selectOption("minutes");
+  await page.getByRole("button", { name: "Set up your first session" }).click();
+
+  await expect(page.getByText("1:00")).toBeVisible();
+});
 
 test("first session can be completed and appears in history", async ({ page }) => {
   await completeSetup(page, 1);
