@@ -201,6 +201,19 @@ test("public SettledSolo site leads into the PWA", async ({ page }) => {
   await expect(page.getByLabel("Your dog's name")).toBeVisible();
 });
 
+test("iOS install help demonstrates the current Safari menu flow", async ({ page, browserName }) => {
+  test.skip(browserName !== "webkit", "Safari installation help is only shown on iOS");
+
+  await completeSetup(page, 5);
+  await page.getByText("Show me how").click();
+
+  await page.getByRole("button", { name: "Tap Safari's three-dot menu" }).click();
+  await page.getByRole("button", { name: "Share", exact: true }).click();
+  await page.getByRole("button", { name: "Add to Home Screen", exact: true }).click();
+
+  await expect(page.getByText("Installed. Tap to watch again.")).toBeVisible();
+});
+
 
 test("a user can create and rename a separate training track", async ({ page }) => {
   await completeSetup(page, 5);

@@ -2,27 +2,11 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { BrandMark } from "../brand/BrandMark";
 import { isIOS, isStandalone } from "../pwa/installStatus";
+import { IOSInstallDemo } from "../pwa/IOSInstallDemo";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
-function ShareIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 16V3m0 0L7.5 7.5M12 3l4.5 4.5M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8" />
-    </svg>
-  );
-}
-
-function PlusSquareIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3.5" y="3.5" width="17" height="17" rx="4" />
-      <path d="M12 8v8M8 12h8" />
-    </svg>
-  );
 }
 
 function IOSInstallGuide({ dialogRef }: { dialogRef: RefObject<HTMLDialogElement | null> }) {
@@ -45,38 +29,13 @@ function IOSInstallGuide({ dialogRef }: { dialogRef: RefObject<HTMLDialogElement
         <h2 id="ios-install-title">Keep SettledSolo one tap away.</h2>
         <ol>
           <li><span>1</span>Open this page in Safari.</li>
-          <li><span>2</span>Tap the Share button.</li>
+          <li><span>2</span>Tap the three dots, then <strong>Share</strong>.</li>
           <li><span>3</span>Choose <strong>Add to Home Screen</strong>.</li>
         </ol>
         <small>No App Store, account or payment card needed.</small>
       </div>
 
-      <div className="ios-install-demo" aria-hidden="true">
-        <div className="ios-demo-phone">
-          <div className="ios-demo-page">
-            <BrandMark compact light />
-            <span>settledsolo.com</span>
-          </div>
-          <div className="ios-demo-toolbar">
-            <i />
-            <span className="ios-demo-share"><ShareIcon /></span>
-            <i />
-          </div>
-          <div className="ios-demo-sheet">
-            <span className="ios-demo-sheet-handle" />
-            <div className="ios-demo-sheet-title">Safari</div>
-            <div className="ios-demo-add-row">
-              <PlusSquareIcon />
-              <span>Add to Home Screen</span>
-            </div>
-          </div>
-          <div className="ios-demo-home-icon">
-            <BrandMark variant="badge" />
-            <span>SettledSolo</span>
-          </div>
-        </div>
-        <p><span>Share</span><span>Add to Home Screen</span><span>Done</span></p>
-      </div>
+      <IOSInstallDemo />
     </dialog>
   );
 }
