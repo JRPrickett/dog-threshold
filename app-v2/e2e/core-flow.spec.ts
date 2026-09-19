@@ -205,6 +205,29 @@ test("iOS install help demonstrates the current Safari menu flow", async ({ page
   test.skip(browserName !== "webkit", "Safari installation help is only shown on iOS");
   await page.emulateMedia({ reducedMotion: "reduce" });
 
+  await page.goto("/");
+  await page.getByRole("button", { name: "Install on iPhone" }).click();
+
+  const installDialog = page.getByRole("dialog", { name: "Keep SettledSolo one tap away." });
+  await expect(installDialog).toBeVisible();
+  await expect(installDialog.getByText("Three dots", { exact: true })).toBeVisible();
+
+  const fit = await installDialog.evaluate((dialog) => {
+    const bounds = dialog.getBoundingClientRect();
+    return {
+      top: bounds.top,
+      bottom: bounds.bottom,
+      viewportHeight: window.innerHeight,
+      scrollHeight: dialog.scrollHeight,
+      clientHeight: dialog.clientHeight
+    };
+  });
+  expect(fit.top).toBeGreaterThanOrEqual(0);
+  expect(fit.bottom).toBeLessThanOrEqual(fit.viewportHeight + 1);
+  expect(fit.scrollHeight).toBeLessThanOrEqual(fit.clientHeight + 1);
+
+  await installDialog.getByRole("button", { name: "Close installation guide" }).click();
+
   await completeSetup(page, 5);
   await page.getByText("Show me how").click();
 

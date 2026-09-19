@@ -4863,3 +4863,121 @@ a:focus-visible {
     animation: none;
   }
 }
+
+/* Keep the complete public install guide inside Safari's small visual viewport. */
+@media (max-width: 720px) {
+  .ios-install-dialog {
+    width: min(100% - 14px, 520px);
+    max-height: calc(100svh - 14px);
+    overflow: hidden;
+    border-radius: 24px;
+  }
+
+  .ios-install-dialog[open] {
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .ios-install-copy {
+    padding: 24px 58px 10px 22px;
+  }
+
+  .ios-install-copy > .settled-mark {
+    display: none;
+  }
+
+  .ios-install-copy > p {
+    margin-top: 0;
+  }
+
+  .ios-install-copy h2,
+  .ios-install-copy h2:first-of-type {
+    max-width: 14ch;
+    margin-top: 4px;
+    font-size: clamp(30px, 9vw, 38px);
+    line-height: .96;
+  }
+
+  .ios-install-copy ol {
+    margin-top: 14px;
+    gap: 7px;
+  }
+
+  .ios-install-copy li {
+    gap: 9px;
+    font-size: 12px;
+  }
+
+  .ios-install-copy li > span {
+    width: 22px;
+    height: 22px;
+  }
+
+  .ios-install-copy small {
+    margin-top: 12px;
+    font-size: 10px;
+  }
+
+  .ios-install-demo:not(.ios-install-demo--compact) {
+    min-height: 0;
+    padding: 8px 14px 15px;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .ios-install-demo:not(.ios-install-demo--compact) .ios-guide-phone {
+    width: min(100%, 280px);
+    height: clamp(250px, calc(100svh - 340px), 340px);
+    border-width: 7px;
+    border-radius: 35px;
+  }
+
+  .ios-install-demo:not(.ios-install-demo--compact) .ios-guide-page {
+    height: calc(100% - 58px);
+    padding-top: 52px;
+  }
+
+  .ios-install-demo:not(.ios-install-demo--compact) .ios-guide-toolbar {
+    height: 58px;
+    grid-template-columns: 36px 1fr 42px;
+  }
+
+  .ios-install-demo:not(.ios-install-demo--compact) .ios-guide-menu {
+    bottom: 61px;
+  }
+
+  .ios-install-demo:not(.ios-install-demo--compact) .ios-guide-share-sheet {
+    min-height: min(265px, calc(100% - 12px));
+  }
+
+  .ios-install-demo:not(.ios-install-demo--compact) .ios-guide-share-options {
+    padding-block: 10px;
+  }
+
+  .ios-install-demo:not(.ios-install-demo--compact) .ios-guide-share-sheet button {
+    margin-top: 10px;
+  }
+
+  .ios-install-demo:not(.ios-install-demo--compact) .ios-guide-progress {
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 720px) and (max-height: 620px) {
+  .ios-install-copy {
+    padding-top: 18px;
+  }
+
+  .ios-install-copy h2,
+  .ios-install-copy h2:first-of-type {
+    font-size: 30px;
+  }
+
+  .ios-install-copy small {
+    display: none;
+  }
+
+  .ios-install-demo:not(.ios-install-demo--compact) .ios-guide-phone {
+    height: 250px;
+  }
+}
