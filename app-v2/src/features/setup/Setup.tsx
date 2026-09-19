@@ -288,7 +288,7 @@ export function Setup({
                   <strong>3 seconds, with a camera if you can.</strong>
                   <p>
                     Starting below distress is the evidence-led principle. The exact
-                    1-second value is a conservative SettledSolo heuristic, not a
+                    3-second value is a conservative SettledSolo heuristic, not a
                     clinically validated threshold.
                   </p>
                 </div>
