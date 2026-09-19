@@ -8,6 +8,13 @@ import type {
   TrainingSession
 } from "../domain/types";
 import type { PersistedLiveSession } from "../session/sessionPersistence";
+import {
+  PRE_PROTOCOL_FINDINGS,
+  PRE_PROTOCOL_OBSERVATION_VERSION,
+  recordObservation,
+  type PreProtocolFinding,
+  type PreProtocolOutcome
+} from "../domain/preProtocolObservation";
 import { activeScenario, freshAppData, replaceScenario } from "./appData";
 import { LEGACY_KEY, readLegacyAppData } from "./legacyImport";
 
@@ -55,6 +62,10 @@ export interface AppRepository {
     shuffleWarmups?: boolean
   ): Promise<AppData>;
   updateDailyCap(cap: number): Promise<AppData>;
+  recordPreProtocolObservation(
+    outcome: PreProtocolOutcome,
+    findings: PreProtocolFinding[]
+  ): Promise<AppData>;
   loadActiveSession(): Promise<PersistedLiveSession | null>;
   saveActiveSession(session: PersistedLiveSession): Promise<void>;
   clearActiveSession(): Promise<void>;
@@ -185,6 +196,26 @@ function normaliseOnboarding(data: AppData): AppData["onboarding"] {
   };
 }
 
+function normalisePreProtocol(data: AppData): AppData["preProtocolObservation"] {
+  const observation = data.preProtocolObservation;
+  if (!observation || observation.version !== PRE_PROTOCOL_OBSERVATION_VERSION)
+    return undefined;
+  if (observation.outcome !== "observed" && observation.outcome !== "skipped")
+    return undefined;
+
+  return {
+    version: PRE_PROTOCOL_OBSERVATION_VERSION,
+    outcome: observation.outcome,
+    findings:
+      observation.outcome === "observed"
+        ? PRE_PROTOCOL_FINDINGS.filter((finding) =>
+            (observation.findings ?? []).includes(finding)
+          )
+        : [],
+    completedAt: Math.max(0, Number(observation.completedAt) || Date.now())
+  };
+}
+
 function normaliseAppData(data: AppData): AppData {
   const scenarios =
     Array.isArray(data.scenarios) && data.scenarios.length
@@ -204,6 +235,7 @@ function normaliseAppData(data: AppData): AppData {
     sync: data.sync,
     dogName: String(data.dogName || "").slice(0, 40),
     onboarding: normaliseOnboarding(data),
+    preProtocolObservation: normalisePreProtocol(data),
     activeScenarioId: scenarios.some(
       (scenario) => scenario.id === requestedActive
     )
@@ -404,6 +436,14 @@ function fallbackRepository(initial: AppData): AppRepository {
     },
     async updateDailyCap(cap) {
       data = normaliseAppData({ ...data, dailyCap: cap });
+      persistData();
+      return data;
+    },
+    async recordPreProtocolObservation(outcome, findings) {
+      data = normaliseAppData({
+        ...data,
+        preProtocolObservation: recordObservation(outcome, findings)
+      });
       persistData();
       return data;
     },
@@ -650,6 +690,16 @@ function createLocalRepository(): AppRepository {
       return next;
     },
 
+    async recordPreProtocolObservation(outcome, findings) {
+      const data = await repository.loadAppData();
+      const next = normaliseAppData({
+        ...data,
+        preProtocolObservation: recordObservation(outcome, findings)
+      });
+      await repository.saveAppData(next);
+      return next;
+    },
+
     async loadActiveSession() {
       await activeMutation;
       return safely(
@@ -751,7 +801,7 @@ export function createAppRepository(): SyncedRepository {
     }),
     resolveConflict: (key: string, choice: "local" | "cloud") => serial(async () => save(resolveConflict(await local.loadAppData(), key, choice)))
   } as SyncedRepository;
-  const mutations = ["saveSetup", "appendSession", "updateSession", "deleteSession", "appendDepartureCueSession", "setActiveScenario", "createScenario", "updateScenario", "updateDailyCap"] as const;
+  const mutations = ["saveSetup", "appendSession", "updateSession", "deleteSession", "appendDepartureCueSession", "setActiveScenario", "createScenario", "updateScenario", "updateDailyCap", "recordPreProtocolObservation"] as const;
   for (const method of mutations) {
     // Serialize local read/modify/write operations together with remote merges.
     Object.assign(repository, { [method]: (...args: unknown[]) => serial(async () => {
