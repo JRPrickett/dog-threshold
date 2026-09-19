@@ -1,8 +1,8 @@
 # SettledSolo handover
 
-**Last updated:** 19 September 2026, 16:21 BST  
+**Last updated:** 19 September 2026 (accounts and sync implementation)
 **Repository:** `JRPrickett/settledsolo`  
-**Current main before PR #26:** `b298fa10b52c1b58fabfe62f58163ecbdcfe8458`
+**Reviewed main:** `8cf04d9934c9e7d581fa069c279ecbc13f16a2e6`
 
 This is the current-state handover for another agent or contributor picking up SettledSolo. Read `AGENTS.md` first for repository rules.
 
@@ -12,7 +12,7 @@ Reviewed main: `8cf04d9` (PR #26 merged). PR #27 storage recovery is a separate 
 The user has explicitly prioritised **optional accounts and sync** next, ahead of the
 remaining physical-device/behaviour-quality work. Those release gates still apply.
 
-Current implementation is on `feat/accounts-sync`, pending review/merge and **not deployed**.
+Current implementation is **PR #28**, `feat/accounts-sync`, pending review/merge and **not deployed**.
 It includes Better Auth email OTP, optional account UI, explicit guest-log import,
 local outbox, revision-based incremental sync, recoverable conflicts, cloud export/deletion,
 and isolated account deployment tooling. Existing guest training remains usable offline.

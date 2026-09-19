@@ -32,6 +32,10 @@ not evidence of a live production rollout or a physical-device test.
 - Paused remote merges while a timed session or cue practice is active.
 - Serialized local mutations and sync application, using Web Locks where available across tabs.
 - Preserved later edits when a response acknowledges an earlier outbox version.
+- Added expected-account checks on sync, export and deletion to reject stale-tab actions
+  after another tab changes the authenticated account. The server still derives ownership
+  exclusively from the authenticated session.
+- Re-check authentication on reconnect after an offline launch before retrying queued sync.
 - Preserved conflicts rather than accepting last-write-wins silently.
 - Distinguished local reset, sign-out and permanent cloud-account deletion.
 - Allowed explicit reconnection of a retained local log after its former cloud account is deleted.

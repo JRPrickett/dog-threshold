@@ -16,7 +16,7 @@ export function makeBackup(data: AppData) {
     schemaVersion: 1,
     exportedAt: new Date().toISOString(),
     appData: trainingData,
-    conflictArchive: sync?.archive
+    conflictArchive: sync ? [...sync.archive, ...sync.conflicts] : undefined
   };
 }
 
