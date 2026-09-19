@@ -3,11 +3,9 @@ import { PublicSite } from "./PublicSite";
 import { BrandWordmark } from "../brand/BrandMark";
 
 function InfoPage({
-  eyebrow,
   title,
   children
 }: {
-  eyebrow: string;
   title: string;
   children: ReactNode;
 }) {
@@ -23,7 +21,6 @@ function InfoPage({
         </nav>
       </header>
       <main className="info-page">
-        <p className="marketing-eyebrow">{eyebrow}</p>
         <h1>{title}</h1>
         <div className="info-page-copy">{children}</div>
       </main>
@@ -33,7 +30,7 @@ function InfoPage({
 
 function PrivacyPage() {
   return (
-    <InfoPage eyebrow="Privacy" title="Your training record belongs to you.">
+    <InfoPage title="Your training record belongs to you.">
       <h2>Local-first by default</h2>
       <p>
         SettledSolo currently stores your dog name, training tracks, session history,
@@ -68,7 +65,7 @@ function PrivacyPage() {
 
 function TermsPage() {
   return (
-    <InfoPage eyebrow="Terms" title="A training aid, not a diagnosis.">
+    <InfoPage title="A training aid, not a diagnosis.">
       <h2>What SettledSolo does</h2>
       <p>
         SettledSolo helps you plan gradual separation-training sessions, time them,
@@ -112,7 +109,7 @@ function TermsPage() {
 
 function EvidencePage() {
   return (
-    <InfoPage eyebrow="Evidence" title="Principles first. False precision never.">
+    <InfoPage title="Principles first. False precision never.">
       <p>
         SettledSolo is built around gradual systematic desensitisation: begin with an
         absence mild enough not to evoke meaningful distress, observe the dog, and
@@ -159,7 +156,7 @@ function EvidencePage() {
 
 function HelpPage() {
   return (
-    <InfoPage eyebrow="Help" title="Keep the next step calm and manageable.">
+    <InfoPage title="Keep the next step calm and manageable.">
       <h2>Start with something already comfortable</h2>
       <p>
         Do not deliberately leave until your dog becomes distressed to discover a
