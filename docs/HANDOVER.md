@@ -283,6 +283,7 @@ Main commands:
 npm install --ignore-scripts
 npm run verify
 npm run test:e2e
+npm run test:pwa
 ```
 
 `npm run verify` includes:
@@ -294,10 +295,12 @@ npm run test:e2e
 - modern production build;
 - Cloudflare Worker dry-run.
 
-Playwright then runs against:
+The normal Playwright suite then runs against:
 
 - Chromium / Pixel 7 profile;
 - WebKit / iPhone 15 profile.
+
+PR #26 also adds `npm run test:pwa`, which builds the production bundle and generated service worker and verifies an offline relaunch/save/reconnect cycle on both profiles.
 
 Do not treat WebKit emulation as evidence of installed iPhone PWA lifecycle behaviour.
 
