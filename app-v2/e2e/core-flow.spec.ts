@@ -514,3 +514,56 @@ test("a user can create and rename a separate training track", async ({ page }) 
   await expect(page.getByText("Weekday school run")).toBeVisible();
   await expect(page.getByText("9s")).toBeVisible();
 });
+
+test("a one-time observation runs before duration training and is not asked again", async ({ page }) => {
+  await completeSetup(page, 1);
+
+  const card = page.getByRole("heading", { name: "Watch Mabel alone once" });
+  await expect(card).toBeVisible();
+  // The step never blocks training.
+  await expect(page.getByRole("button", { name: "Start today's session" })).toBeVisible();
+
+  await page.getByRole("button", { name: "I've watched them alone" }).click();
+  await page
+    .getByRole("button", { name: /^They were calmer when not shut in/ })
+    .click();
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  // Guidance points at the existing free-roam comparison and never diagnoses.
+  await expect(page.getByText(/free-roam session tags/)).toBeVisible();
+  await expect(page.getByText(/does not diagnose/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Save and start training" }).click();
+  await expect(card).toBeHidden();
+
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Start today's session" })).toBeVisible();
+  await expect(card).toBeHidden();
+});
+
+test("skipping the one-time observation is remembered across a reload", async ({ page }) => {
+  await completeSetup(page, 1);
+
+  const card = page.getByRole("heading", { name: "Watch Mabel alone once" });
+  await expect(card).toBeVisible();
+  await page.getByRole("button", { name: "Skip this step" }).click();
+  await expect(card).toBeHidden();
+
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Start today's session" })).toBeVisible();
+  await expect(card).toBeHidden();
+});
+
+test("a cue-first plan is not asked to leave the dog alone to observe", async ({ page }) => {
+  await page.goto("/app/");
+  await page.getByLabel("Your dog's name").fill("Mabel");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: /^Gets watchful or follows me/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Use this starting plan" }).click();
+
+  await expect(page.getByRole("heading", { name: "Departure cues first" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Watch Mabel alone once" })
+  ).toBeHidden();
+});
