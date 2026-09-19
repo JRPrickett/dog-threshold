@@ -19,8 +19,10 @@ function planDuration(seconds: number): string {
 }
 
 export function Setup({
-  onSaved
+  onSaved,
+  onOpenAccount
 }: {
+  onOpenAccount?: () => void;
   onSaved: (
     dogName: string,
     startSeconds: number,
@@ -340,6 +342,7 @@ export function Setup({
           separation anxiety or replace advice from a veterinary behaviourist or
           appropriately qualified behaviour professional.
         </p>
+      {onOpenAccount && <button type="button" className="setup-back" onClick={onOpenAccount}>Already have an account? Sign in</button>}
       </section>
     </main>
   );

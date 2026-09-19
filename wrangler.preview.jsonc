@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "settledsolo-web-preview",
   "main": "worker/index.ts",
+  "compatibility_flags": ["nodejs_compat"],
   "compatibility_date": "2026-09-18",
   "assets": {
     "directory": "./dist-v2",

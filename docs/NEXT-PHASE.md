@@ -2,6 +2,14 @@
 
 Date: 18 September 2026
 
+## Current work — PR #28
+
+The user explicitly prioritised optional accounts and sync on 19 September 2026. PR #28
+implements that next step behind deployment configuration. It is not activated or deployed.
+Use `HANDOVER.md`, `ACCOUNTS-DEPLOYMENT.md` and `ACCOUNTS-REVIEW.md` for the current state.
+The earlier numbered plan below is historical scope; guided onboarding and PR #26 hardening
+are already merged. Physical-device and professional-review release gates remain open.
+
 ## Current position
 
 The modern SettledSolo PWA is live on the isolated Cloudflare preview Worker.
@@ -110,7 +118,7 @@ Still required:
 
 When A1-A4 are satisfied:
 
-1. Merge PR #11.
+1. Select the verified main commit and record the existing production commit for rollback.
 2. Deploy the merged build to `settledsolo-web`.
 3. Connect the canonical domain.
 4. Preserve legacy import compatibility.

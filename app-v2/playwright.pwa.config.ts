@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  outputDir: "../test-results/pwa",
   testMatch: "pwa-offline.spec.ts",
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
