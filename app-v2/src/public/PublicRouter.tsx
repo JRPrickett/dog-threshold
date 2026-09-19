@@ -51,9 +51,27 @@ function PrivacyPage() {
       </p>
       <h2>Accounts are optional</h2>
       <p>
-        Optional cloud backup and cross-device sync are planned. Before that launches,
-        this page will be updated with the relevant account-data, hosting, retention
-        and deletion details.
+        Where accounts are enabled, you can sign in using an email code. Cloudflare
+        hosts the account service and its separate private database. Resend delivers
+        sign-in codes to your email address; it does not receive your training log.
+        Signing in alone does not upload existing local history. The app shows an
+        import summary and asks before connecting your log.
+      </p>
+      <h2>Sync and account controls</h2>
+      <p>
+        After you connect, dog names, tracks, session observations, notes and settings
+        are stored with your account for backup and cross-device sync. Essential
+        secure cookies keep you signed in. Account/session records may contain IP
+        address and browser information for authentication and abuse protection.
+        Deleted training records remain as sync deletion markers and may appear in
+        change history until the account is deleted.
+      </p>
+      <p>
+        More → Account &amp; backup provides cloud export, sign-out and account deletion.
+        Deleting an account removes its active account and cloud training records;
+        it does not erase logs already downloaded on your devices. Use the separate
+        local reset on each device if you want to remove those too. Resolved conflict
+        versions remain on the device and can be exported or cleared with local reset.
       </p>
       <p className="info-note">
         This privacy summary is part of the public beta preparation and will receive a

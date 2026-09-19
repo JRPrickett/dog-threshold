@@ -1,3 +1,5 @@
+import { applyReply, connect, reconcile, resolveConflict } from "../account/syncState";
+import type { SyncOperation, SyncReply } from "../account/protocol";
 import type {
   AppData,
   DepartureCueSession,
@@ -202,6 +204,7 @@ function normaliseAppData(data: AppData): AppData {
   const requestedActive = String(data.activeScenarioId || "");
 
   return {
+    sync: data.sync,
     dogName: String(data.dogName || "").slice(0, 40),
     onboarding: normaliseOnboarding(data),
     activeScenarioId: scenarios.some(
@@ -438,7 +441,7 @@ function fallbackRepository(initial: AppData): AppRepository {
   };
 }
 
-export function createAppRepository(): AppRepository {
+function createLocalRepository(): AppRepository {
   let legacy: AppData;
   try {
     legacy = readLegacyAppData();
@@ -725,5 +728,58 @@ export function createAppRepository(): AppRepository {
     }
   };
 
+  return repository;
+}
+
+
+export interface SyncedRepository extends AppRepository {
+  connectAccount(accountId: string): Promise<AppData>;
+  pauseSync(): Promise<AppData>;
+  markAccountDeleted(): Promise<AppData>;
+  receiveSync(accountId: string, sent: SyncOperation[], reply: SyncReply, canApply?: () => boolean): Promise<AppData>;
+  resolveConflict(key: string, choice: "local" | "cloud"): Promise<AppData>;
+}
+export function createAppRepository(): SyncedRepository {
+  const local = createLocalRepository();
+  let queue: Promise<unknown> = Promise.resolve();
+  const serial = <T,>(operation: () => Promise<T>): Promise<T> => {
+    const run = () => typeof navigator !== "undefined" && navigator.locks
+      ? navigator.locks.request("settledsolo-data", operation) : operation();
+    const result = queue.then(run, run);
+    queue = result.catch(() => {});
+    return result;
+  };
+  const save = async (data: AppData) => { await local.saveAppData(data); return data; };
+  const repository = { ...local,
+    connectAccount: (accountId: string) => serial(async () => save(connect(await local.loadAppData(), accountId))),
+    markAccountDeleted: () => serial(async () => {
+      const data = await local.loadAppData();
+      return save({ ...data, sync: data.sync ? { ...data.sync, enabled: false, deleted: true } : undefined });
+    }),
+    pauseSync: () => serial(async () => {
+      const data = await local.loadAppData();
+      return save({ ...data, sync: data.sync ? { ...data.sync, enabled: false } : undefined });
+    }),
+    receiveSync: (accountId: string, sent: SyncOperation[], reply: SyncReply, canApply = () => true) => serial(async () => {
+      const data = await local.loadAppData();
+      return canApply() ? save(applyReply(data, accountId, sent, reply)) : data;
+    }),
+    resolveConflict: (key: string, choice: "local" | "cloud") => serial(async () => save(resolveConflict(await local.loadAppData(), key, choice)))
+  } as SyncedRepository;
+  const mutations = ["saveSetup", "appendSession", "updateSession", "deleteSession", "appendDepartureCueSession", "setActiveScenario", "createScenario", "updateScenario", "updateDailyCap"] as const;
+  for (const method of mutations) {
+    // Serialize local read/modify/write operations together with remote merges.
+    Object.assign(repository, { [method]: (...args: unknown[]) => serial(async () => {
+      const operation = local[method] as (...values: unknown[]) => Promise<AppData>;
+      return save(reconcile(await operation(...args)));
+    }) });
+  }
+  repository.loadAppData = () => serial(() => local.loadAppData());
+  repository.saveAppData = data => serial(async () => {
+    const current = await local.loadAppData();
+    // Restore never accepts account ownership or outbox state from a backup file.
+    await save(reconcile({ ...data, sync: current.sync }));
+  });
+  repository.resetAppData = () => serial(() => local.resetAppData());
   return repository;
 }

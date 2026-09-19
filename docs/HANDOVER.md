@@ -1,50 +1,55 @@
 # SettledSolo handover
 
-**Last updated:** 19 September 2026 (production-readiness review)
+**Last updated:** 19 September 2026 (accounts and sync implementation)
 **Repository:** `JRPrickett/settledsolo`  
-**Reviewed main:** `8cf04d9` (PR #26 merged)
+**Reviewed main:** `8cf04d9934c9e7d581fa069c279ecbc13f16a2e6`
 
 This is the current-state handover for another agent or contributor picking up SettledSolo. Read `AGENTS.md` first for repository rules.
 
 ## Executive status
 
-SettledSolo is now well beyond the original prototype stage. The active product is the modern React/TypeScript PWA under `app-v2/`, served through the Cloudflare Worker in `worker/`.
+Reviewed main: `8cf04d9` (PR #26 merged). PR #27 storage recovery is a separate open PR.
+The user has explicitly prioritised **optional accounts and sync** next, ahead of the
+remaining physical-device/behaviour-quality work. Those release gates still apply.
 
-**Phase 1 of the current production-readiness roadmap — guided onboarding — is complete and merged.**
+Current implementation is **PR #28**, `feat/accounts-sync`, pending review/merge and **not deployed**.
+It includes Better Auth email OTP, optional account UI, explicit guest-log import,
+local outbox, revision-based incremental sync, recoverable conflicts, cloud export/deletion,
+and isolated account deployment tooling. Existing guest training remains usable offline.
 
-PRs **#21–#26** are merged. PR #26 final PR CI run **35453753932** succeeded. No open PRs existed when this review began. The storage-recovery work described below is on `fix/storage-recovery-readiness`, pending merge. Production deployment of reviewed main has not been verified.
-
-The project is now in **release hardening / real-device gates**. The first hardening pass, PR #26, is merged and adds duplicate-save protection, recovery/notification regressions, a production-service-worker offline relaunch gate and preview-deployment cleanup. With its automated gates green, finish the genuinely OS-dependent checks on real iOS/Android devices before moving to the remaining behaviour-quality items and then D1/accounts/sync.
-
-Do not jump straight into cloud sync in a way that destabilises the currently reliable local-first session path.
+Accounts are disabled by default until D1 IDs, auth origin, verified email sender and secrets
+are configured. No databases or provider secrets have been created from this workspace.
+See `ACCOUNTS-DEPLOYMENT.md` for exact activation steps and `ACCOUNTS-REVIEW.md` for review
+results, test coverage and outstanding real-device/provider evidence.
 
 ## What changed most recently
 
-### PR #27 — Storage recovery and roadmap refresh — pending merge
+### PR #27 — Preserve fallback training data during storage recovery — open
 
-- Review found that an empty/recovered IndexedDB database was seeded from legacy data,
-  ignoring newer training data saved through the localStorage fallback.
-- Startup now promotes the existing fallback app data when the primary app record is absent.
-- A valid fallback active session also carries forward, retaining original timer/review state.
-- Expired or invalid fallback checkpoints are cleared rather than revived.
-- Browser regressions cover history/ID preservation, active-timer recovery, save/reload and
-  expired-checkpoint rejection across both mobile browser profiles.
-- This is empty-primary recovery, not reconciliation of divergent populated stores or
-  concurrent-tab edits. Those remain data-layer review work before account sync.
-- `NEXT-PHASE.md` and `PRODUCT-PLAN.md` now distinguish merged work from outstanding gates.
-- The local-data notice now directs users to More → Download backup instead of claiming
-  installation protects history from clearing. Installation is not a separate backup;
-  WebKit documents best-effort storage and possible eviction:
-  https://webkit.org/blog/14403/updates-to-storage-policy/
-- Local `npm run verify` passed, including 72 modern unit tests. Browser/PWA checks depend
-  on GitHub CI because local browser downloads returned 502/timeouts. Check PR #27 for
-  the final CI status; no physical-device or production-deployment claim is made.
+A user who trains while IndexedDB is unavailable saves setup, history and an active session
+into the localStorage fallback. When IndexedDB later became available with an empty database,
+startup seeded it from legacy data and silently ignored that saved progress.
+
+Now:
+
+- an absent IndexedDB app record is promoted from existing fallback data rather than from
+  legacy migration data;
+- a valid fallback active-session checkpoint is recovered with its original timer/review state;
+- an expired or invalid checkpoint is cleared instead of resurrected;
+- browser regressions cover history/ID preservation, running-session recovery, save/reload and
+  expired-checkpoint rejection.
+
+This handles an empty primary store. It deliberately does **not** reconcile two already-divergent
+populated stores, or concurrent tabs. Guest/local use and training recommendations are unchanged.
+
+This branch predates PR #28, so it carries a merge of `main`. Account sync wiring added to
+`repository.ts` by PR #28 is preserved alongside the recovery change.
 
 ### PR #26 — Release hardening gates — merged
 
 This starts the post-onboarding release-hardening phase.
 
-Merged changes:
+Changes on the PR branch:
 
 - prevents duplicate history records from a fast/double tap on **Save session** by using an in-flight save guard;
 - the new recovered-review test exposed a real lifecycle/persistence race: an older active-session checkpoint could finish after the post-save clear, and a parent rerender could also retrigger persistence because the callback identity changed;
@@ -209,25 +214,18 @@ The reset flow deliberately clears the legacy migration key as well as modern pe
 
 ### Accounts / cloud data
 
-**Not implemented yet.**
+Implemented on the account branch, not yet activated. The normal Wrangler configs remain
+unbound to account D1. Deployment generates a temporary config only when accounts are enabled
+and validates distinct preview/production database IDs. Private account data stays separate
+from the analytics Worker/database.
 
-`wrangler.app.jsonc` and `wrangler.preview.jsonc` currently have no account D1 binding.
-
-Planned direction is documented in `docs/ACCOUNT-SYNC.md`:
-
-- optional accounts; guest remains default;
-- Better Auth in the SettledSolo Worker;
-- email OTP first;
-- optional passkey after sign-in;
-- separate preview and production account D1 databases;
-- local write first;
-- sync outbox + incremental pull;
-- stable IDs;
-- idempotent server writes;
-- tombstones for deletes;
-- account export/delete.
-
-Do not mix private account/training data into the analytics database.
+- Better Auth 1.7.5 + hashed email OTP, secure HTTP-only cookies.
+- Generated auth migration + per-user sync records/change log with delete cascades.
+- Same-origin auth, sync and account export/delete APIs; no-store/noindex responses.
+- Stable mutation IDs, expected server revisions, tombstones and incremental cursor.
+- Local sync metadata belongs to one account; changing accounts cannot silently upload it.
+- Sign-out pauses sync; reset only clears the device; cloud deletion requires recent sign-in.
+- Conflicts retain both versions and an exportable archive. Passkeys remain future work.
 
 ## Analytics and the "how many users?" requirement
 
@@ -378,44 +376,25 @@ Do not use training outcomes as an efficacy claim.
 
 ## Recommended next sequence
 
-Unless the user explicitly changes priorities, the recommended order is:
+1. Finish account-branch CI/review and merge the independently reviewed changes.
+2. Provision isolated D1 databases and configure verified email delivery/secrets.
+3. Activate preview only, then verify real OTP delivery and two-device sync/recovery.
+4. Complete remaining physical-device and professional behavioural-review gates.
+5. Finish smaller behaviour-quality and public-beta contact/privacy/assets work.
+6. Activate production accounts only after preview evidence and release requirements are recorded.
+7. Add user-count/admin metrics and optional passkeys after the baseline is stable.
 
-1. **Release hardening**
-   - finish iOS/Android/offline/update/notification device gates;
-   - fix any issues discovered without changing the local-first data path.
+## Known documentation debt
 
-2. **Remaining behaviour-quality items**
-   - food/treat refusal signal;
-   - one-time baseline recording/observation step;
-   - appropriately cautious support/referral wording.
+Several older documents were written before the latest merges.
 
-3. **D1 + accounts foundation**
-   - create separate preview/production account D1 databases;
-   - add migrations/bindings;
-   - Better Auth + OTP;
-   - account status UI.
+In particular:
 
-4. **Guest import + cloud sync**
-   - explicit import preview;
-   - local outbox;
-   - incremental sync;
-   - multi-device/offline conflict tests.
+- `docs/NEXT-PHASE.md` still contains historical wording such as "Merge PR #11" and should not be used literally for current PR state.
+- `docs/PRODUCT-PLAN.md` still describes some modern-app cutover work as future even though the current Cloudflare build uses `app-v2`.
+- `README.md` contains long legacy development-history sections that are useful context but are not the best source for today's priority.
 
-5. **User-count/admin metrics**
-   - exact registered account count;
-   - active account measures;
-   - optional anonymous installation metric if privacy design is approved;
-   - private admin dashboard.
-
-6. **Small beta**
-   - observe onboarding completion, first-session completion, repeat use and multi-week use;
-   - fix friction before broader launch.
-
-## Documentation status
-
-`NEXT-PHASE.md` and `PRODUCT-PLAN.md` were refreshed in the storage-recovery branch to
-remove obsolete merge/cutover instructions and record current phase status. `README.md`
-still contains historical development sections; use this handover for current priorities.
+Use this handover as current status and update the older roadmap docs opportunistically when touching the relevant area.
 
 ## How the next agent should begin
 

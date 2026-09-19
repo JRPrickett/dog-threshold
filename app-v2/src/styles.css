@@ -5309,3 +5309,22 @@ a:focus-visible {
     height: 250px;
   }
 }
+
+/* Account controls use the existing cream/ink surfaces and form typography. */
+.account-panel { display: grid; gap: 16px; min-width: 0; }
+.account-panel form, .account-panel label, .account-import { display: grid; gap: 10px; }
+.account-panel input { width: 100%; min-width: 0; box-sizing: border-box; }
+.account-panel p, .account-panel strong { overflow-wrap: anywhere; }
+.account-panel button { white-space: normal; min-height: 44px; }
+.account-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.account-conflict { padding: 16px; border: 1px solid currentColor; border-radius: 12px; display: grid; gap: 12px; }
+.account-conflict pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 280px; overflow: auto; font-size: 14px; }
+
+.account-panel button { border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; color: var(--ink); background: var(--paper); cursor: pointer; }
+.account-panel button:disabled { opacity: .5; cursor: default; }
+.account-panel button[type="submit"], .account-import > button { background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: 700; }
+.account-panel input { border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); padding: 12px; }
+.account-panel label { color: var(--ink); font-size: 14px; }
+.account-panel details { min-width: 0; }
+.account-panel summary { cursor: pointer; padding-block: 10px; }
+.account-panel [role="alert"] { color: var(--rose); }

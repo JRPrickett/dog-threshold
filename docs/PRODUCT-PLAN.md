@@ -33,11 +33,12 @@ trainer, veterinary behaviourist or vet.
 
 ## Current delivery status (19 September 2026)
 
-The modern app, Cloudflare Worker configuration, guided onboarding and first automated
-release-hardening pass are merged through PR #26. The phase lists below describe the
-product scope, not a claim that each entry is still unimplemented. Use `HANDOVER.md` and
-`NEXT-PHASE.md` for the current sequence. Physical-device and qualified behavioural-review
-gates remain open. Accounts/sync are not implemented.
+The modern app, Cloudflare Worker configuration, guided onboarding and the first automated
+release-hardening pass are merged through PR #26, and optional accounts and local-first sync
+through PR #28. The phase lists below describe the product scope, not a claim that each entry
+is still unimplemented. Use `HANDOVER.md` and `NEXT-PHASE.md` for the current sequence.
+Accounts are merged but not activated: no verified email sender is configured yet.
+Physical-device and qualified behavioural-review gates remain open.
 
 ## Production phases
 

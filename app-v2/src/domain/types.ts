@@ -79,6 +79,8 @@ export interface Recommendation {
 }
 
 export interface AppData {
+  /** Private local sync metadata; never sent to analytics or imported from a backup. */
+  sync?: import("../account/syncState").SyncState;
   dogName: string;
   /** Versioned first-run routing. Existing users may not have this field. */
   onboarding?: OnboardingProfile;

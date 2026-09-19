@@ -12,3 +12,5 @@ Thumbs.db
 # impeccable design-review tool: platform binary is fetched by npx, not committed
 .claude/skills/impeccable/scripts/bin/
 .github/skills/impeccable/scripts/bin/
+
+.wrangler-accounts-*.jsonc

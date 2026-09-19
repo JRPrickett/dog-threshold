@@ -1,6 +1,6 @@
 import type { StorageMode } from "../data/repository";
 
-export function AccountNotice({ storageMode }: { storageMode: StorageMode }) {
+export function AccountNotice({ storageMode, onOpenAccount }: { storageMode: StorageMode; onOpenAccount: () => void }) {
   if (storageMode === "memory") {
     return (
       <aside className="account-notice storage-danger" role="status">
@@ -21,16 +21,15 @@ export function AccountNotice({ storageMode }: { storageMode: StorageMode }) {
         <strong>Your progress is saved on this device.</strong>
         <span>
           {storageMode === "localstorage"
-            ? "Using compatibility storage. Create a free account later for safer backup across devices."
-            : "Create a free account later to back it up and use it on other devices."}
+            ? "Using compatibility storage. Keep a separate backup while compatibility storage is in use."
+            : "Optional account sync and backup controls are in More."}
         </span>
         <span>
-          Keep a separate copy with More → Download backup. Installing the app does
-          not back up your history.
+          Keep a separate copy with More → Download backup. Installing the app does not back up your history.
         </span>
       </div>
-      <button type="button" disabled title="Account sync is the next production phase">
-        Soon
+      <button type="button" onClick={onOpenAccount}>
+        Account & backup
       </button>
     </aside>
   );

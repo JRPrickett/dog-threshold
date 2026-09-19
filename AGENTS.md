@@ -139,9 +139,10 @@ The modern app is built to `dist-v2` and served by `worker/index.ts`.
 
 ## 10. Accounts, D1 and sync rules
 
-Accounts/sync are planned, not yet implemented at the time of the current handover.
+Accounts/sync are implemented on the account branch but remain disabled until deployment
+configuration and release evidence are complete. See `docs/ACCOUNTS-DEPLOYMENT.md`.
 
-When that work starts:
+When extending that work:
 
 - Keep guest/local mode as the default.
 - Use separate preview and production account D1 databases.

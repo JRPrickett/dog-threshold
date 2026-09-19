@@ -1,5 +1,28 @@
 # Account and sync architecture
 
+## Implementation status — account branch, 19 September 2026
+
+`feat/accounts-sync` implements email OTP, account controls, explicit guest import and
+local-first incremental sync. It is not deployed or activated. See `ACCOUNTS-DEPLOYMENT.md`
+for activation inputs and `ACCOUNTS-REVIEW.md` for review evidence and remaining gates.
+
+The implementation uses generated Better Auth tables plus `sync_records` and an append-only
+`sync_changes` log. Typed payloads represent dog profile, track, timed session and cue-session
+entities. This replaces the separate entity-table proposal below for the first release.
+Server revisions are monotonic D1 sequence numbers, not client clocks. Each mutation has
+a stable retry ID and expected base revision; stale writes return recoverable conflicts.
+
+The browser stores sync ownership, cursor, shadow, remote records, durable outbox and
+conflict archive with its existing local app record. Local mutations and merges are serialized.
+Live-session checkpoints are not synced. Signup and import remain separate actions.
+API routes are same-origin and no-store; private records never enter analytics.
+
+Email OTP is the first supported path. Passkeys remain deferred. Account endpoints remain
+disabled without complete configuration; preview and production D1 IDs must differ.
+
+## Original design rationale
+
+
 ## Goal
 
 Add optional free accounts without making signup a prerequisite for using the training
@@ -263,9 +286,9 @@ push-outbox pattern the rules section already implies:
 
 ```
 POST /api/sync
-  { lastSyncedAt, outbox: [{ op: "create"|"update"|"delete", entity, id, payload, clientRevision }, ...] }
+  { cursor, operations: [{ id: "mutation UUID", key, value, base: expectedRevision }, ...] }
   ->
-  { serverChanges: [...], newSyncedAt }
+  { accepted: [...], conflicts: [...], changes: [...], cursor, hasMore }
 ```
 
 This maps directly onto the repository methods already built for the local-first store
@@ -275,9 +298,9 @@ of an outbox already done on the client side.
 
 **Rate limiting.** Use Cloudflare's dashboard-configured Rate Limiting rules on
 `/api/auth/*` (specifically the OTP-request endpoint — email-bombing is the realistic
-abuse vector at this scale) rather than hand-rolling a D1- or KV-backed limiter. Zero
-extra application code, and it's enough for 500 accounts; an in-app limiter is only
-worth building if abuse patterns show the edge rule isn't sufficient.
+abuse vector at this scale) alongside the implemented native Worker rate limiter and Better Auth database-backed
+limits. The latter remain effective across Worker instances; edge rules add protection
+against distributed email abuse.
 
 **Migrations and backups**, for completeness: use `wrangler d1 migrations` (wire a
 `migrate:preview` / `migrate:production` script into CI rather than applying schema
