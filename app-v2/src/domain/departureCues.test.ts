@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CUE_REPETITIONS,
   cueOutcome,
+  cuePracticeReadyForDeparture,
   recommendCueLevel
 } from "./departureCues";
 import type { DepartureCuePractice, DepartureCueSession } from "./types";
@@ -66,6 +67,39 @@ describe("departure cue practice", () => {
         ]
       })
     ).toMatchObject({ cueIndex: 2, supportFlag: true });
+  });
+
+  it("only opens the timed-departure path after repeated calm final-doorway practice", () => {
+    const finalLevel = 7;
+    const practice: DepartureCuePractice = {
+      level: finalLevel,
+      sessions: [
+        cueSession({ cueIndex: finalLevel }),
+        cueSession({ cueIndex: finalLevel })
+      ]
+    };
+
+    expect(cuePracticeReadyForDeparture(practice)).toBe(true);
+    expect(
+      cuePracticeReadyForDeparture({
+        ...practice,
+        sessions: [cueSession({ cueIndex: finalLevel })]
+      })
+    ).toBe(false);
+    expect(
+      cuePracticeReadyForDeparture({
+        ...practice,
+        sessions: [
+          cueSession({ cueIndex: finalLevel }),
+          cueSession({
+            cueIndex: finalLevel,
+            relaxedReps: 2,
+            concernReps: 1,
+            outcome: "concern"
+          })
+        ]
+      })
+    ).toBe(false);
   });
 
   it("classifies a three-rep set conservatively", () => {

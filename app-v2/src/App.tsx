@@ -76,8 +76,10 @@ export default function App() {
   if (!data.dogName) {
     return (
       <Setup
-        onSaved={async (dogName, startSeconds) => {
-          setData(await repository.saveSetup(dogName, startSeconds));
+        onSaved={async (dogName, startSeconds, startingPath) => {
+          setData(
+            await repository.saveSetup(dogName, startSeconds, startingPath)
+          );
           setStorageMode(repository.storageMode());
         }}
       />

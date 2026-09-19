@@ -30,6 +30,21 @@ function recentAtLevel(
   return sessions.filter((session) => session.cueIndex === level).slice(-3);
 }
 
+export function cuePracticeReadyForDeparture(
+  practice: DepartureCuePractice | undefined
+): boolean {
+  const finalLevel = DEPARTURE_CUES.length - 1;
+  const sessions = recentAtLevel(practice?.sessions ?? [], finalLevel);
+
+  let consecutiveRelaxed = 0;
+  for (const session of [...sessions].reverse()) {
+    if (session.outcome !== "relaxed") break;
+    consecutiveRelaxed += 1;
+  }
+
+  return consecutiveRelaxed >= 2;
+}
+
 export function recommendCueLevel(
   practice: DepartureCuePractice | undefined
 ): CueRecommendation {

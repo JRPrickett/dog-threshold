@@ -152,6 +152,35 @@ peer-reviewed sources higher in this document. It's the source for one product-r
 before starting a structured protocol, video-recording the dog alone once can help rule out
 confinement anxiety or incomplete housetraining being mistaken for separation anxiety.
 
+## First-run routing and starting assessment
+
+The first-run flow should identify the least difficult useful starting point without asking an
+owner to deliberately provoke distress or discover a maximum tolerance.
+
+The routing rules are:
+
+- if ordinary pre-departure cues already produce meaningful concern, or the owner cannot yet
+  judge their response, begin with departure-cue practice while the owner stays home;
+- if departure cues are neutral and the owner has already observed a comfortable absence, use
+  that observed duration as the first ceiling;
+- if departure cues are neutral but there is no known-comfortable absence, begin with an
+  exceptionally brief observed departure and adjust from the dog's behaviour;
+- encourage camera/video observation where practical so the owner can respond to behaviour
+  rather than elapsed time alone.
+
+This follows the evidence-supported principles of systematic desensitisation, very brief
+graduated departures that remain below the point that evokes anxiety, and direct observation.
+It does **not** establish a universal starting duration.
+
+SettledSolo currently uses **3 seconds** for the unknown-duration route. That exact number is a
+deliberately conservative **product heuristic**, not a clinically validated dosage or diagnostic
+threshold. It should remain labelled as such and is part of the professional-review gate.
+
+For dogs routed through cue practice, the app waits for repeated relaxed practice at the most
+departure-like doorway cue before offering a timed departure. The exact readiness rule is also a
+product heuristic layered on top of the supported principle that departure cues should be
+desensitised without repeatedly provoking anxiety.
+
 ## Production engine philosophy
 
 The production recommendation engine follows these principles:

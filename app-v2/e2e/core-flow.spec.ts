@@ -3,14 +3,25 @@ import { expect, test } from "@playwright/test";
 async function completeSetup(page: import("@playwright/test").Page, seconds = 1) {
   await page.goto("/app/");
   await page.getByLabel("Your dog's name").fill("Mabel");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: /^Stays relaxed/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: /^Yes/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Comfortable duration").fill(String(seconds));
-  await page.getByRole("button", { name: "Set up your first session" }).click();
+  await page.getByRole("button", { name: "See my starting plan" }).click();
+  await page.getByRole("button", { name: "Use this starting plan" }).click();
   await expect(page.getByRole("button", { name: "Start today's session" })).toBeVisible();
 }
 
-test("setup accepts a clear duration and converts minutes to seconds", async ({ page }) => {
+test("setup accepts an observed comfortable duration and converts minutes to seconds", async ({ page }) => {
   await page.goto("/app/");
   await page.getByLabel("Your dog's name").fill("Mabel");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: /^Stays relaxed/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: /^Yes/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
 
   const duration = page.getByLabel("Comfortable duration");
   await duration.fill("");
@@ -19,9 +30,46 @@ test("setup accepts a clear duration and converts minutes to seconds", async ({ 
 
   await duration.fill("1");
   await page.getByLabel("Duration unit").selectOption("minutes");
-  await page.getByRole("button", { name: "Set up your first session" }).click();
+  await page.getByRole("button", { name: "See my starting plan" }).click();
+  await expect(page.getByText("1 minute", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Use this starting plan" }).click();
 
   await expect(page.getByText("1:00")).toBeVisible();
+});
+
+test("onboarding routes cue-sensitive dogs to departure-cue practice before leaving", async ({ page }) => {
+  await page.goto("/app/");
+  await page.getByLabel("Your dog's name").fill("Mabel");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: /^Gets watchful or follows me/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  await expect(page.getByRole("heading", { name: "Start before the leaving part." })).toBeVisible();
+  await expect(page.getByText("Departure cues first", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Use this starting plan" }).click();
+
+  await expect(page.getByRole("heading", { name: "Departure cues first" })).toBeVisible();
+  await page.getByRole("button", { name: "Start departure cue practice" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Walk toward the exit, then turn away" })
+  ).toBeVisible();
+});
+
+test("onboarding uses a clearly-labelled micro departure when no comfortable absence is known", async ({ page }) => {
+  await page.goto("/app/");
+  await page.getByLabel("Your dog's name").fill("Mabel");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: /^Stays relaxed/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: /^I'm not sure/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  await expect(page.getByRole("heading", { name: "Start with a 3-second observation." })).toBeVisible();
+  await expect(page.getByText(/conservative SettledSolo heuristic/)).toBeVisible();
+  await page.getByRole("button", { name: "Use this starting plan" }).click();
+
+  await expect(page.getByText("Starting observation", { exact: true })).toBeVisible();
+  await expect(page.getByText("3s")).toBeVisible();
 });
 
 test("first session can be completed and appears in history", async ({ page }) => {

@@ -2,6 +2,7 @@ import type {
   AppData,
   DepartureCueSession,
   Scenario,
+  StartingPath,
   TrainingSession
 } from "../domain/types";
 import type { PersistedLiveSession } from "../session/sessionPersistence";
@@ -29,7 +30,11 @@ interface StoredRecord {
 export interface AppRepository {
   loadAppData(): Promise<AppData>;
   saveAppData(data: AppData): Promise<void>;
-  saveSetup(dogName: string, startSeconds: number): Promise<AppData>;
+  saveSetup(
+    dogName: string,
+    startSeconds: number,
+    startingPath: StartingPath
+  ): Promise<AppData>;
   appendSession(session: TrainingSession, scenarioId?: string): Promise<AppData>;
   updateSession(scenarioId: string, session: TrainingSession): Promise<AppData>;
   deleteSession(scenarioId: string, sessionId: string): Promise<AppData>;
@@ -159,6 +164,24 @@ function normaliseScenario(scenario: Scenario, index: number): Scenario {
   };
 }
 
+function normaliseOnboarding(data: AppData): AppData["onboarding"] {
+  const onboarding = data.onboarding;
+  if (!onboarding || onboarding.version !== 2) return undefined;
+
+  const paths: StartingPath[] = [
+    "departure-cues",
+    "micro-departure",
+    "known-duration"
+  ];
+  if (!paths.includes(onboarding.startingPath)) return undefined;
+
+  return {
+    version: 2,
+    startingPath: onboarding.startingPath,
+    completedAt: Math.max(0, Number(onboarding.completedAt) || Date.now())
+  };
+}
+
 function normaliseAppData(data: AppData): AppData {
   const scenarios =
     Array.isArray(data.scenarios) && data.scenarios.length
@@ -176,6 +199,7 @@ function normaliseAppData(data: AppData): AppData {
 
   return {
     dogName: String(data.dogName || "").slice(0, 40),
+    onboarding: normaliseOnboarding(data),
     activeScenarioId: scenarios.some(
       (scenario) => scenario.id === requestedActive
     )
@@ -251,11 +275,19 @@ function fallbackRepository(initial: AppData): AppRepository {
       data = normaliseAppData(next);
       persistData();
     },
-    async saveSetup(dogName, startSeconds) {
+    async saveSetup(dogName, startSeconds, startingPath) {
       const scenario = activeScenario(data);
       data = normaliseAppData(
         replaceScenario(
-          { ...data, dogName: dogName.trim() },
+          {
+            ...data,
+            dogName: dogName.trim(),
+            onboarding: {
+              version: 2,
+              startingPath,
+              completedAt: Date.now()
+            }
+          },
           { ...scenario, startSeconds }
         )
       );
@@ -454,12 +486,20 @@ export function createAppRepository(): AppRepository {
       );
     },
 
-    async saveSetup(dogName, startSeconds) {
+    async saveSetup(dogName, startSeconds, startingPath) {
       const data = await repository.loadAppData();
       const scenario = activeScenario(data);
       const next = normaliseAppData(
         replaceScenario(
-          { ...data, dogName: dogName.trim() },
+          {
+            ...data,
+            dogName: dogName.trim(),
+            onboarding: {
+              version: 2,
+              startingPath,
+              completedAt: Date.now()
+            }
+          },
           { ...scenario, startSeconds }
         )
       );

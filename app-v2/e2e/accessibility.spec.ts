@@ -34,3 +34,20 @@ test("first-run app shell has no serious WCAG A/AA violations", async ({ page })
   await expect(page.getByLabel("Your dog's name")).toBeVisible();
   await expectNoSeriousViolations(page);
 });
+
+
+test("guided onboarding remains accessible through routing and plan review", async ({ page }) => {
+  await page.goto("/app/");
+  await page.getByLabel("Your dog's name").fill("Mabel");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expectNoSeriousViolations(page);
+
+  await page.getByRole("button", { name: /^Stays relaxed/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expectNoSeriousViolations(page);
+
+  await page.getByRole("button", { name: /^I'm not sure/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByRole("heading", { name: "Start with a 3-second observation." })).toBeVisible();
+  await expectNoSeriousViolations(page);
+});

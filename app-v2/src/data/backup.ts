@@ -29,6 +29,25 @@ function finiteNumber(value: unknown, fallback: number): number {
   return Number.isFinite(number) ? number : fallback;
 }
 
+function cleanOnboarding(value: unknown): AppData["onboarding"] {
+  if (!isRecord(value) || value.version !== 2) return undefined;
+
+  const startingPath = String(value.startingPath || "");
+  if (
+    startingPath !== "departure-cues" &&
+    startingPath !== "micro-departure" &&
+    startingPath !== "known-duration"
+  ) {
+    return undefined;
+  }
+
+  return {
+    version: 2,
+    startingPath,
+    completedAt: Math.max(0, finiteNumber(value.completedAt, Date.now()))
+  };
+}
+
 function cleanOutcome(value: unknown): Outcome {
   return outcomes.includes(value as Outcome)
     ? (value as Outcome)
@@ -188,6 +207,7 @@ export function sanitiseImportedAppData(value: unknown): AppData {
 
   return {
     dogName: String(value.dogName || "").trim().slice(0, 40),
+    onboarding: cleanOnboarding(value.onboarding),
     activeScenarioId,
     scenarios,
     dailyCap:
