@@ -4815,7 +4815,7 @@ a:focus-visible {
 }
 
 @keyframes ios-guide-pulse {
-  50% { box-shadow: 0 0 0 7px rgba(242,166,90,.32); transform: scale(.92); }
+  50% { box-shadow: 0 0 0 7px rgba(242,166,90,.32); }
 }
 
 @keyframes ios-guide-pop {

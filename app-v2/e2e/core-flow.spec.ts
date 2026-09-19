@@ -203,6 +203,7 @@ test("public SettledSolo site leads into the PWA", async ({ page }) => {
 
 test("iOS install help demonstrates the current Safari menu flow", async ({ page, browserName }) => {
   test.skip(browserName !== "webkit", "Safari installation help is only shown on iOS");
+  await page.emulateMedia({ reducedMotion: "reduce" });
 
   await completeSetup(page, 5);
   await page.getByText("Show me how").click();
