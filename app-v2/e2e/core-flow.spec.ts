@@ -64,12 +64,12 @@ test("onboarding uses a clearly-labelled micro departure when no comfortable abs
   await page.getByRole("button", { name: /^I'm not sure/ }).click();
   await page.getByRole("button", { name: "Continue" }).click();
 
-  await expect(page.getByRole("heading", { name: "Start with a 1-second observation." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Start with a 3-second observation." })).toBeVisible();
   await expect(page.getByText(/conservative SettledSolo heuristic/)).toBeVisible();
   await page.getByRole("button", { name: "Use this starting plan" }).click();
 
   await expect(page.getByText("Starting observation", { exact: true })).toBeVisible();
-  await expect(page.getByText("1s")).toBeVisible();
+  await expect(page.getByText("3s")).toBeVisible();
 });
 
 test("first session can be completed and appears in history", async ({ page }) => {
