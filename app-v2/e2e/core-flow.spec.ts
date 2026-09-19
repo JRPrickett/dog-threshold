@@ -1,5 +1,38 @@
 import { expect, test } from "@playwright/test";
 
+async function expectNoSub16pxFormControls(
+  page: import("@playwright/test").Page
+) {
+  const controls = page.locator(
+    'input:not([type="checkbox"]):not([type="radio"]), select, textarea'
+  );
+  const tooSmall = await controls.evaluateAll((elements) =>
+    elements
+      .filter((element) => {
+        const style = window.getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return (
+          style.display !== "none" &&
+          style.visibility !== "hidden" &&
+          rect.width > 0 &&
+          rect.height > 0
+        );
+      })
+      .map((element) => ({
+        tag: element.tagName.toLowerCase(),
+        label:
+          element.getAttribute("aria-label") ??
+          element.getAttribute("name") ??
+          element.getAttribute("placeholder") ??
+          "",
+        fontSize: Number.parseFloat(window.getComputedStyle(element).fontSize)
+      }))
+      .filter((control) => control.fontSize < 16)
+  );
+
+  expect(tooSmall).toEqual([]);
+}
+
 async function completeSetup(page: import("@playwright/test").Page, seconds = 1) {
   await page.goto("/app/");
   await page.getByLabel("Your dog's name").fill("Mabel");
@@ -13,6 +46,29 @@ async function completeSetup(page: import("@playwright/test").Page, seconds = 1)
   await page.getByRole("button", { name: "Use this starting plan" }).click();
   await expect(page.getByRole("button", { name: "Start today's session" })).toBeVisible();
 }
+
+test("mobile form controls remain at least 16px to prevent iOS focus zoom", async ({ page }) => {
+  await page.goto("/app/");
+  await expect(page.getByLabel("Your dog's name")).toBeVisible();
+  await expectNoSub16pxFormControls(page);
+
+  await page.getByLabel("Your dog's name").fill("Mabel");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: /^Stays relaxed/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: /^Yes/ }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  await expect(page.getByLabel("Comfortable duration")).toBeVisible();
+  await expectNoSub16pxFormControls(page);
+
+  await page.getByRole("button", { name: "See my starting plan" }).click();
+  await page.getByRole("button", { name: "Use this starting plan" }).click();
+  await page.getByRole("button", { name: "More" }).click();
+
+  await expect(page.getByRole("heading", { name: /training settings/i })).toBeVisible();
+  await expectNoSub16pxFormControls(page);
+});
 
 test("setup accepts an observed comfortable duration and converts minutes to seconds", async ({ page }) => {
   await page.goto("/app/");

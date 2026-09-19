@@ -37,8 +37,22 @@ body {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
+}
+
+/*
+ * iOS Safari zooms focused form controls whose computed font size is below
+ * 16px. Keep surrounding labels/copy compact, but never let an interactive
+ * text control fall below that threshold.
+ */
+body :is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea
+) {
+  font-size: 16px;
 }
 
 button {
