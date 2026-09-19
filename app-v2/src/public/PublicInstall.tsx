@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { BrandMark } from "../brand/BrandMark";
 import { isIOS, isStandalone } from "../pwa/installStatus";
@@ -25,25 +25,12 @@ function PlusSquareIcon() {
   );
 }
 
-function IOSInstallGuide({ onClose }: { onClose: () => void }) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    dialog.showModal();
-    return () => {
-      if (dialog.open) dialog.close();
-    };
-  }, []);
-
+function IOSInstallGuide({ dialogRef }: { dialogRef: RefObject<HTMLDialogElement | null> }) {
   return (
     <dialog
       ref={dialogRef}
       className="ios-install-dialog"
       aria-labelledby="ios-install-title"
-      onClose={onClose}
-      onCancel={onClose}
     >
       <button className="ios-install-close" type="button" onClick={() => dialogRef.current?.close()}>
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -97,8 +84,8 @@ function IOSInstallGuide({ onClose }: { onClose: () => void }) {
 export function PublicInstallAction() {
   useRegisterSW({ immediate: true });
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
-  const [guideOpen, setGuideOpen] = useState(false);
   const [installed, setInstalled] = useState(() => isStandalone());
+  const guideRef = useRef<HTMLDialogElement>(null);
   const ios = isIOS();
 
   useEffect(() => {
@@ -147,11 +134,11 @@ export function PublicInstallAction() {
         <button
           className="marketing-primary marketing-install-button"
           type="button"
-          onClick={() => setGuideOpen(true)}
+          onClick={() => guideRef.current?.showModal()}
         >
           Install on iPhone
         </button>
-        {guideOpen && <IOSInstallGuide onClose={() => setGuideOpen(false)} />}
+        <IOSInstallGuide dialogRef={guideRef} />
       </>
     );
   }
