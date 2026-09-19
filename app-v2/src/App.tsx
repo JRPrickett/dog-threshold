@@ -174,12 +174,19 @@ export default function App() {
             storageMode={storageMode}
             celebration={celebration}
             onDismissCelebration={() => setCelebration(null)}
-            onStart={(target) => {
+            onStart={async (target) => {
+              account.pauseForTraining();
+              const latest = await repository.loadAppData();
+              setData(latest);
               setCelebration(null);
               setRestoredState(undefined);
               setLiveTarget(target);
             }}
-            onOpenCuePractice={() => setCuePracticeOpen(true)}
+            onOpenCuePractice={async () => {
+              account.pauseForTraining();
+              setData(await repository.loadAppData());
+              setCuePracticeOpen(true);
+            }}
             onOpenAccount={() => setScreen("more")}
           />
         )}

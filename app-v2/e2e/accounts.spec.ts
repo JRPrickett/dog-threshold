@@ -9,8 +9,22 @@ function cloud() {
     get requests() {
       return requests;
     },
+    renameDog(name: string) {
+      const value = {
+        kind: "profile" as const,
+        dogId: "primary",
+        dogName: name,
+      };
+      const record = {
+        key: "profile:primary",
+        revision: changes.length + 1,
+        value,
+      };
+      records.set(record.key, record);
+      changes.push(record);
+    },
     async attach(context: BrowserContext) {
-      const state = { signedIn: false, online: true, account: "owner" };
+      const state = { signedIn: false, online: true, account: "owner", hold: null as Promise<void> | null };
       await context.route("**/api/**", async (route) => {
         const path = new URL(route.request().url()).pathname;
         if (!state.online) {
@@ -43,6 +57,11 @@ function cloud() {
         }
         if (path === "/api/sync") {
           requests++;
+          if (state.hold) {
+            const hold = state.hold;
+            state.hold = null;
+            await hold;
+          }
           if (!state.signedIn) return respond({ error: "Sign in again" }, 401);
           const body = route.request().postDataJSON() as {
             cursor: number;
@@ -197,4 +216,39 @@ test("offline local save syncs later and restores on a second device without dup
   } finally {
     await second.close();
   }
+});
+
+test("a late cloud response cannot change an active training session", async ({
+  page,
+  context,
+}) => {
+  const server = cloud();
+  const state = await server.attach(context);
+  await setup(page);
+  await page.getByRole("button", { name: "More", exact: true }).click();
+  await signIn(page);
+  await page
+    .getByRole("button", { name: "Connect and upload this log" })
+    .click();
+  await expect(page.getByText(/Last synced/)).toBeVisible();
+  let release!: () => void;
+  state.hold = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  server.renameDog("Cloud Mabel");
+  const before = server.requests;
+  await page.getByRole("button", { name: "Sync now", exact: true }).click();
+  await expect.poll(() => server.requests).toBeGreaterThan(before);
+  await page.getByRole("button", { name: "Today", exact: true }).click();
+  await page.getByRole("button", { name: "Start today's session" }).click();
+  await page.getByRole("button", { name: "I'm leaving now" }).click();
+  const response = page.waitForResponse((response) =>
+    response.url().endsWith("/api/sync"),
+  );
+  release();
+  await response;
+  await page.getByRole("button", { name: "I'm back" }).click();
+  await expect(
+    page.getByRole("heading", { name: "How was Mabel while you were away?" }),
+  ).toBeVisible();
 });

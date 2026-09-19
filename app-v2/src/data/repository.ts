@@ -721,7 +721,7 @@ export interface SyncedRepository extends AppRepository {
   connectAccount(accountId: string): Promise<AppData>;
   pauseSync(): Promise<AppData>;
   markAccountDeleted(): Promise<AppData>;
-  receiveSync(accountId: string, sent: SyncOperation[], reply: SyncReply): Promise<AppData>;
+  receiveSync(accountId: string, sent: SyncOperation[], reply: SyncReply, canApply?: () => boolean): Promise<AppData>;
   resolveConflict(key: string, choice: "local" | "cloud"): Promise<AppData>;
 }
 export function createAppRepository(): SyncedRepository {
@@ -745,7 +745,10 @@ export function createAppRepository(): SyncedRepository {
       const data = await local.loadAppData();
       return save({ ...data, sync: data.sync ? { ...data.sync, enabled: false } : undefined });
     }),
-    receiveSync: (accountId: string, sent: SyncOperation[], reply: SyncReply) => serial(async () => save(applyReply(await local.loadAppData(), accountId, sent, reply))),
+    receiveSync: (accountId: string, sent: SyncOperation[], reply: SyncReply, canApply = () => true) => serial(async () => {
+      const data = await local.loadAppData();
+      return canApply() ? save(applyReply(data, accountId, sent, reply)) : data;
+    }),
     resolveConflict: (key: string, choice: "local" | "cloud") => serial(async () => save(resolveConflict(await local.loadAppData(), key, choice)))
   } as SyncedRepository;
   const mutations = ["saveSetup", "appendSession", "updateSession", "deleteSession", "appendDepartureCueSession", "setActiveScenario", "createScenario", "updateScenario", "updateDailyCap"] as const;

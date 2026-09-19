@@ -76,6 +76,7 @@ export function useAccount(
             account.id,
             operations,
             reply,
+            () => !pausedRef.current && generation === epoch.current,
           );
           onData(next);
           if (!reply.hasMore && !next.sync?.outbox.length) break;
@@ -147,6 +148,10 @@ export function useAccount(
     syncing,
     refresh,
     syncNow,
+    pauseForTraining() {
+      epoch.current++;
+      pausedRef.current = true;
+    },
     async connect() {
       if (!currentUser.current) return;
       onData(await repository.connectAccount(currentUser.current.id));

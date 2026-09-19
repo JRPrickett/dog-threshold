@@ -29,7 +29,8 @@ not evidence of a live production rollout or a physical-device test.
 
 - Replaced dead `Soon` account controls with a navigable account panel.
 - Added returning-user sign-in before onboarding without imposing a login wall.
-- Paused remote merges while a timed session or cue practice is active.
+- Paused remote merges while a timed session or cue practice is active, with a local-write
+  handover before training starts and a browser regression for a delayed sync response.
 - Serialized local mutations and sync application, using Web Locks where available across tabs.
 - Preserved later edits when a response acknowledges an earlier outbox version.
 - Added expected-account checks on sync, export and deletion to reject stale-tab actions
