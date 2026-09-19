@@ -2309,7 +2309,7 @@ a:focus-visible {
   position: relative;
   background:
     linear-gradient(0deg, rgba(21,36,44,.82), rgba(21,36,44,.08) 55%),
-    url("/photos/hero-window-watch.jpg") center / cover no-repeat;
+    url("/photos/hero-settled-at-home.webp") center / cover no-repeat;
   display: grid;
   align-items: end;
 }

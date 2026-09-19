@@ -56,10 +56,11 @@ export function PublicSite() {
 
           <figure className="marketing-hero-art">
             <img
-              src="/photos/hero-window-watch.jpg"
-              alt="A dog sitting quietly beside a softly lit window."
-              width="1440"
-              height="2560"
+              src="/photos/hero-settled-at-home.webp"
+              alt="A relaxed dog sleeping comfortably in a warm, softly lit living room."
+              width="1122"
+              height="1402"
+              fetchPriority="high"
             />
             <figcaption className="marketing-scene-copy">
               <span>Observe comfort, not just the clock.</span>
