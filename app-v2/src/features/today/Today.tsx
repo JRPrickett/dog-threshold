@@ -7,6 +7,11 @@ import {
   formatDuration,
   recommendNext
 } from "../../domain/trainingEngine";
+import {
+  DEPARTURE_CUES,
+  cuePracticeReadyForDeparture,
+  recommendCueLevel
+} from "../../domain/departureCues";
 import { effectiveDailyCap, isDailyCapReached, sessionsToday } from "../../domain/dailyCap";
 import { AccountNotice } from "../../components/AccountNotice";
 import { MilestoneBanner } from "../progress/MilestoneBanner";
@@ -32,6 +37,10 @@ export function Today({
     () => recommendNext(scenario.sessions, scenario.startSeconds),
     [scenario]
   );
+  const cueRecommendation = useMemo(
+    () => recommendCueLevel(scenario.cuePractice),
+    [scenario.cuePractice]
+  );
   const practice = buildPracticeDepartures(
     recommendation.targetSeconds,
     scenario.sessions.length,
@@ -41,6 +50,16 @@ export function Today({
   const capReached = isDailyCapReached(data, effectiveDailyCap(data));
   const [restDayOverride, setRestDayOverride] = useState(false);
   useEffect(() => setRestDayOverride(false), [scenario.id]);
+
+  const cueFirstRoute =
+    data.onboarding?.startingPath === "departure-cues" &&
+    scenario.sessions.length === 0;
+  const cueReady =
+    cueFirstRoute && cuePracticeReadyForDeparture(scenario.cuePractice);
+  const cuePracticeOnly = cueFirstRoute && !cueReady;
+  const firstMicroObservation =
+    data.onboarding?.startingPath === "micro-departure" &&
+    scenario.sessions.length === 0;
   const showRestDayCard =
     recommendation.restDayRecommended && !capReached && !restDayOverride;
 
@@ -56,82 +75,148 @@ export function Today({
         <MilestoneBanner celebration={celebration} onDismiss={onDismissCelebration} />
       )}
 
-      <section className="today-card">
-        <p className="kicker">Today's plan</p>
-        <div className="target-row">
-          <div>
-            <h1>{formatDuration(recommendation.targetSeconds)}</h1>
-            <p>main departure</p>
+      {cuePracticeOnly ? (
+        <section className="today-card starting-route-card">
+          <p className="kicker">Your starting plan</p>
+          <div className="starting-route-heading">
+            <div>
+              <h1>Departure cues first</h1>
+              <p>No real leaving yet.</p>
+            </div>
+            <span className="direction direction-repeat">Foundation</span>
           </div>
-          <span className={`direction direction-${recommendation.direction}`}>
-            {recommendation.direction === "increase"
-              ? "Small step up"
-              : recommendation.direction === "reduce"
-                ? "Easier today"
-                : recommendation.direction === "start"
-                  ? "Starting point"
-                  : "Repeat"}
-          </span>
-        </div>
 
-        {practice.length > 0 && !capReached && !showRestDayCard && (
+          <p className="starting-route-copy">
+            Getting ready to leave already changes {data.dogName}&apos;s behaviour.
+            Work on one mild cue at a time while staying home, and only make it more
+            departure-like while they remain relaxed.
+          </p>
+
           <div className="practice-preview">
-            <span>Before the main departure</span>
-            <strong>
-              {practice.map((seconds) => formatDuration(seconds)).join(" · ")}
-            </strong>
-            <small>Short practice departures with calm settle time between them.</small>
+            <span>Current cue</span>
+            <strong>{DEPARTURE_CUES[cueRecommendation.cueIndex]}</strong>
+            <small>{cueRecommendation.reason}</small>
           </div>
-        )}
 
-        <div className="why-card">
-          <span>Why this plan?</span>
-          <p>{recommendation.reason}</p>
-        </div>
+          {cueRecommendation.supportFlag && (
+            <div className="support-card">
+              The last cue practice was too difficult. Stop for now, return to an
+              easier step next time, and consider qualified behavioural support if
+              distress is strong or persistent.
+            </div>
+          )}
 
-        {recommendation.supportFlag && !showRestDayCard && (
-          <div className="support-card">
-            Several recent sessions showed concern. Make things easier and consider
-            checking in with an accredited separation anxiety specialist (such as a
-            Certified Separation Anxiety Trainer) before pushing duration.
+          <button
+            className="primary-button start-button"
+            onClick={onOpenCuePractice}
+          >
+            Start departure cue practice
+          </button>
+          <p className="ceiling-note">
+            This practice deliberately does not ask you to leave.
+          </p>
+        </section>
+      ) : (
+        <section className="today-card">
+          <p className="kicker">Today&apos;s plan</p>
+          <div className="target-row">
+            <div>
+              <h1>{formatDuration(recommendation.targetSeconds)}</h1>
+              <p>main departure</p>
+            </div>
+            <span className={`direction direction-${recommendation.direction}`}>
+              {recommendation.direction === "increase"
+                ? "Small step up"
+                : recommendation.direction === "reduce"
+                  ? "Easier today"
+                  : recommendation.direction === "start"
+                    ? "Starting point"
+                    : "Repeat"}
+            </span>
           </div>
-        )}
 
-        {capReached ? (
-          <div className="support-card daily-cap-card">
-            {sessionsToday(data)} main departure{sessionsToday(data) === 1 ? "" : "s"} logged
-            today — that's today's ceiling. Separation training consolidates in the gaps
-            between sessions, and cramming in another attempt tends to set a dog back
-            rather than speed things up. Departure-cue practice below is still available.
+          {firstMicroObservation && (
+            <div className="starting-observation-note">
+              <strong>Starting observation</strong>
+              <p>
+                One second is a deliberately cautious SettledSolo starting
+                heuristic because you do not yet have an observed comfortable
+                absence. If possible, watch on a camera and return sooner at the
+                first sign of concern.
+              </p>
+            </div>
+          )}
+
+          {cueReady && (
+            <div className="starting-observation-note">
+              <strong>Ready for the first brief departure</strong>
+              <p>
+                The most departure-like doorway cue has stayed relaxed across
+                repeated practice. Try the very short departure below and keep
+                observing {data.dogName}, ideally by camera.
+              </p>
+            </div>
+          )}
+
+          {practice.length > 0 && !capReached && !showRestDayCard && (
+            <div className="practice-preview">
+              <span>Before the main departure</span>
+              <strong>
+                {practice.map((seconds) => formatDuration(seconds)).join(" · ")}
+              </strong>
+              <small>Short practice departures with calm settle time between them.</small>
+            </div>
+          )}
+
+          <div className="why-card">
+            <span>Why this plan?</span>
+            <p>{recommendation.reason}</p>
           </div>
-        ) : showRestDayCard ? (
-          <div className="support-card rest-day-card">
-            <strong>Consider a rest day.</strong> Recent sessions have been difficult
-            enough that a full day without training — no timed absences at all — is
-            likely to help more than an easier session would. Setbacks are normal;
-            skipping today is part of the plan, not a failure of it.
-            <button
-              type="button"
-              className="text-button rest-day-override"
-              onClick={() => setRestDayOverride(true)}
-            >
-              Train anyway
-            </button>
-          </div>
-        ) : (
-          <>
-            <button
-              className="primary-button start-button"
-              onClick={() => onStart(recommendation.targetSeconds)}
-            >
-              Start today's session
-            </button>
-            <p className="ceiling-note">
-              The target is a ceiling, not a quota. Returning early is always okay.
-            </p>
-          </>
-        )}
-      </section>
+
+          {recommendation.supportFlag && !showRestDayCard && (
+            <div className="support-card">
+              Several recent sessions showed concern. Make things easier and consider
+              checking in with an accredited separation anxiety specialist (such as a
+              Certified Separation Anxiety Trainer) before pushing duration.
+            </div>
+          )}
+
+          {capReached ? (
+            <div className="support-card daily-cap-card">
+              {sessionsToday(data)} main departure{sessionsToday(data) === 1 ? "" : "s"} logged
+              today — that&apos;s today&apos;s ceiling. Separation training consolidates in the gaps
+              between sessions, and cramming in another attempt tends to set a dog back
+              rather than speed things up. Departure-cue practice below is still available.
+            </div>
+          ) : showRestDayCard ? (
+            <div className="support-card rest-day-card">
+              <strong>Consider a rest day.</strong> Recent sessions have been difficult
+              enough that a full day without training — no timed absences at all — is
+              likely to help more than an easier session would. Setbacks are normal;
+              skipping today is part of the plan, not a failure of it.
+              <button
+                type="button"
+                className="text-button rest-day-override"
+                onClick={() => setRestDayOverride(true)}
+              >
+                Train anyway
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                className="primary-button start-button"
+                onClick={() => onStart(recommendation.targetSeconds)}
+              >
+                Start today&apos;s session
+              </button>
+              <p className="ceiling-note">
+                The target is a ceiling, not a quota. Returning early is always okay.
+              </p>
+            </>
+          )}
+        </section>
+      )}
 
       <section className="quiet-card session-summary-card">
         <div>
@@ -149,11 +234,11 @@ export function Today({
 
       <section className="cue-entry-card coverage-card">
         <div>
-          <p className="kicker">While you're actively training</p>
+          <p className="kicker">While you&apos;re actively training</p>
           <h2>Cover real absences, not just training sessions.</h2>
           <p>
-            Training works best when {data.dogName} isn't practising anxiety outside of a
-            session too. Try not to leave them alone longer than today's plan for anything
+            Training works best when {data.dogName} isn&apos;t practising anxiety outside of a
+            session too. Try not to leave them alone longer than today&apos;s plan for anything
             else this week — errands included.
           </p>
         </div>
@@ -168,19 +253,21 @@ export function Today({
         </details>
       </section>
 
-      <section className="cue-entry-card">
-        <div>
-          <p className="kicker">Before you can leave</p>
-          <h2>Does getting ready to go already cause worry?</h2>
-          <p>
-            Practise departure cues without actually leaving, so keys, shoes and the
-            door become less predictive.
-          </p>
-        </div>
-        <button className="secondary-button" onClick={onOpenCuePractice}>
-          Departure cue practice
-        </button>
-      </section>
+      {!cuePracticeOnly && (
+        <section className="cue-entry-card">
+          <div>
+            <p className="kicker">Before you can leave</p>
+            <h2>Does getting ready to go already cause worry?</h2>
+            <p>
+              Practise departure cues without actually leaving, so keys, shoes and the
+              door become less predictive.
+            </p>
+          </div>
+          <button className="secondary-button" onClick={onOpenCuePractice}>
+            Departure cue practice
+          </button>
+        </section>
+      )}
     </div>
   );
 }
