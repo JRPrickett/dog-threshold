@@ -31,8 +31,8 @@ Changes on the PR branch:
 - active-session save/clear/reset mutations are now serialized and the live persistence callback is stable across parent rerenders, so a completed review cannot be re-persisted after its clear;
 - adds a recovered-review browser journey that reloads before save, deliberately double-taps save and proves one history record remains after a second reload;
 - adds notification-denial coverage proving denial does not block training and is not immediately re-prompted;
-- adds a separate production-PWA Playwright gate that builds the real service worker, relaunches offline, saves offline and verifies the data after connectivity returns;
-- runs that production-PWA gate against Chromium/Pixel 7 and WebKit/iPhone 15 profiles;
+- adds a separate production-PWA Playwright gate that builds the real service worker and proves it installs/controls the app in Chromium/Pixel 7 and WebKit/iPhone 15 profiles;
+- Chromium additionally proves an offline relaunch, offline save and reconnect cycle; Playwright WebKit cannot reliably emulate offline+reload and the real iPhone Airplane Mode check therefore remains manual;
 - changes preview deployment to follow `main` rather than the obsolete `modern-app-shell-engine` branch.
 
 The production-service-worker test does **not** clear the real installed-iPhone Airplane Mode gate; that remains manual evidence.
@@ -302,7 +302,7 @@ The normal Playwright suite then runs against:
 - Chromium / Pixel 7 profile;
 - WebKit / iPhone 15 profile.
 
-PR #26 also adds `npm run test:pwa`, which builds the production bundle and generated service worker and verifies an offline relaunch/save/reconnect cycle on both profiles.
+PR #26 also adds `npm run test:pwa`, which builds the production bundle and generated service worker. Both mobile profiles prove service-worker control; Chromium additionally verifies the full offline relaunch/save/reconnect cycle. Playwright WebKit's offline+reload emulation currently fails inside the engine itself, so real iOS Airplane Mode remains a physical-device gate.
 
 Do not treat WebKit emulation as evidence of installed iPhone PWA lifecycle behaviour.
 
