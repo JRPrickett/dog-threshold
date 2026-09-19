@@ -74,10 +74,20 @@ function secure(response: Response, url: URL, env: Env): Response {
     headers.set("X-Robots-Tag", "noindex, nofollow");
   }
 
-  if (url.pathname.startsWith("/assets/")) {
+  if (
+    url.pathname.startsWith("/assets/") ||
+    url.pathname === "/photos/hero-settled-at-home-v2.webp"
+  ) {
     headers.set("Cache-Control", "public, max-age=31536000, immutable");
   } else if ((headers.get("content-type") ?? "").includes("text/html")) {
     headers.set("Cache-Control", "no-cache");
+  }
+
+  if (url.pathname === "/" && (headers.get("content-type") ?? "").includes("text/html")) {
+    headers.set(
+      "Link",
+      '</photos/hero-settled-at-home-v2.webp>; rel="preload"; as="image"; type="image/webp"; fetchpriority="high"'
+    );
   }
 
   return new Response(response.body, {

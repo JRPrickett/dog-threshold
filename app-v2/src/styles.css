@@ -2307,9 +2307,7 @@ a:focus-visible {
 .marketing-hero-art {
   min-height: 620px;
   position: relative;
-  background:
-    linear-gradient(0deg, rgba(21,36,44,.82), rgba(21,36,44,.08) 55%),
-    url("/photos/hero-settled-at-home.webp") center / cover no-repeat;
+  background: #0D181C;
   display: grid;
   align-items: end;
 }
@@ -4045,17 +4043,17 @@ a:focus-visible {
   .marketing-hero-copy > :nth-child(4) { animation-delay: .22s; }
 
   .marketing-hero-art {
-    animation: marketing-image-reveal .9s .08s cubic-bezier(.2,.8,.2,1) both;
+    animation: marketing-image-reveal .35s cubic-bezier(.2,.8,.2,1) both;
   }
 
   @keyframes marketing-reveal {
-    from { opacity: .01; transform: translateY(18px); filter: blur(5px); }
-    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    from { transform: translateY(18px); }
+    to { transform: translateY(0); }
   }
 
   @keyframes marketing-image-reveal {
-    from { opacity: .01; clip-path: inset(0 0 100% 0); }
-    to { opacity: 1; clip-path: inset(0); }
+    from { transform: translateY(8px); }
+    to { transform: translateY(0); }
   }
 }
 
