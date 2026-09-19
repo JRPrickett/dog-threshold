@@ -24,6 +24,17 @@ optional accounts.
 Goal: reach a modern local-first build that is safe to merge and use as the production baseline
 before account code changes the data path.
 
+### A0. Guided starting assessment
+
+- replace the single duration field with a short first-run assessment;
+- route cue-sensitive/uncertain dogs into departure-cue practice before real leaving;
+- use an already observed comfortable duration when the owner genuinely has one;
+- otherwise begin with a clearly labelled conservative micro-departure heuristic;
+- show the owner their starting plan before saving setup;
+- encourage direct camera/video observation without turning onboarding into a diagnostic test;
+- preserve existing users without forcing them through the new onboarding;
+- persist only the resulting route/version rather than every intake answer.
+
 ### A1. Finish physical-device release gates
 
 iOS remaining:
