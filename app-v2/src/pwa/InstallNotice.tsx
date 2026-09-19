@@ -4,6 +4,7 @@ import {
   isStandalone,
   requestPersistentStorage
 } from "./installStatus";
+import { IOSInstallDemo } from "./IOSInstallDemo";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -63,10 +64,12 @@ export function InstallNotice() {
           <details className="install-steps">
             <summary>Show me how</summary>
             <ol>
-              <li>Tap the Share button in Safari.</li>
+              <li>Tap the <b>three dots</b> at the bottom of Safari.</li>
+              <li>Choose <b>Share</b>.</li>
               <li>Choose <b>Add to Home Screen</b>.</li>
               <li>Open SettledSolo from the new Home Screen icon.</li>
             </ol>
+            <IOSInstallDemo compact />
           </details>
         )}
       </div>
