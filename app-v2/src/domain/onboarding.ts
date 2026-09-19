@@ -25,10 +25,10 @@ export const ONBOARDING_VERSION = 2 as const;
  * Published guidance supports beginning with a departure brief enough not to
  * evoke anxiety, but does not establish a universal number of seconds.
  *
- * One second is therefore a deliberately conservative SettledSolo product
+ * Three seconds is therefore a deliberately conservative SettledSolo product
  * heuristic for owners who have never observed a known-comfortable absence.
  */
-export const MICRO_DEPARTURE_SECONDS = 1;
+export const MICRO_DEPARTURE_SECONDS = 3;
 
 export function determineStartingPlan(
   answers: OnboardingAnswers
