@@ -11,6 +11,7 @@
     "check": "node --check js/app.js && node --check js/analytics.js && node --check cloudflare-worker/src/index.js && tsc -p app-v2/tsconfig.json --noEmit && npm test",
     "verify": "npm run check && npm run build:v2 && npm run check:worker",
     "test:e2e": "playwright test --config app-v2/playwright.config.ts",
+    "test:pwa": "playwright test --config app-v2/playwright.pwa.config.ts",
     "preview:cloudflare": "npm run build:v2 && wrangler dev --config wrangler.app.jsonc",
     "deploy:cloudflare": "npm run build:v2 && wrangler deploy --config wrangler.app.jsonc",
     "deploy:preview": "npm run build:v2 && wrangler deploy --config wrangler.preview.jsonc",

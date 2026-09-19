@@ -92,9 +92,10 @@ Before calling a PR ready:
 npm install --ignore-scripts
 npm run verify
 npm run test:e2e
+npm run test:pwa
 ```
 
-CI runs `npm run verify` first, then the Playwright suite against Chromium/Pixel 7 and WebKit/iPhone 15 profiles.
+CI runs `npm run verify` first, then the normal Playwright suite against Chromium/Pixel 7 and WebKit/iPhone 15 profiles, followed by `npm run test:pwa` against the production build/service worker. The production PWA gate proves service-worker control in both engines and the full offline relaunch/save/reconnect cycle in Chromium; real installed-iOS offline lifecycle behaviour remains a physical-device gate.
 
 Automated WebKit is not proof of installed iOS PWA behaviour. Changes affecting timers, notifications, audio, offline behaviour, install flows, safe areas or app lifecycle may also require the real-device gates in `docs/DEVICE-TEST-MATRIX.md`.
 

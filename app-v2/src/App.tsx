@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AppData } from "./domain/types";
 import { activeScenario } from "./data/appData";
 import {
@@ -26,6 +26,10 @@ type Screen = "today" | "progress" | "history" | "more";
 
 export default function App() {
   const repository = useMemo(() => createAppRepository(), []);
+  const persistLiveSession = useCallback(
+    (snapshot: PersistedLiveSession) => repository.saveActiveSession(snapshot),
+    [repository]
+  );
   const [data, setData] = useState<AppData | null>(null);
   const [storageMode, setStorageMode] = useState<StorageMode>("indexeddb");
   const [screen, setScreen] = useState<Screen>("today");
@@ -113,7 +117,7 @@ export default function App() {
         warmupCount={activeScenario(data).warmupCount}
         shuffleWarmups={activeScenario(data).shuffleWarmups}
         restSeconds={activeScenario(data).restSeconds ?? 60}
-        onPersist={(snapshot) => repository.saveActiveSession(snapshot)}
+        onPersist={persistLiveSession}
         onClose={async () => {
           await repository.clearActiveSession();
           setLiveTarget(null);

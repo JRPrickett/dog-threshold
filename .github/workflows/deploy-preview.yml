@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - modern-app-shell-engine
+      - main
     paths:
       - "app-v2/**"
       - "worker/**"

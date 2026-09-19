@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import type {
   ObservedSignal,
   Outcome,
@@ -94,6 +94,8 @@ export function LiveSession({
   const [tags, setTags] = useState<SessionTag[]>([]);
   const [stopReason, setStopReason] = useState("");
   const [note, setNote] = useState("");
+  const [savingReview, setSavingReview] = useState(false);
+  const saveInFlight = useRef(false);
   const [restStartedAt, setRestStartedAt] = useState<number | null>(null);
   const [notificationPermission, setNotificationPermission] =
     useState<NotificationPermissionState>(
@@ -215,20 +217,35 @@ export function LiveSession({
   const stoppedEarly =
     state.mainActualSeconds !== null && state.mainActualSeconds < targetSeconds;
 
-  function saveReview() {
-    if (!outcome || state.mainActualSeconds === null) return;
-    void onSaved({
-      id: `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
-      at: Date.now(),
-      targetSeconds,
-      actualSeconds: state.mainActualSeconds,
-      outcome,
-      stoppedEarly,
-      signals,
-      tags,
-      stopReason: stoppedEarly ? stopReason.trim().slice(0, 80) : "",
-      note: note.trim()
-    });
+  async function saveReview() {
+    if (
+      !outcome ||
+      state.mainActualSeconds === null ||
+      saveInFlight.current
+    ) {
+      return;
+    }
+
+    saveInFlight.current = true;
+    setSavingReview(true);
+
+    try {
+      await onSaved({
+        id: `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+        at: Date.now(),
+        targetSeconds,
+        actualSeconds: state.mainActualSeconds,
+        outcome,
+        stoppedEarly,
+        signals,
+        tags,
+        stopReason: stoppedEarly ? stopReason.trim().slice(0, 80) : "",
+        note: note.trim()
+      });
+    } catch {
+      saveInFlight.current = false;
+      setSavingReview(false);
+    }
   }
 
   async function enableReturnAlerts() {
@@ -364,10 +381,10 @@ export function LiveSession({
 
           <button
             className="primary-button live-save"
-            disabled={!outcome}
-            onClick={saveReview}
+            disabled={!outcome || savingReview}
+            onClick={() => void saveReview()}
           >
-            Save session
+            {savingReview ? "Saving…" : "Save session"}
           </button>
         </main>
       </div>
