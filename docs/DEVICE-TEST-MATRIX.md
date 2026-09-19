@@ -1,6 +1,6 @@
 # Production device and interruption test matrix
 
-Last updated: 18 September 2026
+Last updated: 19 September 2026
 
 Automated browser tests are necessary but are not evidence that an installed PWA behaves
 identically on a real phone. This document is the manual release gate for live-session
@@ -17,12 +17,20 @@ Automated journeys include:
 
 - onboarding -> session -> review -> history;
 - reload during a running session and timestamp recovery;
+- recovered review -> save exactly once, including a deliberate fast double-tap;
+- notification denial without blocking training or immediately re-prompting;
 - offline session completion;
 - backup restore;
 - departure-cue progression;
 - legacy multi-scenario migration.
 
+CI also builds the **production PWA** and runs a separate service-worker journey against
+Chromium/Pixel 7 and WebKit/iPhone 15 profiles. That journey waits for the generated service
+worker to control the app, simulates an Airplane Mode relaunch, completes/saves a session while
+offline, restores connectivity and confirms the same local history remains present.
+
 Playwright WebKit is **not** a substitute for Mobile Safari or an installed iOS Home Screen app.
+The production-service-worker test proves the web/PWA code path, not iOS lifecycle behaviour.
 
 ## Supported product promise
 
