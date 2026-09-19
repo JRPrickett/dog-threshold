@@ -20,7 +20,7 @@ Do not jump straight into cloud sync in a way that destabilises the currently re
 
 ## What changed most recently
 
-### Storage recovery and roadmap refresh — current branch, pending merge
+### PR #27 — Storage recovery and roadmap refresh — pending merge
 
 - Review found that an empty/recovered IndexedDB database was seeded from legacy data,
   ignoring newer training data saved through the localStorage fallback.
@@ -32,6 +32,13 @@ Do not jump straight into cloud sync in a way that destabilises the currently re
 - This is empty-primary recovery, not reconciliation of divergent populated stores or
   concurrent-tab edits. Those remain data-layer review work before account sync.
 - `NEXT-PHASE.md` and `PRODUCT-PLAN.md` now distinguish merged work from outstanding gates.
+- The local-data notice now directs users to More → Download backup instead of claiming
+  installation protects history from clearing. Installation is not a separate backup;
+  WebKit documents best-effort storage and possible eviction:
+  https://webkit.org/blog/14403/updates-to-storage-policy/
+- Local `npm run verify` passed, including 72 modern unit tests. Browser/PWA checks depend
+  on GitHub CI because local browser downloads returned 502/timeouts. Check PR #27 for
+  the final CI status; no physical-device or production-deployment claim is made.
 
 ### PR #26 — Release hardening gates — merged
 
