@@ -14,7 +14,6 @@ export function Setup({
       <section className="setup-card">
         <BrandMark light />
         <p className="setup-brand">SettledSolo</p>
-        <p className="kicker">Separation training for dogs</p>
         <h1>Calm starts with small steps.</h1>
         <p className="lead">
           Build comfortable alone time gradually. Start with something you already

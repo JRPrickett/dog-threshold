@@ -18,7 +18,6 @@ export function PublicSite() {
       <main>
         <section className="marketing-hero">
           <div className="marketing-hero-copy">
-            <p className="marketing-eyebrow">Separation training for dogs</p>
             <h1>Calm starts with small steps.</h1>
             <p className="marketing-lead">
               Build comfortable alone time gradually, with an explainable plan,
@@ -51,7 +50,6 @@ export function PublicSite() {
 
         <section className="marketing-section" id="how-it-works">
           <div className="marketing-section-heading">
-            <p className="marketing-eyebrow">How it works</p>
             <h2>A training loop that stays simple.</h2>
             <p>
               SettledSolo keeps the focus on observation and comfort rather than
@@ -80,7 +78,6 @@ export function PublicSite() {
 
         <section className="marketing-app-preview" id="why-settledsolo">
           <div className="marketing-preview-copy">
-            <p className="marketing-eyebrow">A calmer product, too</p>
             <h2>Designed for the moment you actually leave.</h2>
             <p>
               The everyday app is light and quiet. Start a live session and it
@@ -122,7 +119,6 @@ export function PublicSite() {
 
         <section className="marketing-section marketing-evidence">
           <div className="marketing-section-heading">
-            <p className="marketing-eyebrow">Evidence-aware, not algorithm worship</p>
             <h2>Transparent about what science can and cannot tell us.</h2>
           </div>
           <div className="marketing-evidence-grid">
@@ -140,7 +136,6 @@ export function PublicSite() {
 
         <section className="marketing-section marketing-faq" id="faq">
           <div className="marketing-section-heading">
-            <p className="marketing-eyebrow">Questions</p>
             <h2>Useful before you ever create an account.</h2>
           </div>
           <div className="faq-list">
