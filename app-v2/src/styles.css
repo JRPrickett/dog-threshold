@@ -4047,13 +4047,13 @@ a:focus-visible {
   }
 
   @keyframes marketing-reveal {
-    from { opacity: .01; transform: translateY(18px); filter: blur(5px); }
-    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    from { transform: translateY(18px); }
+    to { transform: translateY(0); }
   }
 
   @keyframes marketing-image-reveal {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { transform: translateY(8px); }
+    to { transform: translateY(0); }
   }
 }
 
