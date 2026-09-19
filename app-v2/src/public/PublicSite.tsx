@@ -235,7 +235,7 @@ export function PublicSite() {
           <BrandMark />
           <h2>Build comfortable alone time, gradually.</h2>
           <p>Your first plan takes less than a minute to set up. No account required.</p>
-          <a className="marketing-primary" href="/app/">Start training free</a>
+          <a className="marketing-primary" href="/app/">Begin your first plan</a>
         </section>
       </main>
 
