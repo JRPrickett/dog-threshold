@@ -1,4 +1,7 @@
-interface Env {
+import { handleAccountApi } from "./accounts/api";
+import type { AccountEnv } from "./accounts/auth";
+
+interface Env extends AccountEnv {
   ASSETS: Fetcher;
   /** Canonical production origin. Preview hosts are automatically noindexed. */
   SITE_URL?: string;
@@ -69,8 +72,11 @@ function secure(response: Response, url: URL, env: Env): Response {
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
 
+  const isApi = url.pathname.startsWith("/api/");
+  if (isApi) headers.set("Cache-Control", "no-store, private");
+
   const isAppRoute = url.pathname === "/app" || url.pathname.startsWith("/app/");
-  if (!productionHost(url, env) || isAppRoute) {
+  if (!productionHost(url, env) || isAppRoute || isApi) {
     headers.set("X-Robots-Tag", "noindex, nofollow");
   }
 
@@ -102,6 +108,8 @@ function secure(response: Response, url: URL, env: Env): Response {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname.startsWith("/api/")) return secure(await handleAccountApi(request, env), url, env);
 
     const redirect = canonicalHostRedirect(url, env);
     if (redirect) return secure(redirect, url, env);

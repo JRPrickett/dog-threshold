@@ -23,7 +23,8 @@ export function Today({
   celebration,
   onDismissCelebration,
   onStart,
-  onOpenCuePractice
+  onOpenCuePractice,
+  onOpenAccount
 }: {
   data: AppData;
   storageMode: StorageMode;
@@ -31,6 +32,7 @@ export function Today({
   onDismissCelebration: () => void;
   onStart: (target: number) => void;
   onOpenCuePractice: () => void;
+  onOpenAccount: () => void;
 }) {
   const scenario = activeScenario(data);
   const recommendation = useMemo(
@@ -244,7 +246,7 @@ export function Today({
         </div>
       </section>
 
-      <AccountNotice storageMode={storageMode} />
+      <AccountNotice storageMode={storageMode} onOpenAccount={onOpenAccount} />
 
       <section className="cue-entry-card coverage-card">
         <div>

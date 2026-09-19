@@ -1,3 +1,5 @@
+import { AccountPanel } from "./account/AccountPanel";
+import { useAccount } from "./account/useAccount";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AppData } from "./domain/types";
 import { activeScenario } from "./data/appData";
@@ -37,6 +39,8 @@ export default function App() {
   const [cuePracticeOpen, setCuePracticeOpen] = useState(false);
   const [restoredState, setRestoredState] =
     useState<PersistedLiveSession["state"] | undefined>(undefined);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const account = useAccount(repository, setData, liveTarget !== null || cuePracticeOpen);
   const [celebration, setCelebration] = useState<Celebration | null>(null);
 
   useEffect(() => {
@@ -77,9 +81,14 @@ export default function App() {
     );
   }
 
+  if (accountOpen) {
+    return <main className="app-shell"><div className="app-content"><button onClick={() => setAccountOpen(false)}>Back to training</button><AccountPanel data={data} account={account} /></div></main>;
+  }
+
   if (!data.dogName) {
     return (
       <Setup
+        onOpenAccount={() => setAccountOpen(true)}
         onSaved={async (dogName, startSeconds, startingPath) => {
           setData(
             await repository.saveSetup(dogName, startSeconds, startingPath)
@@ -171,6 +180,7 @@ export default function App() {
               setLiveTarget(target);
             }}
             onOpenCuePractice={() => setCuePracticeOpen(true)}
+            onOpenAccount={() => setScreen("more")}
           />
         )}
         {screen === "progress" && <Progress data={data} />}
@@ -193,6 +203,7 @@ export default function App() {
         )}
         {screen === "more" && (
           <More
+            accountPanel={<AccountPanel data={data} account={account} />}
             data={data}
             onSelectScenario={async (id) => {
               setData(await repository.setActiveScenario(id));
@@ -229,7 +240,7 @@ export default function App() {
             onRestoreBackup={async (restored) => {
               await repository.clearActiveSession();
               await repository.saveAppData(restored);
-              setData(restored);
+              setData(await repository.loadAppData());
               setStorageMode(repository.storageMode());
               setRestoredState(undefined);
               setLiveTarget(null);

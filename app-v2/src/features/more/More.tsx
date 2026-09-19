@@ -29,9 +29,11 @@ export function More({
   onUpdateScenario,
   onUpdateDailyCap,
   onRestoreBackup,
-  onResetApp
+  onResetApp,
+  accountPanel
 }: {
   data: AppData;
+  accountPanel?: import("react").ReactNode;
   onSelectScenario: (id: string) => Promise<void>;
   onCreateScenario: (label: string, startSeconds: number) => Promise<void>;
   onUpdateScenario: (
@@ -98,13 +100,7 @@ export function More({
         <h1>{data.dogName}'s training settings.</h1>
       </section>
 
-      <section className="menu-card">
-        <div>
-          <strong>Account & backup</strong>
-          <span>Optional cloud backup and cross-device sync</span>
-        </div>
-        <span className="soon-pill">Coming next</span>
-      </section>
+      {accountPanel}
 
       {data.scenarios.length > 1 && (
         <section className="menu-card scenario-switch-card">
@@ -432,7 +428,8 @@ export function More({
           <p>
             This permanently deletes {data.dogName}&apos;s local training tracks,
             session history, departure-cue progress and onboarding setup on this
-            device. You&apos;ll return to the first-run assessment.
+            device. You&apos;ll return to the first-run assessment. This stops sync on this
+            device but does not delete your cloud account or its history.
           </p>
           <p>
             Download a backup first if there is anything you may want to restore

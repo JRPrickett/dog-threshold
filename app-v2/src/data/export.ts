@@ -11,10 +11,12 @@ function csvCell(value: unknown): string {
 }
 
 export function makeBackup(data: AppData) {
+  const { sync, ...trainingData } = data;
   return {
     schemaVersion: 1,
     exportedAt: new Date().toISOString(),
-    appData: data
+    appData: trainingData,
+    conflictArchive: sync?.archive
   };
 }
 

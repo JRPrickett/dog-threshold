@@ -7,32 +7,37 @@
     "build:v2": "vite build app-v2",
     "test:legacy": "node tests/progression.test.js && node tests/storage.test.js && node tests/migration.test.js && node tests/sessions.test.js && node tests/state.test.js && node tests/charts.test.js && node tests/dashboard.test.js && node tests/target-reason.test.js && node tests/analytics.test.js && node tests/app-wiring.test.js && node tests/startup-wiring.test.js && node tests/save-event-order.test.js && node tests/notification-routing.test.js && node tests/ios-open-analytics.test.js && node tests/media-card-teardown.test.js && node tests/distinct-chimes.test.js && node tests/interruption-proof.test.js && node tests/notification-timing.test.js && node tests/default-scenario.test.js && node tests/time-context.test.js && node tests/version-consistency.test.js",
     "test:v2": "vitest run --config app-v2/vite.config.ts",
-    "test": "npm run test:legacy && npm run test:v2",
-    "check": "node --check js/app.js && node --check js/analytics.js && node --check cloudflare-worker/src/index.js && tsc -p app-v2/tsconfig.json --noEmit && npm test",
+    "test": "npm run test:legacy && npm run test:v2 && npm run test:accounts",
+    "check": "node --check js/app.js && node --check js/analytics.js && node --check cloudflare-worker/src/index.js && tsc -p app-v2/tsconfig.json --noEmit && tsc -p worker/tsconfig.json && npm test",
     "verify": "npm run check && npm run build:v2 && npm run check:worker",
     "test:e2e": "playwright test --config app-v2/playwright.config.ts",
     "test:pwa": "playwright test --config app-v2/playwright.pwa.config.ts",
     "preview:cloudflare": "npm run build:v2 && wrangler dev --config wrangler.app.jsonc",
-    "deploy:cloudflare": "npm run build:v2 && wrangler deploy --config wrangler.app.jsonc",
-    "deploy:preview": "npm run build:v2 && wrangler deploy --config wrangler.preview.jsonc",
-    "check:worker": "wrangler deploy --dry-run --config wrangler.app.jsonc"
+    "deploy:cloudflare": "npm run build:v2 && node scripts/deploy-app.mjs production",
+    "deploy:preview": "npm run build:v2 && node scripts/deploy-app.mjs preview",
+    "check:worker": "wrangler deploy --dry-run --config wrangler.app.jsonc",
+    "test:accounts": "node --test scripts/account-config.test.mjs && vitest run --config worker/vitest.config.ts"
   },
   "dependencies": {
+    "@fontsource/fraunces": "5.3.0",
+    "@fontsource/karla": "5.3.0",
+    "better-auth": "1.7.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "@fontsource/fraunces": "5.3.0",
-    "@fontsource/karla": "5.3.0"
+    "zod": "4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@cloudflare/workers-types": "5.20260919.1",
+    "@playwright/test": "1.63.0",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
+    "miniflare": "5.20260917.0-alpha",
     "typescript": "7.0.2",
     "vite": "8.3.0",
-    "vitest": "5.0.1",
     "vite-plugin-pwa": "1.3.0",
-    "@playwright/test": "1.63.0",
-    "wrangler": "4.134.0",
-    "@axe-core/playwright": "4.13.0"
+    "vitest": "5.0.1",
+    "wrangler": "4.134.0"
   }
 }
