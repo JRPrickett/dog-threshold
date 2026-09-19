@@ -1,5 +1,13 @@
 export type Outcome = "relaxed" | "concern" | "distressed";
 
+export type StartingPath = "departure-cues" | "micro-departure" | "known-duration";
+
+export interface OnboardingProfile {
+  version: 2;
+  startingPath: StartingPath;
+  completedAt: number;
+}
+
 export type ObservedSignal =
   | "exit-watching"
   | "pacing"
@@ -72,6 +80,8 @@ export interface Recommendation {
 
 export interface AppData {
   dogName: string;
+  /** Versioned first-run routing. Existing users may not have this field. */
+  onboarding?: OnboardingProfile;
   activeScenarioId: string;
   scenarios: Scenario[];
   /** Main departures allowed per day, counted across every scenario. Defaults to 2 when unset. */
