@@ -103,6 +103,15 @@ export function Today({
             <small>{cueRecommendation.reason}</small>
           </div>
 
+          <div className="starting-observation-note">
+            <strong>Keep this genuinely easy</strong>
+            <p>
+              If even a mild getting-ready cue causes clear or escalating distress,
+              stop rather than pushing through it. A vet or appropriately qualified
+              behaviour professional can help with more severe cases.
+            </p>
+          </div>
+
           {cueRecommendation.supportFlag && (
             <div className="support-card">
               The last cue practice was too difficult. Stop for now, return to an
