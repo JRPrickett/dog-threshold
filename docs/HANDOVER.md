@@ -1,28 +1,70 @@
 # SettledSolo handover
 
-**Last updated:** 19 September 2026 (accounts and sync implementation)
+**Last updated:** 19 September 2026 (account activation tooling)
 **Repository:** `JRPrickett/settledsolo`  
-**Reviewed main:** `8cf04d9934c9e7d581fa069c279ecbc13f16a2e6`
+**Reviewed main:** `e13f5d4280a5cb9655016341cc506f76e7f373bd`
 
 This is the current-state handover for another agent or contributor picking up SettledSolo. Read `AGENTS.md` first for repository rules.
 
 ## Executive status
 
-Reviewed main: `8cf04d9` (PR #26 merged). PR #27 storage recovery is a separate open PR.
-The user has explicitly prioritised **optional accounts and sync** next, ahead of the
-remaining physical-device/behaviour-quality work. Those release gates still apply.
+Reviewed main: `e13f5d4` (PR #28 merged, CI green). PR #27 storage recovery is a separate
+open PR, still based on `8cf04d9`. The user has explicitly prioritised **optional accounts
+and sync**, ahead of the remaining physical-device/behaviour-quality work. Those release
+gates still apply.
 
-Current implementation is **PR #28**, `feat/accounts-sync`, pending review/merge and **not deployed**.
-It includes Better Auth email OTP, optional account UI, explicit guest-log import,
-local outbox, revision-based incremental sync, recoverable conflicts, cloud export/deletion,
-and isolated account deployment tooling. Existing guest training remains usable offline.
+Accounts and sync are **merged and deployed to the preview Worker, but not activated**. The
+merged implementation covers Better Auth email OTP, optional account UI, explicit guest-log
+import, local outbox, revision-based incremental sync, recoverable conflicts, cloud
+export/deletion and isolated account deployment tooling. Guest training remains usable offline.
 
-Accounts are disabled by default until D1 IDs, auth origin, verified email sender and secrets
-are configured. No databases or provider secrets have been created from this workspace.
-See `ACCOUNTS-DEPLOYMENT.md` for exact activation steps and `ACCOUNTS-REVIEW.md` for review
-results, test coverage and outstanding real-device/provider evidence.
+The current phase is **activation**, and the remaining work is provisioning and configuration
+rather than implementation. Verified on `e13f5d4`:
+
+- the preview Worker at `https://settledsolo-web-preview.jasonrprickett.workers.dev` runs the
+  merged account code with `ACCOUNTS_ENABLED="false"`;
+- `/api/account/status` returns `{"available":false}`, private and noindexed, and unknown API
+  paths fail closed as JSON rather than falling through to the app shell;
+- **no account D1 database exists** — the provisioning workflow has never run;
+- **all seven account variables and secrets are unset** in the GitHub `preview` environment;
+- Cloudflare deployment credentials are present in the GitHub `preview` environment.
+
+Whether that Cloudflare token also carries D1 read/edit permission, and whether the GitHub
+`production` environment holds Cloudflare credentials at all, are not yet established.
+
+See `ACCOUNTS-DEPLOYMENT.md` for the current state table and the ordered activation runbook,
+and `ACCOUNTS-REVIEW.md` for review results, test coverage and outstanding real-device and
+provider evidence.
 
 ## What changed most recently
+
+### Account activation tooling — current branch
+
+Activation was a multi-step configuration dance with no way to check it except by deploying.
+This adds the missing checks without changing any account or sync behaviour:
+
+- `npm run accounts:preflight <target>` reports every outstanding variable or secret at once
+  instead of failing on the first one, and never prints a secret value;
+- a **Verify account configuration** workflow runs that report for an environment without
+  deploying, applying migrations or uploading secrets;
+- both deploy workflows run the preflight before installing anything, so an incomplete
+  activation fails before the first D1 migration or secret upload rather than part-way through;
+- `npm run accounts:verify <origin>` probes a deployed Worker and fails when a deployment that
+  claimed to enable accounts reports them unavailable, when account responses become cacheable
+  or indexable, or when an unknown API path falls through to the app shell. Both deploy
+  workflows run it after deploying when `ACCOUNTS_VERIFY_ORIGIN` or `AUTH_ORIGIN` is set;
+- `npm run verify` now also dry-runs the accounts-enabled Worker configuration for both targets
+  using placeholder values, so a broken binding, migration path or rate limiter fails in CI
+  rather than at activation.
+
+`accountConfig` keeps its existing fail-closed behaviour; the validation rules simply moved into
+a shared `accountConfigProblems` so the preflight and the deployment cannot disagree.
+
+### PR #28 — Optional email accounts and local-first cloud sync — merged
+
+Better Auth email OTP, optional account UI, explicit guest-log import, durable local outbox,
+revision-based incremental sync, recoverable conflicts, cloud export and deletion, and the
+isolated account deployment/provisioning tooling. Accounts stay disabled until configured.
 
 ### PR #26 — Release hardening gates — merged
 
@@ -193,7 +235,7 @@ The reset flow deliberately clears the legacy migration key as well as modern pe
 
 ### Accounts / cloud data
 
-Implemented on the account branch, not yet activated. The normal Wrangler configs remain
+Merged on `main`, deployed to preview, not yet activated. The normal Wrangler configs remain
 unbound to account D1. Deployment generates a temporary config only when accounts are enabled
 and validates distinct preview/production database IDs. Private account data stays separate
 from the analytics Worker/database.
@@ -292,7 +334,8 @@ npm run test:pwa
 - legacy regression suite;
 - modern Vitest suite;
 - modern production build;
-- Cloudflare Worker dry-run.
+- Cloudflare Worker dry-run;
+- accounts-enabled Worker dry-run for both targets, using placeholder values.
 
 The normal Playwright suite then runs against:
 
@@ -355,8 +398,12 @@ Do not use training outcomes as an efficacy claim.
 
 ## Recommended next sequence
 
-1. Finish account-branch CI/review and merge the independently reviewed changes.
-2. Provision isolated D1 databases and configure verified email delivery/secrets.
+1. ~~Finish account-branch CI/review and merge the independently reviewed changes.~~ Done: PR #28.
+2. Provision isolated D1 databases and configure verified email delivery/secrets. **This is the
+   current blocking step.** It needs a Cloudflare API token with D1 read/edit permission and a
+   Resend account with a verified sender; neither can be created from an agent workspace. Run
+   **Provision isolated account database**, then follow the activation order in
+   `ACCOUNTS-DEPLOYMENT.md`, checking progress with **Verify account configuration**.
 3. Activate preview only, then verify real OTP delivery and two-device sync/recovery.
 4. Complete remaining physical-device and professional behavioural-review gates.
 5. Finish smaller behaviour-quality and public-beta contact/privacy/assets work.
