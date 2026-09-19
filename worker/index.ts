@@ -74,10 +74,12 @@ function secure(response: Response, url: URL, env: Env): Response {
     headers.set("X-Robots-Tag", "noindex, nofollow");
   }
 
-  if (
-    url.pathname.startsWith("/assets/") ||
-    url.pathname === "/photos/hero-settled-at-home-v2.webp"
-  ) {
+  const isImmutableAsset =
+    response.ok &&
+    (url.pathname.startsWith("/assets/") ||
+      url.pathname === "/photos/hero-settled-at-home-v2.webp");
+
+  if (isImmutableAsset) {
     headers.set("Cache-Control", "public, max-age=31536000, immutable");
   } else if ((headers.get("content-type") ?? "").includes("text/html")) {
     headers.set("Cache-Control", "no-cache");
@@ -86,7 +88,7 @@ function secure(response: Response, url: URL, env: Env): Response {
   if (url.pathname === "/" && (headers.get("content-type") ?? "").includes("text/html")) {
     headers.set(
       "Link",
-      '</photos/hero-settled-at-home-v2.webp>; rel="preload"; as="image"; type="image/webp"; fetchpriority="high"'
+      '</photos/hero-settled-at-home-v2.webp?v=2>; rel="preload"; as="image"; type="image/webp"; fetchpriority="high"'
     );
   }
 
