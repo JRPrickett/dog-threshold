@@ -2,7 +2,7 @@
 
 **Last updated:** 19 September 2026, 16:21 BST  
 **Repository:** `JRPrickett/settledsolo`  
-**Current main at handover review:** `805e8f1ebcca57f280e680337b135e3d2ea1afec`
+**Current main before PR #26:** `b298fa10b52c1b58fabfe62f58163ecbdcfe8458`
 
 This is the current-state handover for another agent or contributor picking up SettledSolo. Read `AGENTS.md` first for repository rules.
 
@@ -12,7 +12,7 @@ SettledSolo is now well beyond the original prototype stage. The active product 
 
 **Phase 1 of the current production-readiness roadmap — guided onboarding — is complete and merged.**
 
-All functional PRs through **#24** are merged. At the time this handover was prepared there were **no open feature PRs**. PR #24's CI completed successfully.
+PRs **#21–#25** are merged. **PR #26 is the current open release-hardening PR** at this handover update. The last merged functional change, PR #24, completed CI successfully; PR #25 added the agent rules and this living handover.
 
 The project is now in **release hardening / real-device gates**. The first hardening pass is PR #26, which adds duplicate-save protection, recovery/notification regressions, a production-service-worker offline relaunch gate and preview-deployment cleanup. After those automated gates are green, finish the genuinely OS-dependent checks on real iOS/Android devices before moving to the remaining behaviour-quality items and then D1/accounts/sync.
 
