@@ -56,10 +56,12 @@ export function PublicSite() {
 
           <figure className="marketing-hero-art">
             <img
-              src="/photos/hero-settled-at-home.webp"
+              src="/photos/hero-settled-at-home-v2.webp"
               alt="A relaxed dog sleeping comfortably in a warm, softly lit living room."
               width="1122"
               height="1402"
+              loading="eager"
+              decoding="async"
               fetchPriority="high"
             />
             <figcaption className="marketing-scene-copy">
