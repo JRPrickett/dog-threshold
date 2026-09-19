@@ -1,6 +1,6 @@
 # SettledSolo handover
 
-**Last updated:** 19 September 2026, 13:24 BST  
+**Last updated:** 19 September 2026, 16:21 BST  
 **Repository:** `JRPrickett/settledsolo`  
 **Current main at handover review:** `805e8f1ebcca57f280e680337b135e3d2ea1afec`
 
@@ -14,9 +14,27 @@ SettledSolo is now well beyond the original prototype stage. The active product 
 
 All functional PRs through **#24** are merged. At the time this handover was prepared there were **no open feature PRs**. PR #24's CI completed successfully.
 
-The immediate next phase should be **release hardening / real-device gates**, then the remaining behaviour-quality items, then D1/accounts/sync. Do not jump straight into cloud sync in a way that destabilises the currently reliable local-first session path.
+The project is now in **release hardening / real-device gates**. The first hardening pass is PR #26, which adds duplicate-save protection, recovery/notification regressions, a production-service-worker offline relaunch gate and preview-deployment cleanup. After those automated gates are green, finish the genuinely OS-dependent checks on real iOS/Android devices before moving to the remaining behaviour-quality items and then D1/accounts/sync.
+
+Do not jump straight into cloud sync in a way that destabilises the currently reliable local-first session path.
 
 ## What changed most recently
+
+### PR #26 — Release hardening gates — open at this handover update
+
+This starts the post-onboarding release-hardening phase.
+
+Changes on the PR branch:
+
+- prevents duplicate history records from a fast/double tap on **Save session** by using an in-flight save guard;
+- adds a recovered-review browser journey that reloads before save, deliberately double-taps save and proves one history record remains after a second reload;
+- adds notification-denial coverage proving denial does not block training and is not immediately re-prompted;
+- adds a separate production-PWA Playwright gate that builds the real service worker, relaunches offline, saves offline and verifies the data after connectivity returns;
+- runs that production-PWA gate against Chromium/Pixel 7 and WebKit/iPhone 15 profiles;
+- changes preview deployment to follow `main` rather than the obsolete `modern-app-shell-engine` branch.
+
+The production-service-worker test does **not** clear the real installed-iPhone Airplane Mode gate; that remains manual evidence.
+
 
 ### PR #24 — Prevent iOS form focus zoom — merged
 
@@ -249,11 +267,11 @@ The production Worker:
 - gives HTML `no-cache`;
 - handles canonical www/non-www sibling redirect.
 
-### Deployment gotcha
+### Preview deployment
 
-`.github/workflows/deploy-preview.yml` still has an automatic push trigger for the old `modern-app-shell-engine` branch. It also supports manual dispatch.
+PR #26 changes `.github/workflows/deploy-preview.yml` so relevant pushes to `main` deploy the preview Worker. Manual dispatch remains available.
 
-That trigger is now stale because the modern work has been merged. A future housekeeping PR should decide the intended preview workflow (for example manual-only, a dedicated preview branch, or another controlled trigger) rather than assuming pushes to `main` automatically update preview.
+Production deployment remains manual. Do not make production auto-deploy merely to mirror preview.
 
 ## CI / verification
 
@@ -296,12 +314,12 @@ Real iPhone evidence already recorded:
 
 Still important on iOS:
 
-- Airplane Mode relaunch + complete offline save;
-- notification permission/denial path;
+- real installed-PWA Airplane Mode relaunch + complete offline save (production service-worker behaviour is now covered automatically in PR #26, but real iOS lifecycle behaviour is not);
+- real notification permission/denial behaviour;
 - update prompt while an active session exists;
 - duplicate warning/target chime behaviour across background/repeated sessions;
 - Media Session/Control Centre behaviour where available;
-- recovered session saved exactly once.
+- real-device confirmation that a recovered session saves exactly once (automated recovery/deduplication coverage is in PR #26).
 
 Android installed-PWA testing is still largely open.
 
